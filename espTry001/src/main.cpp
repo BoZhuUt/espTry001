@@ -380,7 +380,12 @@ void drawAuthorPage() {
   gfx->printf("Author: Bo\n"); 
   
   gfx->setCursor(5, 100);
-  gfx->printf("V1.0.4\n");
+ #ifdef AUTO_VERSION
+    gfx->printf("%s\n", AUTO_VERSION); // 自动打印 Git 编译的版本号
+  #else
+    gfx->printf("V1.0.1\n");           // 保底显示
+  #endif
+
   gfx->setCursor(5, 140);
   gfx->printf("esp32-utility\n");
 
