@@ -8,9 +8,10 @@
 // ==========================================
 #define GFX_BL 46           // 屏幕背光
 
-#define RS485_RX 5          // RS-485 接收
-#define RS485_TX 7          // RS-485 发送
+#define RS485_RX 43          // RS-485 接收（硬件 RO/R 接到 GPIO43）
+#define RS485_TX 44          // RS-485 发送（硬件 DI/T 接到 GPIO44）
 #define RS485_BAUDRATE 9600 
+#define RS485_TX_TEST_MODE 0 // 1: GPIO44 连续发送 0x55；0: 正常透传/Modbus
 
 #define ADC_MA1_PIN 1       // mA1 采样
 #define ADC_MA2_PIN 2       // mA2 采样
@@ -21,9 +22,10 @@
 #define Touch_RST      47
 #define Touch_INT      48
 
-#define SLAVE_ID            1      
-#define REG_START_ADDR      0x0000 
-#define REG_COUNT           3      
+#define SLAVE_ID            15
+#define REG_START_ADDR      46036  // 表中 46037，按 1-based 地址换算为协议地址 46036
+#define REG_COUNT           4      // 连续读取 46037~46040，共两个 float
+#define MODBUS_FLOAT_WORD_SWAP 1   // 0: 高字在前(ABCD)；1: 低字在前(CDAB)
 
 // ==========================================
 // 2. 前置函数声明与全局变量
@@ -41,6 +43,18 @@ unsigned long lastModbusTime = 0;
 uint16_t modbusRegValues[REG_COUNT] = {0};
 uint8_t modbusResult = 0xFF;               
 bool touchOnline = false; 
+bool masterMode = false; // false: USB-RS485 透传；true: Modbus 主站轮询
+
+float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
+#if MODBUS_FLOAT_WORD_SWAP
+  uint32_t raw = ((uint32_t)secondWord << 16) | firstWord;
+#else
+  uint32_t raw = ((uint32_t)firstWord << 16) | secondWord;
+#endif
+  float value;
+  memcpy(&value, &raw, sizeof(value));
+  return value;
+}
 
 // ==========================================
 // 3. 实例化屏幕驱动对象
@@ -187,19 +201,33 @@ void setup()
 
 void loop()
 {
-  // 已修复：移除了不支持的 isConnected()，直接检测 Serial 状态
-  bool isUsbConnected = false;
-  if (Serial) {
-    isUsbConnected = true;
-  }
+#if RS485_TX_TEST_MODE
+  // 示波器发送通道测试：9600、8E1 连续发送 0x55。
+  // write() 在发送缓冲区满时会等待，因此输出为连续、稳定的 UART 波形。
+  Serial1.write(0x55);
+  return;
+#endif
 
   // ----------------------------------------------------------------
   // 核心功能 1：AXS5106L 触摸事件检测
   // ----------------------------------------------------------------
   int tx = 0, ty = 0;
   if (touchOnline && checkTouchAXS(tx, ty)) {
+#if TOUCH_DEBUG_OUTPUT
     Serial.printf("Touch Event -> X: %d, Y: %d\n", tx, ty);
-    if (ty < 80 && ty > 0) {
+#endif
+    if (currentPage == 0 && ty >= 40 && ty < 80) {
+      // 点击 Mode 区域，在纯透传与 Modbus 主站之间手动切换。
+      masterMode = !masterMode;
+      while (Serial.available()) Serial.read();
+      while (Serial1.available()) Serial1.read();
+      modbusResult = 0xFF;
+      lastModbusTime = 0;
+      gfx->fillScreen(RGB565_BLACK);
+      drawStaticUI();
+      delay(400);
+    } else if ((currentPage == 0 && ty > 0 && ty < 40) ||
+               (currentPage == 1 && ty > 0 && ty < 80)) {
       gfx->fillScreen(RGB565_BLACK);
       if (currentPage == 0) {
         currentPage = 1;
@@ -215,16 +243,19 @@ void loop()
   // ----------------------------------------------------------------
   // 核心功能 2：后台双向透传与 Modbus 轮询
   // ----------------------------------------------------------------
-  if (isUsbConnected) {
-    if (Serial.available()) {
-      while (Serial.available()) Serial1.write(Serial.read());
-      if (currentPage == 0) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
-    }
+  if (!masterMode && Serial.available()) {
+    while (Serial.available()) Serial1.write(Serial.read());
+    Serial1.flush();
+    if (currentPage == 0) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+  }
+
+  if (!masterMode) {
     if (Serial1.available()) {
       while (Serial1.available()) Serial.write(Serial1.read());
       if (currentPage == 0) showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
     }
-  } else {
+  }
+  else {
     if (millis() - lastModbusTime > 1000) {
       lastModbusTime = millis();
       if (currentPage == 0) showTransferStatus("Modbus Polling...", RGB565_ORANGE);
@@ -254,9 +285,9 @@ void loop()
     if (currentPage == 0) {
       gfx->setTextSize(1);
       gfx->setCursor(95, 48);
-      if (isUsbConnected) {
+      if (!masterMode) {
         gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
-        gfx->print("[SLAVE]   ");
+        gfx->print("[PASS]    ");
       } else {
         gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
         gfx->print("[MASTER]  ");
@@ -269,7 +300,7 @@ void loop()
       gfx->printf("CH2(IO2): %4.1f mA  ", current2_ma);
 
       gfx->setCursor(5, 202);
-      if (isUsbConnected) {
+      if (!masterMode) {
         // 已修复：改用库内标准英式拼写 DARKGREY
         gfx->setTextColor(DARKGREY, RGB565_BLACK);
         gfx->println("Link: USB PassThrough");
@@ -279,20 +310,20 @@ void loop()
         if (modbusResult == node.ku8MBSuccess) {
           gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
           gfx->printf("Status: OK (Slave:%d) \n", SLAVE_ID);
-          for (int i = 0; i < REG_COUNT; i++) {
-            gfx->setCursor(5, 217 + i * 14);
-            uint16_t val = modbusRegValues[i];
-            if (val == 0) {
-              gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
-              gfx->printf("Reg[%02X]: 0 (Empty)    ", REG_START_ADDR + i);
-            } else {
-              gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
-              gfx->printf("Reg[%02X]: %u            ", REG_START_ADDR + i, val);
-            }
-          }
+          float s470Raw = registersToFloat(modbusRegValues[0], modbusRegValues[1]);
+          float t365Raw = registersToFloat(modbusRegValues[2], modbusRegValues[3]);
+          gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+          gfx->setCursor(5, 217);
+          gfx->printf("s470Raw: %10.3f  ", s470Raw);
+          gfx->setCursor(5, 237);
+          gfx->printf("t365Raw: %10.3f  ", t365Raw);
         } else {
           gfx->setTextColor(RGB565_RED, RGB565_BLACK);
           gfx->printf("Status: ERR (0x%02X)  \n", modbusResult);
+          gfx->setCursor(5, 217);
+          gfx->print("s470Raw: --          ");
+          gfx->setCursor(5, 237);
+          gfx->print("t365Raw: --          ");
         }
       }
     } 
@@ -307,7 +338,7 @@ void loop()
   }
 
   static unsigned long lastClearTime = 0;
-  if (isUsbConnected && (millis() - lastClearTime > 150)) {
+  if (!masterMode && (millis() - lastClearTime > 150)) {
     if (currentPage == 0) gfx->fillRect(5, 295, 160, 20, RGB565_BLACK);
     gfx->flush();
     lastClearTime = millis();
@@ -321,7 +352,9 @@ void initAXS5106L() {
   Wire.begin(Touch_I2C_SDA, Touch_I2C_SCL);
   bsp_touch_init(&Wire, Touch_RST, Touch_INT, gfx->getRotation(), gfx->width(), gfx->height());
   touchOnline = true;
+#if TOUCH_DEBUG_OUTPUT
   Serial.println("AXS5106L Touch BSP Initialized.");
+#endif
 }
 
 // ==========================================

@@ -3,6 +3,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#ifndef TOUCH_DEBUG_OUTPUT
+#define TOUCH_DEBUG_OUTPUT 0
+#endif
+
 #define MAX_TOUCH_MAX_POINTS    5
 
 #define AXS5106L_ADDR 0x63

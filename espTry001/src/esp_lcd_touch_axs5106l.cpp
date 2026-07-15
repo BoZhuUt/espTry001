@@ -16,7 +16,9 @@ static bool touch_i2c_write(uint8_t driver_addr, uint8_t reg_addr, const uint8_t
 
 
     if (g_touch_i2c->endTransmission() != 0) {
+#if TOUCH_DEBUG_OUTPUT
         Serial.println("The I2C transmission fails. - I2C Read\r\n");
+#endif
         return false;
     }
     return true;
@@ -27,13 +29,17 @@ static bool touch_i2c_read(uint8_t driver_addr, uint8_t reg_addr, uint8_t *data,
     g_touch_i2c->beginTransmission(driver_addr);
     g_touch_i2c->write(reg_addr);
     if (g_touch_i2c->endTransmission() != 0) {
+#if TOUCH_DEBUG_OUTPUT
         Serial.println("The I2C write fails. - I2C Read\r\n");
+#endif
         return false;
     }
 
     g_touch_i2c->requestFrom(driver_addr, length);
     if (g_touch_i2c->available() != length) {
+#if TOUCH_DEBUG_OUTPUT
         Serial.println("The I2C read fails. - I2C Read\r\n");
+#endif
         return false;
     }
     g_touch_i2c->readBytes(data, length);
@@ -64,11 +70,13 @@ void bsp_touch_init(TwoWire *touch_i2c,int tp_rst, int tp_int, uint16_t rotation
 
     uint8_t data[5] = {0};
     touch_i2c_read(AXS5106L_ADDR, AXS5106L_ID_REG, data, 3);
+#if TOUCH_DEBUG_OUTPUT
     if (data[0] != 0){
         Serial.print("read: ");
         Serial.print(data[0]);Serial.print(data[1]);Serial.print(data[2]);
         Serial.println();
     }
+#endif
 }
 
 
