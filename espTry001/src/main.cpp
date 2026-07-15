@@ -172,8 +172,8 @@ void setup()
   }
 
   // 2. 初始化串口与 485
-  Serial1.begin(RS485_BAUDRATE, SERIAL_8E1, RS485_RX, RS485_TX);
-  pinMode(RS485_RX, INPUT_PULLUP); 
+  pinMode(RS485_RX, INPUT_PULLUP);
+  Serial1.begin(RS485_BAUDRATE, SERIAL_8E1, RS485_RX, RS485_TX); 
   node.begin(SLAVE_ID, Serial1);
 
   // 3. 初始化 ADC

@@ -3,27 +3,22 @@ import os
 
 Import("env")
 
-def get_git_version():
+def get_git_commit_count():
     try:
-        # 1. 获取最新的 short commit hash (例如: a1b2c3d)
-        commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+        # 获取当前分支的总提交次数（即你的 n）
+        commit_count = subprocess.check_output(['git', 'rev-list', '--count', 'HEAD']).decode('utf-8').strip()
         
-        # 2. 获取当前的 branch 名称 (例如: main 或 master)
-        # branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('utf-8').strip()
-        
-        # 3. 组合成你想要的格式，比如 "V1.0-[Hash]"
-        # 如果你本地有 git tag，也可以用 ['git', 'describe', '--tags', '--always']
-        return f"V1.0-{commit_hash}"
+        # 拼接成 V1.0.n 格式
+        return f"V1.0.{commit_count}"
     except Exception:
-        # 如果不是 git 仓库或者获取失败，返回一个保底版本号
-        return "V1.0-unknown"
+        # 如果还没建立 git 仓库或获取失败，保底显示
+        return "V1.0.0"
 
 # 获取动态版本号
-git_version = get_git_version()
+git_version = get_git_commit_count()
 print(f"*** Automatically detected Git Version: {git_version} ***")
 
-# 将版本号作为一个宏定义注入到 C++ 编译环境中
-# 相当于在代码里动态加上了 #define AUTO_VERSION "V1.0-xxxxxxx"
+# 注入到 C++ 编译环境的宏中
 env.Append(CPPDEFINES=[
     ("AUTO_VERSION", env.StringifyMacro(git_version))
 ])
