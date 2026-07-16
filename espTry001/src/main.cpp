@@ -7,6 +7,7 @@
 // 1. 硬件引脚与通信参数配置
 // ==========================================
 #define GFX_BL 46           // 屏幕背光
+#define DISPLAY_ROTATION 2  // 屏幕与触摸旋转 180 度
 
 #define RS485_RX 43          // RS-485 接收（硬件 RO/R 接到 GPIO43）
 #define RS485_TX 44          // RS-485 发送（硬件 DI/T 接到 GPIO44）
@@ -95,7 +96,7 @@ float readCalibratedMilliVolts(uint8_t pin) {
 // ==========================================
 Arduino_DataBus *bus = new Arduino_ESP32SPI(45 /* DC */, 21 /* CS */, 38 /* SCK */, 39 /* MOSI */);
 Arduino_GFX *gfx = new Arduino_ST7789(
-  bus, 40 /* RST */, 0 /* rotation */, false /* IPS */,
+  bus, 40 /* RST */, DISPLAY_ROTATION, false /* IPS */,
   172 /* width */, 320 /* height */,
   34 /* col_offset1 */, 0 /* row_offset1 */,
   34 /* col_offset2 */, 0 /* row_offset2 */);
@@ -210,7 +211,7 @@ void setup()
   // 1. 屏幕底层硬件初始化
   if (gfx->begin()) {
     lcd_reg_init();   
-    gfx->setRotation(0);
+    gfx->setRotation(DISPLAY_ROTATION);
 #ifdef GFX_BL
     pinMode(GFX_BL, OUTPUT);
     digitalWrite(GFX_BL, HIGH);
@@ -339,11 +340,13 @@ void loop()
       }
 
       gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-      gfx->setCursor(5, 108);
-      gfx->printf("CH1(IO1): %4.1f mA  ", current1Ma);
-      gfx->setCursor(5, 142);
-      gfx->printf("CH2(IO2): %4.1f mA  ", current2Ma);
+      gfx->setTextSize(2);
+      gfx->setCursor(5, 104);
+      gfx->printf("CH1:%4.1fmA ", current1Ma);
+      gfx->setCursor(5, 138);
+      gfx->printf("CH2:%4.1fmA ", current2Ma);
 
+      gfx->setTextSize(1);
       gfx->setCursor(5, 202);
       if (!masterMode) {
         // 已修复：改用库内标准英式拼写 DARKGREY
@@ -359,16 +362,36 @@ void loop()
           float t365Raw = registersToFloat(modbusRegValues[2], modbusRegValues[3]);
           gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
           gfx->setCursor(5, 217);
-          gfx->printf("s470Raw: %10.3f  ", s470Raw);
-          gfx->setCursor(5, 237);
-          gfx->printf("t365Raw: %10.3f  ", t365Raw);
+          gfx->print("s470Raw:");
+          gfx->fillRect(5, 226, 160, 20, RGB565_BLACK);
+          gfx->setTextSize(2);
+          gfx->setCursor(5, 228);
+          gfx->printf("%10.3f", s470Raw);
+          gfx->setTextSize(1);
+          gfx->setCursor(5, 249);
+          gfx->print("t365Raw:");
+          gfx->fillRect(5, 258, 160, 20, RGB565_BLACK);
+          gfx->setTextSize(2);
+          gfx->setCursor(5, 260);
+          gfx->printf("%10.3f", t365Raw);
+          gfx->setTextSize(1);
         } else {
           gfx->setTextColor(RGB565_RED, RGB565_BLACK);
           gfx->printf("Status: ERR (0x%02X)  \n", modbusResult);
           gfx->setCursor(5, 217);
-          gfx->print("s470Raw: --          ");
-          gfx->setCursor(5, 237);
-          gfx->print("t365Raw: --          ");
+          gfx->print("s470Raw:");
+          gfx->fillRect(5, 226, 160, 20, RGB565_BLACK);
+          gfx->setTextSize(2);
+          gfx->setCursor(5, 228);
+          gfx->print("--");
+          gfx->setTextSize(1);
+          gfx->setCursor(5, 249);
+          gfx->print("t365Raw:");
+          gfx->fillRect(5, 258, 160, 20, RGB565_BLACK);
+          gfx->setTextSize(2);
+          gfx->setCursor(5, 260);
+          gfx->print("--");
+          gfx->setTextSize(1);
         }
       }
     } 
