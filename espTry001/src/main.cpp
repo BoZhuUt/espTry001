@@ -15,6 +15,8 @@
 
 #define ADC_MA1_PIN 1       // mA1 采样
 #define ADC_MA2_PIN 2       // mA2 采样
+#define ADC_SAMPLE_COUNT 16
+#define SHUNT_RESISTOR_OHMS 100.0f
 
 // 【触摸硬件引脚】
 #define Touch_I2C_SDA  42
@@ -27,6 +29,11 @@
 #define REG_COUNT           4      // 连续读取 46037~46040，共两个 float
 #define MODBUS_FLOAT_WORD_SWAP 1   // 0: 高字在前(ABCD)；1: 低字在前(CDAB)
 
+#define LOCAL_SLAVE_ID           247
+#define LOCAL_REG_COUNT          7
+#define USB_MODBUS_MAX_FRAME     256
+#define USB_MODBUS_FRAME_GAP_US  5000
+
 // ==========================================
 // 2. 前置函数声明与全局变量
 // ==========================================
@@ -36,6 +43,10 @@ void showTransferStatus(const char* text, uint16_t color);
 void drawAuthorPage();
 void initAXS5106L();               
 bool checkTouchAXS(int &x, int &y);
+void processUsbModbusFrame();
+void sendLocalModbusResponse(const uint8_t *request, size_t length);
+uint16_t modbusCrc16(const uint8_t *data, size_t length);
+float readCalibratedMilliVolts(uint8_t pin);
 
 int currentPage = 0; 
 unsigned long lastSampleTime = 0;
@@ -44,6 +55,13 @@ uint16_t modbusRegValues[REG_COUNT] = {0};
 uint8_t modbusResult = 0xFF;               
 bool touchOnline = false; 
 bool masterMode = false; // false: USB-RS485 透传；true: Modbus 主站轮询
+uint16_t adc1Raw = 0;
+uint16_t adc2Raw = 0;
+float current1Ma = 0.0f;
+float current2Ma = 0.0f;
+uint8_t usbModbusFrame[USB_MODBUS_MAX_FRAME] = {0};
+size_t usbModbusFrameLength = 0;
+unsigned long lastUsbByteTimeUs = 0;
 
 float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
 #if MODBUS_FLOAT_WORD_SWAP
@@ -54,6 +72,22 @@ float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
   float value;
   memcpy(&value, &raw, sizeof(value));
   return value;
+}
+
+float readCalibratedMilliVolts(uint8_t pin) {
+  uint32_t sum = 0;
+  uint32_t minimum = UINT32_MAX;
+  uint32_t maximum = 0;
+
+  for (uint8_t i = 0; i < ADC_SAMPLE_COUNT; i++) {
+    uint32_t millivolts = analogReadMilliVolts(pin);
+    sum += millivolts;
+    if (millivolts < minimum) minimum = millivolts;
+    if (millivolts > maximum) maximum = millivolts;
+  }
+
+  // 去掉一个最大值和一个最小值，降低偶发尖峰对结果的影响。
+  return (float)(sum - minimum - maximum) / (ADC_SAMPLE_COUNT - 2);
 }
 
 // ==========================================
@@ -221,6 +255,7 @@ void loop()
       masterMode = !masterMode;
       while (Serial.available()) Serial.read();
       while (Serial1.available()) Serial1.read();
+      usbModbusFrameLength = 0;
       modbusResult = 0xFF;
       lastModbusTime = 0;
       gfx->fillScreen(RGB565_BLACK);
@@ -243,10 +278,20 @@ void loop()
   // ----------------------------------------------------------------
   // 核心功能 2：后台双向透传与 Modbus 轮询
   // ----------------------------------------------------------------
-  if (!masterMode && Serial.available()) {
-    while (Serial.available()) Serial1.write(Serial.read());
-    Serial1.flush();
-    if (currentPage == 0) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+  // USB 侧先按 RTU 帧间隔收包：ID 247 本地响应，其余 ID 在 PASS 模式下转发。
+  while (Serial.available()) {
+    uint8_t value = Serial.read();
+    if (usbModbusFrameLength < USB_MODBUS_MAX_FRAME) {
+      usbModbusFrame[usbModbusFrameLength++] = value;
+    } else {
+      // 超长帧无效，丢弃并重新同步下一帧。
+      usbModbusFrameLength = 0;
+    }
+    lastUsbByteTimeUs = micros();
+  }
+  if (usbModbusFrameLength > 0 &&
+      (unsigned long)(micros() - lastUsbByteTimeUs) >= USB_MODBUS_FRAME_GAP_US) {
+    processUsbModbusFrame();
   }
 
   if (!masterMode) {
@@ -275,12 +320,12 @@ void loop()
   // ----------------------------------------------------------------
   if (millis() - lastSampleTime > 500) {
     lastSampleTime = millis();
-    int adc1 = analogRead(ADC_MA1_PIN);
-    int adc2 = analogRead(ADC_MA2_PIN);
-    float vol1_mv = (adc1 * 3100.0) / 4095.0;
-    float vol2_mv = (adc2 * 3100.0) / 4095.0;
-    float current1_ma = vol1_mv / 100.0; 
-    float current2_ma = vol2_mv / 100.0;
+    adc1Raw = analogRead(ADC_MA1_PIN);
+    adc2Raw = analogRead(ADC_MA2_PIN);
+    float vol1_mv = readCalibratedMilliVolts(ADC_MA1_PIN);
+    float vol2_mv = readCalibratedMilliVolts(ADC_MA2_PIN);
+    current1Ma = vol1_mv / SHUNT_RESISTOR_OHMS;
+    current2Ma = vol2_mv / SHUNT_RESISTOR_OHMS;
 
     if (currentPage == 0) {
       gfx->setTextSize(1);
@@ -295,9 +340,9 @@ void loop()
 
       gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
       gfx->setCursor(5, 108);
-      gfx->printf("CH1(IO1): %4.1f mA  ", current1_ma);
+      gfx->printf("CH1(IO1): %4.1f mA  ", current1Ma);
       gfx->setCursor(5, 142);
-      gfx->printf("CH2(IO2): %4.1f mA  ", current2_ma);
+      gfx->printf("CH2(IO2): %4.1f mA  ", current2Ma);
 
       gfx->setCursor(5, 202);
       if (!masterMode) {
@@ -346,7 +391,102 @@ void loop()
 }
 
 // ==========================================
-// 6. 微雪原厂 BSP 托管初始化
+// 6. USB Modbus RTU 网关与本地模拟量从站
+// ==========================================
+uint16_t modbusCrc16(const uint8_t *data, size_t length) {
+  uint16_t crc = 0xFFFF;
+  for (size_t i = 0; i < length; i++) {
+    crc ^= data[i];
+    for (uint8_t bit = 0; bit < 8; bit++) {
+      crc = (crc & 0x0001) ? ((crc >> 1) ^ 0xA001) : (crc >> 1);
+    }
+  }
+  return crc;
+}
+
+static void floatToModbusRegisters(float value, uint16_t &firstWord, uint16_t &secondWord) {
+  uint32_t raw;
+  memcpy(&raw, &value, sizeof(raw));
+#if MODBUS_FLOAT_WORD_SWAP
+  firstWord = raw & 0xFFFF;
+  secondWord = raw >> 16;
+#else
+  firstWord = raw >> 16;
+  secondWord = raw & 0xFFFF;
+#endif
+}
+
+static void sendLocalModbusException(uint8_t function, uint8_t exceptionCode) {
+  uint8_t response[5] = {LOCAL_SLAVE_ID, (uint8_t)(function | 0x80), exceptionCode, 0, 0};
+  uint16_t crc = modbusCrc16(response, 3);
+  response[3] = crc & 0xFF;
+  response[4] = crc >> 8;
+  Serial.write(response, sizeof(response));
+}
+
+void sendLocalModbusResponse(const uint8_t *request, size_t length) {
+  if (length < 4) return;
+
+  uint16_t receivedCrc = request[length - 2] | ((uint16_t)request[length - 1] << 8);
+  if (modbusCrc16(request, length - 2) != receivedCrc) return;
+
+  uint8_t function = request[1];
+  if (function != 0x03) {
+    sendLocalModbusException(function, 0x01); // Illegal Function
+    return;
+  }
+  if (length != 8) return;
+
+  uint16_t startAddress = ((uint16_t)request[2] << 8) | request[3];
+  uint16_t quantity = ((uint16_t)request[4] << 8) | request[5];
+  if (quantity == 0 || quantity > 125) {
+    sendLocalModbusException(function, 0x03); // Illegal Data Value
+    return;
+  }
+  if (startAddress >= LOCAL_REG_COUNT || quantity > LOCAL_REG_COUNT - startAddress) {
+    sendLocalModbusException(function, 0x02); // Illegal Data Address
+    return;
+  }
+
+  uint16_t localRegisters[LOCAL_REG_COUNT] = {0};
+  floatToModbusRegisters(current1Ma, localRegisters[0], localRegisters[1]);
+  floatToModbusRegisters(current2Ma, localRegisters[2], localRegisters[3]);
+  localRegisters[4] = masterMode ? 1 : 0;
+  localRegisters[5] = adc1Raw;
+  localRegisters[6] = adc2Raw;
+
+  uint8_t response[3 + LOCAL_REG_COUNT * 2 + 2] = {0};
+  response[0] = LOCAL_SLAVE_ID;
+  response[1] = function;
+  response[2] = quantity * 2;
+  size_t responseLength = 3;
+  for (uint16_t i = 0; i < quantity; i++) {
+    uint16_t value = localRegisters[startAddress + i];
+    response[responseLength++] = value >> 8;
+    response[responseLength++] = value & 0xFF;
+  }
+  uint16_t crc = modbusCrc16(response, responseLength);
+  response[responseLength++] = crc & 0xFF;
+  response[responseLength++] = crc >> 8;
+  Serial.write(response, responseLength);
+}
+
+void processUsbModbusFrame() {
+  if (usbModbusFrameLength == 0) return;
+
+  if (usbModbusFrame[0] == LOCAL_SLAVE_ID) {
+    sendLocalModbusResponse(usbModbusFrame, usbModbusFrameLength);
+  } else if (!masterMode) {
+    // 非本地地址保持透明转发，CRC 与功能码由下游设备处理。
+    Serial1.write(usbModbusFrame, usbModbusFrameLength);
+    Serial1.flush();
+    if (currentPage == 0) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+  }
+  usbModbusFrameLength = 0;
+}
+
+// ==========================================
+// 7. 微雪原厂 BSP 托管初始化
 // ==========================================
 void initAXS5106L() {
   Wire.begin(Touch_I2C_SDA, Touch_I2C_SCL);
@@ -358,7 +498,7 @@ void initAXS5106L() {
 }
 
 // ==========================================
-// 7. 微雪原厂 BSP 托管读取
+// 8. 微雪原厂 BSP 托管读取
 // ==========================================
 bool checkTouchAXS(int &x, int &y) {
   touch_data_t touch_data;
@@ -374,7 +514,7 @@ bool checkTouchAXS(int &x, int &y) {
 }
 
 // ==========================================
-// 8. 页面静态 UI 渲染
+// 9. 页面静态 UI 渲染
 // ==========================================
 void drawStaticUI() {
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
