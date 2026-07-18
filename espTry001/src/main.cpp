@@ -2,6 +2,8 @@
 #include <ModbusMaster.h> 
 #include <Wire.h> 
 #include "esp_lcd_touch_axs5106l.h"  // 引入同级目录下的微雪触摸库
+#include "sensor_discovery.h"
+#include "sensor_profile.h"
 
 // ==========================================
 // 1. 硬件引脚与通信参数配置
@@ -42,6 +44,8 @@ void lcd_reg_init();
 void drawStaticUI();
 void showTransferStatus(const char* text, uint16_t color);
 void drawAuthorPage();
+void drawSensorInfoPage();
+void drawSensorParameterArea();
 void initAXS5106L();               
 bool checkTouchAXS(int &x, int &y);
 void processUsbModbusFrame();
@@ -49,7 +53,13 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length);
 uint16_t modbusCrc16(const uint8_t *data, size_t length);
 float readCalibratedMilliVolts(uint8_t pin);
 
-int currentPage = 0; 
+enum class UiPage : uint8_t {
+  Dashboard,
+  SystemInfo,
+  SensorInfo
+};
+
+UiPage currentPage = UiPage::Dashboard;
 unsigned long lastSampleTime = 0;
 unsigned long lastModbusTime = 0;
 uint16_t modbusRegValues[REG_COUNT] = {0};
@@ -63,6 +73,11 @@ float current2Ma = 0.0f;
 uint8_t usbModbusFrame[USB_MODBUS_MAX_FRAME] = {0};
 size_t usbModbusFrameLength = 0;
 unsigned long lastUsbByteTimeUs = 0;
+const SensorProfile *activeProfile = nullptr;
+bool profileLookupComplete = false;
+float profileValues[kMaxSensorFields] = {0};
+bool profileValueValid[kMaxSensorFields] = {false};
+uint8_t parameterPage = 0;
 
 float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
 #if MODBUS_FLOAT_WORD_SWAP
@@ -101,6 +116,8 @@ Arduino_GFX *gfx = new Arduino_ST7789(
   34 /* col_offset1 */, 0 /* row_offset1 */,
   34 /* col_offset2 */, 0 /* row_offset2 */);
 ModbusMaster node; 
+SensorDiscovery sensorDiscovery(Serial1);
+SensorProfilePoller profilePoller(Serial1);
 
 // ==========================================
 // 4. 微雪官方原厂屏幕初始化微代码
@@ -251,7 +268,7 @@ void loop()
 #if TOUCH_DEBUG_OUTPUT
     Serial.printf("Touch Event -> X: %d, Y: %d\n", tx, ty);
 #endif
-    if (currentPage == 0 && ty >= 40 && ty < 80) {
+    if (currentPage == UiPage::Dashboard && ty >= 40 && ty < 80) {
       // 点击 Mode 区域，在纯透传与 Modbus 主站之间手动切换。
       masterMode = !masterMode;
       while (Serial.available()) Serial.read();
@@ -259,19 +276,42 @@ void loop()
       usbModbusFrameLength = 0;
       modbusResult = 0xFF;
       lastModbusTime = 0;
+      activeProfile = nullptr;
+      profilePoller.cancel();
+      profileLookupComplete = false;
+      parameterPage = 0;
+      memset(profileValueValid, 0, sizeof(profileValueValid));
+      if (masterMode) {
+        sensorDiscovery.start();
+      } else {
+        sensorDiscovery.cancel();
+      }
       gfx->fillScreen(RGB565_BLACK);
       drawStaticUI();
       delay(400);
-    } else if ((currentPage == 0 && ty > 0 && ty < 40) ||
-               (currentPage == 1 && ty > 0 && ty < 80)) {
+    } else if (currentPage == UiPage::Dashboard && ty >= 280 &&
+               masterMode && sensorDiscovery.state() == SensorDiscovery::State::Success) {
+      currentPage = UiPage::SensorInfo;
+      parameterPage = 0;
+      drawSensorInfoPage();
+      delay(400);
+    } else if (currentPage == UiPage::Dashboard && ty > 0 && ty < 40) {
       gfx->fillScreen(RGB565_BLACK);
-      if (currentPage == 0) {
-        currentPage = 1;
-        drawAuthorPage();
-      } else {
-        currentPage = 0;
-        drawStaticUI();
+      currentPage = UiPage::SystemInfo;
+      drawAuthorPage();
+      delay(400);
+    } else if (currentPage == UiPage::SensorInfo && ty >= 280) {
+      if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
+        parameterPage = parameterPage == 0 ? 1 : 0;
+        drawSensorParameterArea();
+        gfx->flush();
       }
+      delay(400);
+    } else if ((currentPage == UiPage::SystemInfo && ty > 0 && ty < 80) ||
+               (currentPage == UiPage::SensorInfo && ty > 0 && ty < 40)) {
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::Dashboard;
+      drawStaticUI();
       delay(400); 
     }
   }
@@ -298,21 +338,28 @@ void loop()
   if (!masterMode) {
     if (Serial1.available()) {
       while (Serial1.available()) Serial.write(Serial1.read());
-      if (currentPage == 0) showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
+      if (currentPage == UiPage::Dashboard) showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
     }
   }
   else {
-    if (millis() - lastModbusTime > 1000) {
-      lastModbusTime = millis();
-      if (currentPage == 0) showTransferStatus("Modbus Polling...", RGB565_ORANGE);
-      
-      modbusResult = node.readHoldingRegisters(REG_START_ADDR, REG_COUNT);
-      if (modbusResult == node.ku8MBSuccess) {
-        for (int i = 0; i < REG_COUNT; i++) {
-          modbusRegValues[i] = node.getResponseBuffer(i);
+    sensorDiscovery.update();
+    if (sensorDiscovery.state() == SensorDiscovery::State::Success) {
+      if (!profileLookupComplete) {
+        activeProfile = findSensorProfile(sensorDiscovery.result().productNum);
+        profileLookupComplete = true;
+        if (activeProfile != nullptr) {
+          profilePoller.begin(sensorDiscovery.result().slaveAddress,
+                              *activeProfile, profileValues,
+                              profileValueValid);
         }
       }
-      if (currentPage == 0) gfx->fillRect(5, 295, 160, 20, RGB565_BLACK);
+
+      if (activeProfile != nullptr && profilePoller.update(modbusResult)) {
+        if (currentPage == UiPage::SensorInfo) {
+          drawSensorParameterArea();
+          gfx->flush();
+        }
+      }
     }
   }
 
@@ -328,7 +375,7 @@ void loop()
     current1Ma = vol1_mv / SHUNT_RESISTOR_OHMS;
     current2Ma = vol2_mv / SHUNT_RESISTOR_OHMS;
 
-    if (currentPage == 0) {
+    if (currentPage == UiPage::Dashboard) {
       gfx->setTextSize(1);
       gfx->setCursor(95, 48);
       if (!masterMode) {
@@ -355,47 +402,68 @@ void loop()
         gfx->setCursor(5, 217);
         gfx->println("Master is computer.   ");
       } else {
-        if (modbusResult == node.ku8MBSuccess) {
-          gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-          gfx->printf("Status: OK (Slave:%d) \n", SLAVE_ID);
-          float s470Raw = registersToFloat(modbusRegValues[0], modbusRegValues[1]);
-          float t365Raw = registersToFloat(modbusRegValues[2], modbusRegValues[3]);
-          gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
-          gfx->setCursor(5, 217);
-          gfx->print("s470Raw:");
-          gfx->fillRect(5, 226, 160, 20, RGB565_BLACK);
-          gfx->setTextSize(2);
-          gfx->setCursor(5, 228);
-          gfx->printf("%10.3f", s470Raw);
-          gfx->setTextSize(1);
-          gfx->setCursor(5, 249);
-          gfx->print("t365Raw:");
-          gfx->fillRect(5, 258, 160, 20, RGB565_BLACK);
-          gfx->setTextSize(2);
-          gfx->setCursor(5, 260);
-          gfx->printf("%10.3f", t365Raw);
-          gfx->setTextSize(1);
-        } else {
-          gfx->setTextColor(RGB565_RED, RGB565_BLACK);
-          gfx->printf("Status: ERR (0x%02X)  \n", modbusResult);
-          gfx->setCursor(5, 217);
-          gfx->print("s470Raw:");
-          gfx->fillRect(5, 226, 160, 20, RGB565_BLACK);
-          gfx->setTextSize(2);
-          gfx->setCursor(5, 228);
-          gfx->print("--");
-          gfx->setTextSize(1);
-          gfx->setCursor(5, 249);
-          gfx->print("t365Raw:");
-          gfx->fillRect(5, 258, 160, 20, RGB565_BLACK);
-          gfx->setTextSize(2);
-          gfx->setCursor(5, 260);
-          gfx->print("--");
-          gfx->setTextSize(1);
+        gfx->fillRect(5, 200, 165, 115, RGB565_BLACK);
+        switch (sensorDiscovery.state()) {
+          case SensorDiscovery::State::Idle:
+            gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+            gfx->print("Discovery idle");
+            break;
+
+          case SensorDiscovery::State::DiscoveringAddress:
+            gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+            gfx->print("Discovering address...");
+            gfx->setCursor(5, 217);
+            gfx->printf("Try: %u/%u", sensorDiscovery.attempt(),
+                        sensorDiscovery.maxAttempts());
+            gfx->setCursor(5, 232);
+            gfx->print("TX: 00 03 A028 0001");
+            break;
+
+          case SensorDiscovery::State::ReadingIdentity:
+            gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+            gfx->print("Reading identity...");
+            gfx->setCursor(5, 217);
+            gfx->printf("Addr: %u  Try: %u/%u",
+                        sensorDiscovery.result().slaveAddress,
+                        sensorDiscovery.attempt(),
+                        sensorDiscovery.maxAttempts());
+            gfx->setCursor(5, 232);
+            gfx->print("Regs: 41001-41014");
+            break;
+
+          case SensorDiscovery::State::Success:
+            gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+            gfx->printf("Sensor found  Addr:%u", sensorDiscovery.result().slaveAddress);
+            gfx->setCursor(5, 220);
+            gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+            gfx->print("Name: ");
+            if (sensorDiscovery.result().deviceName[0] != '\0') {
+              gfx->print(sensorDiscovery.result().deviceName);
+            } else {
+              gfx->print("(empty)");
+            }
+            gfx->setCursor(5, 237);
+            gfx->printf("PN: %lu", (unsigned long)sensorDiscovery.result().productNum);
+            gfx->fillRect(5, 286, 165, 29, RGB565_BLUE);
+            gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+            gfx->setCursor(28, 296);
+            gfx->print("Tap for details >");
+            break;
+
+          case SensorDiscovery::State::Failed:
+            gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+            gfx->print("Discovery failed");
+            gfx->setCursor(5, 217);
+            gfx->print(sensorDiscovery.errorText());
+            if (sensorDiscovery.error() == SensorDiscovery::Error::ExceptionResponse) {
+              gfx->setCursor(5, 232);
+              gfx->printf("Exception: 0x%02X", sensorDiscovery.exceptionCode());
+            }
+            break;
         }
       }
     } 
-    else if (currentPage == 1) {
+    else if (currentPage == UiPage::SystemInfo) {
       gfx->setTextSize(2);
       gfx->setTextColor(RGB565_RED, RGB565_BLACK);
       gfx->setCursor(10, 270);
@@ -407,7 +475,7 @@ void loop()
 
   static unsigned long lastClearTime = 0;
   if (!masterMode && (millis() - lastClearTime > 150)) {
-    if (currentPage == 0) gfx->fillRect(5, 295, 160, 20, RGB565_BLACK);
+    if (currentPage == UiPage::Dashboard) gfx->fillRect(5, 295, 160, 20, RGB565_BLACK);
     gfx->flush();
     lastClearTime = millis();
   }
@@ -503,7 +571,7 @@ void processUsbModbusFrame() {
     // 非本地地址保持透明转发，CRC 与功能码由下游设备处理。
     Serial1.write(usbModbusFrame, usbModbusFrameLength);
     Serial1.flush();
-    if (currentPage == 0) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+    if (currentPage == UiPage::Dashboard) showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
   }
   usbModbusFrameLength = 0;
 }
@@ -595,6 +663,90 @@ void drawAuthorPage() {
   gfx->setCursor(5, 230);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
+}
+
+void drawSensorInfoPage() {
+  const SensorDiscovery::Result &identity = sensorDiscovery.result();
+
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setCursor(5, 15);
+  gfx->println("SENSOR INFO");
+  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->setCursor(5, 52);
+  gfx->printf("Address: %u", identity.slaveAddress);
+
+  gfx->setCursor(5, 72);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->print("Product Number:");
+  gfx->setCursor(5, 86);
+  gfx->setTextSize(2);
+  gfx->printf("%lu", (unsigned long)identity.productNum);
+
+  gfx->setTextSize(1);
+  gfx->setCursor(5, 110);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->print("Device Name:");
+  gfx->setCursor(5, 126);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->print(identity.deviceName[0] != '\0' ? identity.deviceName : "(empty)");
+
+  drawSensorParameterArea();
+  gfx->flush();
+}
+
+void drawSensorParameterArea() {
+  gfx->fillRect(0, 148, 172, 172, RGB565_BLACK);
+  gfx->drawLine(5, 148, 165, 148, RGB565_DARKGREY);
+  gfx->setTextSize(1);
+
+  if (activeProfile == nullptr) {
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->setCursor(5, 165);
+    gfx->print("Unsupported PN");
+    gfx->setCursor(5, 185);
+    gfx->print("No parameter profile");
+  } else {
+    uint8_t startIndex = parameterPage * 4;
+    for (uint8_t row = 0; row < 4; row++) {
+      uint8_t fieldIndex = startIndex + row;
+      if (fieldIndex >= activeProfile->fieldCount) break;
+
+      const SensorField &field = activeProfile->fields[fieldIndex];
+      gfx->setCursor(5, 162 + row * 25);
+      gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+      gfx->printf("%s: ", field.label);
+      if (!profileValueValid[fieldIndex]) {
+        gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+        gfx->print("--");
+      } else {
+        gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+        switch (field.decimals) {
+          case 0: gfx->printf("%.0f", profileValues[fieldIndex]); break;
+          case 1: gfx->printf("%.1f", profileValues[fieldIndex]); break;
+          case 2: gfx->printf("%.2f", profileValues[fieldIndex]); break;
+          default: gfx->printf("%.3f", profileValues[fieldIndex]); break;
+        }
+      }
+    }
+  }
+
+  gfx->drawLine(5, 270, 165, 270, RGB565_DARKGREY);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(12, 282);
+  if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
+    uint8_t pageCount = (activeProfile->fieldCount + 3) / 4;
+    gfx->printf("Page %u/%u - tap bottom", parameterPage + 1, pageCount);
+  } else {
+    gfx->print("No more parameters");
+  }
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setCursor(45, 302);
+  gfx->print("Header = back");
 }
 
 void showTransferStatus(const char* text, uint16_t color) {
