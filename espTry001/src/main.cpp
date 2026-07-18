@@ -302,7 +302,8 @@ void loop()
       delay(400);
     } else if (currentPage == UiPage::SensorInfo && ty >= 280) {
       if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
-        parameterPage = parameterPage == 0 ? 1 : 0;
+        uint8_t pageCount = (activeProfile->fieldCount + 3) / 4;
+        parameterPage = (parameterPage + 1) % pageCount;
         drawSensorParameterArea();
         gfx->flush();
       }

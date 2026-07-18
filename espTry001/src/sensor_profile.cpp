@@ -2,33 +2,8 @@
 
 namespace {
 
-const SensorPollBlock kPn55995Blocks[] = {
-  {46001, 2}, // sensorValue
-  {46033, 8}, // s365LowRaw ~ t365Raw
-  {45050, 3}  // three zero values
-};
-
-const SensorField kPn55995Fields[] = {
-  {"sensorValue",      0, 0, SensorValueType::Float32CDAB, 3},
-  {"s365LowRaw",       1, 0, SensorValueType::Float32CDAB, 2},
-  {"s365HighRaw",      1, 2, SensorValueType::Float32CDAB, 2},
-  {"s470Raw",          1, 4, SensorValueType::Float32CDAB, 2},
-  {"t365Raw",          1, 6, SensorValueType::Float32CDAB, 2},
-  {"s365LowZero_DI",   2, 0, SensorValueType::UInt16, 0},
-  {"s365HighZero_DI",  2, 1, SensorValueType::UInt16, 0},
-  {"t365Zero_DI",      2, 2, SensorValueType::UInt16, 0}
-};
-
-const SensorProfile kProfiles[] = {
-  {
-    55995,
-    "ST-731SS-T",
-    kPn55995Blocks,
-    sizeof(kPn55995Blocks) / sizeof(kPn55995Blocks[0]),
-    kPn55995Fields,
-    sizeof(kPn55995Fields) / sizeof(kPn55995Fields[0])
-  }
-};
+// JSON 是 Profile 的唯一人工维护入口；此文件由编译前脚本生成。
+#include "sensor_profiles_generated.inc"
 
 // 将设备连续返回的两个寄存器按 CDAB 字顺序还原为 IEEE-754 float。
 float decodeFloatCDAB(uint16_t firstWord, uint16_t secondWord) {

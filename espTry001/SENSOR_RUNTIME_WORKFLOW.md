@@ -9,6 +9,9 @@
 | `src/main.cpp` | 模式切换、触摸页面、调用发现和轮询状态机 |
 | `src/sensor_discovery.h/.cpp` | 使用地址 0 发现真实地址，并读取 PN 和设备名称 |
 | `src/sensor_profile.h/.cpp` | PN 参数表、非阻塞 Modbus 轮询、数据类型解析 |
+| `config/sensor_profiles.json` | 人工维护的 PN 与显示参数配置（唯一配置入口） |
+| `generate_sensor_profiles.py` | 编译前校验 JSON、合并连续地址并生成 C++ 表 |
+| `src/sensor_profiles_generated.inc` | 自动生成的固件内置表，禁止手工修改 |
 | `SENSOR_PROFILE_HOT_UPDATE_PLAN.md` | 将来通过 JSON 热更新参数表的规划 |
 
 ## 2. 总体流程
@@ -73,7 +76,7 @@
 
 ## 4. PN 配置结构
 
-当前 PN `55995` 的配置在 `src/sensor_profile.cpp`。
+当前 PN `55995` 的配置在 `config/sensor_profiles.json`。PlatformIO 编译前会自动运行 `generate_sensor_profiles.py`，生成 `src/sensor_profiles_generated.inc`，`sensor_profile.cpp` 不再写死具体 PN。
 
 为了减少 Modbus 请求次数，连续参数被合并为读取块：
 
@@ -127,24 +130,34 @@ Modbus 响应中每个寄存器按高字节在前组成一个 16 位无符号整
 
 - Dashboard 的 Mode 区域：切换 PASS / MASTER；
 - MASTER 发现成功后，点击 Dashboard 底部提示进入传感器详情；
-- 详情页一次显示 4 个参数；
-- 点击详情页底部切换第 1/2 页；
+- 详情页一次显示 4 个参数，最多显示 4 页、共 16 个参数；
+- 点击详情页底部循环切换下一页；
 - 点击详情页顶部返回 Dashboard；
 - 切回 PASS 时取消发现和参数轮询，并清空参数有效标志。
 
 ## 8. 增加一个新 PN
 
-1. 在 `sensor_profile.cpp` 新建该 PN 的 `SensorPollBlock[]`；
-2. 尽量把连续寄存器合成一个块，但不要读取设备不支持的空洞地址；
-3. 新建 `SensorField[]`，填写显示名、块编号、偏移、类型和小数位；
-4. 在 `kProfiles[]` 中添加 PN、名称、块数组和字段数组；
-5. 确认字段总数不超过 `kMaxSensorFields`；
-6. 用 Modbus Poll 对照至少一个 UInt16 和一个 float；
-7. 测试无设备、CRC 错误和非法寄存器时，触摸仍然能够工作。
+1. 只编辑 `config/sensor_profiles.json`，在 `profiles` 数组增加一个对象；
+2. 填写唯一 `product_num`、设备 `name` 和最多 16 个 `fields`；
+3. 字段地址填写资料中的 1-based 地址，当前功能码只支持 03；
+4. 当前字段类型支持 `uint16` 和 `float32`，float 字序必须为 `CDAB`；
+5. 正常执行 PlatformIO Build，生成器会校验并自动合并连续寄存器；
+6. 不要编辑 `src/sensor_profiles_generated.inc`，它会在下次构建时被覆盖；
+7. 用 Modbus Poll 对照至少一个 UInt16 和一个 float；
+8. 测试无设备、CRC 错误和非法寄存器时，触摸仍然能够工作。
+
+也可以在命令行单独验证和生成：
+
+```powershell
+python generate_sensor_profiles.py
+```
+
+配置错误会直接显示 PN、字段位置和错误原因，并让构建失败，防止错误表被烧入设备。
 
 ## 9. 维护时不要踩的坑
 
 - 不要在 `loop()` 中使用同步的 `ModbusMaster::readHoldingRegisters()` 连续轮询；从站不响应时它会阻塞界面。
+- 不要同时修改 JSON 和自动生成的 `.inc`；JSON 是唯一人工维护入口。
 - 配置表写资料地址（1-based），真正发包时统一减 1。
 - PN 55995 的 float 是 CDAB，设备名则是每个寄存器低字节字符在前，这两种字节规则不要混淆。
 - 地址 0 发现完成后，所有正常参数读取必须使用发现到的真实地址。

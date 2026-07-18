@@ -34,7 +34,8 @@ struct SensorProfile {
   uint8_t fieldCount;
 };
 
-constexpr uint8_t kMaxSensorFields = 8;
+// 每页显示 4 个字段，最多 4 页。
+constexpr uint8_t kMaxSensorFields = 16;
 
 // 根据发现阶段读到的 PN 查找内置配置；不支持时返回 nullptr。
 const SensorProfile *findSensorProfile(uint32_t productNum);
