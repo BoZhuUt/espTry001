@@ -2,13 +2,16 @@
 
 SensorDiscovery::SensorDiscovery(HardwareSerial &serial) : serial_(serial) {}
 
-void SensorDiscovery::start(uint8_t maxAttempts, uint32_t timeoutMs) {
+void SensorDiscovery::start(uint8_t maxAttempts, uint32_t timeoutMs,
+                            uint32_t retryIntervalMs) {
   // start() 同时清理上一次结果，保证重新扫描不会显示旧设备资料。
   maxAttempts_ = maxAttempts == 0 ? 1 : maxAttempts;
   timeoutMs_ = timeoutMs;
+  retryIntervalMs_ = retryIntervalMs;
   attempt_ = 0;
   error_ = Error::None;
   exceptionCode_ = 0;
+  retryWaiting_ = false;
   result_ = {};
   sendAddressRequest();
 }
@@ -18,6 +21,7 @@ void SensorDiscovery::cancel() {
   error_ = Error::None;
   responseLength_ = 0;
   expectedLength_ = 0;
+  retryWaiting_ = false;
 }
 
 void SensorDiscovery::sendAddressRequest() {
@@ -53,6 +57,7 @@ void SensorDiscovery::sendReadRequest(uint8_t slaveAddress,
 
   responseLength_ = 0;
   expectedLength_ = 0;
+  retryWaiting_ = false;
   attempt_++;
   state_ = waitingState;
   requestStartTime_ = millis();
@@ -64,6 +69,20 @@ void SensorDiscovery::update() {
   // 这里只消费当前已经到达的字节，不等待串口，因此不会阻塞 UI。
   if (state_ != State::DiscoveringAddress &&
       state_ != State::ReadingIdentity) return;
+
+  // 失败后只记录下一次发送时间，不在 retryOrFail() 中立即重发。
+  // 这样等待 2 秒期间 loop() 仍可处理触摸、ADC 和屏幕刷新。
+  if (retryWaiting_) {
+    if ((int32_t)(millis() - retryAtTime_) >= 0) {
+      retryWaiting_ = false;
+      if (state_ == State::ReadingIdentity) {
+        sendIdentityRequest();
+      } else {
+        sendAddressRequest();
+      }
+    }
+    return;
+  }
 
   while (serial_.available()) {
     if (responseLength_ >= kResponseBufferSize) {
@@ -108,8 +127,7 @@ void SensorDiscovery::handleResponse() {
 
   if (response_[1] & 0x80) {
     exceptionCode_ = response_[2];
-    error_ = Error::ExceptionResponse;
-    state_ = State::Failed;
+    retryOrFail(Error::ExceptionResponse);
     return;
   }
 
@@ -201,12 +219,13 @@ void SensorDiscovery::handleIdentityResponse() {
 void SensorDiscovery::retryOrFail(Error error) {
   error_ = error;
   if (attempt_ < maxAttempts_) {
-    if (state_ == State::ReadingIdentity) {
-      sendIdentityRequest();
-    } else {
-      sendAddressRequest();
-    }
+    // 任何错误都统一等待 retryIntervalMs_，避免 CRC/异常响应时密集重发。
+    responseLength_ = 0;
+    expectedLength_ = 0;
+    retryWaiting_ = true;
+    retryAtTime_ = millis() + retryIntervalMs_;
   } else {
+    retryWaiting_ = false;
     state_ = State::Failed;
   }
 }

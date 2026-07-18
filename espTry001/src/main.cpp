@@ -42,6 +42,8 @@
 // ==========================================
 void lcd_reg_init();
 void drawStaticUI();
+void drawModeStatus();
+void drawPassModeHint();
 void showTransferStatus(const char* text, uint16_t color);
 void drawAuthorPage();
 void drawSensorInfoPage();
@@ -377,15 +379,7 @@ void loop()
     current2Ma = vol2_mv / SHUNT_RESISTOR_OHMS;
 
     if (currentPage == UiPage::Dashboard) {
-      gfx->setTextSize(1);
-      gfx->setCursor(95, 48);
-      if (!masterMode) {
-        gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
-        gfx->print("[PASS]    ");
-      } else {
-        gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
-        gfx->print("[MASTER]  ");
-      }
+      drawModeStatus();
 
       gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
       gfx->setTextSize(2);
@@ -476,7 +470,11 @@ void loop()
 
   static unsigned long lastClearTime = 0;
   if (!masterMode && (millis() - lastClearTime > 150)) {
-    if (currentPage == UiPage::Dashboard) gfx->fillRect(5, 295, 160, 20, RGB565_BLACK);
+    if (currentPage == UiPage::Dashboard) {
+      // 传输方向只短暂显示；底部模式切换提示始终保留。
+      gfx->fillRect(5, 252, 165, 24, RGB565_BLACK);
+      drawPassModeHint();
+    }
     gfx->flush();
     lastClearTime = millis();
   }
@@ -617,9 +615,12 @@ void drawStaticUI() {
   
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(1);                           
-  gfx->setCursor(5, 48);
+  gfx->setCursor(5, 50);
   gfx->printf("Mode: ");
-  gfx->setCursor(5, 62);
+  drawModeStatus();
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->setTextSize(1);
+  gfx->setCursor(5, 66);
   gfx->printf("485 Config: 9600,8E1\n");
   gfx->drawLine(5, 78, 165, 78, RGB565_YELLOW);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
@@ -629,6 +630,32 @@ void drawStaticUI() {
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 185);
   gfx->println("[ Modbus RTU Data ]");
+
+  if (!masterMode) drawPassModeHint();
+}
+
+// 在 Mode 点击区域内用大字显示当前模式。
+void drawModeStatus() {
+  gfx->fillRect(55, 40, 112, 25, RGB565_BLACK);
+  gfx->setTextSize(2);
+  if (masterMode) {
+    gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+    gfx->setCursor(62, 44);
+    gfx->print("MASTER");
+  } else {
+    gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
+    gfx->setCursor(72, 44);
+    gfx->print("PASS");
+  }
+}
+
+// PASS 模式下固定占用屏幕底部，提示用户点击上方 PASS 切换模式。
+void drawPassModeHint() {
+  gfx->fillRect(5, 286, 165, 29, RGB565_BLUE);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+  gfx->setTextSize(1);
+  gfx->setCursor(28, 296);
+  gfx->print("Tap PASS to switch");
 }
 
 void drawAuthorPage() {
@@ -751,10 +778,11 @@ void drawSensorParameterArea() {
 }
 
 void showTransferStatus(const char* text, uint16_t color) {
-  gfx->fillRect(5, 295, 160, 20, color);
+  // 传输状态放在底部提示上方，避免覆盖模式切换提示。
+  gfx->fillRect(5, 252, 165, 20, color);
   gfx->setTextColor(RGB565_WHITE, color);
   gfx->setTextSize(1);
-  gfx->setCursor(12, 301);
+  gfx->setCursor(12, 258);
   gfx->print(text);
   gfx->flush();
 }
