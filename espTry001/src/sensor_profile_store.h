@@ -19,6 +19,10 @@ public:
   // 返回 false 时仍可正常调用 find()，它会查询固件内置配置。
   bool begin(const char *path = "/sensor_profiles.json");
 
+  // 校验并激活一个已经存在于 LittleFS 的候选文件。
+  // 主要供配置上传器在原子替换前复用完整校验规则。
+  bool activateFile(const char *path);
+
   // LittleFS 配置有效时只查询文件配置；否则查询固件内置配置。
   const SensorProfile *find(uint32_t productNum) const;
 

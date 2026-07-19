@@ -5,6 +5,7 @@
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
+#include "sensor_profile_update.h"
 
 // ==========================================
 // 1. 硬件引脚与通信参数配置
@@ -49,6 +50,8 @@ void showTransferStatus(const char* text, uint16_t color);
 void drawAuthorPage();
 void drawSensorInfoPage();
 void drawSensorParameterArea();
+void enterConfigMode();
+void drawConfigUpdatePage();
 void initAXS5106L();               
 bool checkTouchAXS(int &x, int &y);
 void processUsbModbusFrame();
@@ -78,6 +81,7 @@ size_t usbModbusFrameLength = 0;
 unsigned long lastUsbByteTimeUs = 0;
 const SensorProfile *activeProfile = nullptr;
 bool profileLookupComplete = false;
+bool configMode = false;
 float profileValues[kMaxSensorFields] = {0};
 bool profileValueValid[kMaxSensorFields] = {false};
 uint8_t parameterPage = 0;
@@ -122,6 +126,7 @@ ModbusMaster node;
 SensorDiscovery sensorDiscovery(Serial1);
 SensorProfilePoller profilePoller(Serial1);
 SensorProfileStore profileStore;
+SensorProfileUpdater profileUpdater;
 
 // ==========================================
 // 4. 微雪官方原厂屏幕初始化微代码
@@ -275,7 +280,15 @@ void loop()
 #if TOUCH_DEBUG_OUTPUT
     Serial.printf("Touch Event -> X: %d, Y: %d\n", tx, ty);
 #endif
-    if (currentPage == UiPage::Dashboard && ty >= 40 && ty < 80) {
+    if (configMode) {
+      if (ty > 0 && ty < 45) {
+        // CONFIG 模式退出时重启，重新加载最后一个有效配置。
+        profileUpdater.cancel();
+        Serial.flush();
+        delay(50);
+        ESP.restart();
+      }
+    } else if (currentPage == UiPage::Dashboard && ty >= 40 && ty < 80) {
       // 点击 Mode 区域，在纯透传与 Modbus 主站之间手动切换。
       masterMode = !masterMode;
       while (Serial.available()) Serial.read();
@@ -307,6 +320,9 @@ void loop()
       currentPage = UiPage::SystemInfo;
       drawAuthorPage();
       delay(400);
+    } else if (currentPage == UiPage::SystemInfo && ty >= 270) {
+      enterConfigMode();
+      delay(400);
     } else if (currentPage == UiPage::SensorInfo && ty >= 280) {
       if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
         uint8_t pageCount = (activeProfile->fieldCount + 3) / 4;
@@ -322,6 +338,33 @@ void loop()
       drawStaticUI();
       delay(400); 
     }
+  }
+
+  // CONFIG 模式独占 USB CDC，禁止 JSON 被本地 Modbus 解析或转发到 RS485。
+  if (configMode) {
+    profileUpdater.update(Serial);
+    static SensorProfileUpdater::State lastUpdateState =
+        SensorProfileUpdater::State::Idle;
+    static uint32_t lastUpdateLength = UINT32_MAX;
+    static uint32_t lastUpdateDrawMs = 0;
+    SensorProfileUpdater::State state = profileUpdater.state();
+    uint32_t received = profileUpdater.receivedLength();
+    bool stateChanged = state != lastUpdateState;
+    bool progressDue = received != lastUpdateLength &&
+                       (uint32_t)(millis() - lastUpdateDrawMs) >= 200;
+    if (stateChanged || progressDue) {
+      drawConfigUpdatePage();
+      lastUpdateState = state;
+      lastUpdateLength = received;
+      lastUpdateDrawMs = millis();
+    }
+    if (profileUpdater.shouldRestart()) {
+      Serial.flush();
+      delay(50);
+      ESP.restart();
+    }
+    delay(1);
+    return;
   }
 
   // ----------------------------------------------------------------
@@ -462,12 +505,6 @@ void loop()
             break;
         }
       }
-    } 
-    else if (currentPage == UiPage::SystemInfo) {
-      gfx->setTextSize(2);
-      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
-      gfx->setCursor(10, 270);
-      gfx->printf(" Time Flows");
     }
     
     gfx->flush();
@@ -703,6 +740,76 @@ void drawAuthorPage() {
   gfx->setCursor(5, 240);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
+
+  gfx->fillRect(5, 280, 165, 35, RGB565_BLUE);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+  gfx->setCursor(25, 293);
+  gfx->print("CONFIG UPLOAD");
+}
+
+void enterConfigMode() {
+  // 停止所有使用 USB/RS485 的业务，避免 JSON 上传与 Modbus 混流。
+  configMode = true;
+  masterMode = false;
+  sensorDiscovery.cancel();
+  profilePoller.cancel();
+  activeProfile = nullptr;
+  profileLookupComplete = false;
+  usbModbusFrameLength = 0;
+  while (Serial.available()) Serial.read();
+  while (Serial1.available()) Serial1.read();
+  profileUpdater.begin(profileStore);
+  drawConfigUpdatePage();
+}
+
+void drawConfigUpdatePage() {
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(5, 15);
+  gfx->print("CONFIG UPLOAD");
+  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setCursor(5, 55);
+  gfx->print("USB protocol: ESPCFG1");
+  gfx->setCursor(5, 75);
+  gfx->print("Status:");
+  gfx->setCursor(5, 92);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->print(profileUpdater.statusText());
+
+  if (profileUpdater.expectedLength() > 0) {
+    gfx->setCursor(5, 120);
+    gfx->printf("Bytes: %lu / %lu",
+                (unsigned long)profileUpdater.receivedLength(),
+                (unsigned long)profileUpdater.expectedLength());
+  }
+
+  if (profileUpdater.state() == SensorProfileUpdater::State::Failed) {
+    gfx->setCursor(5, 150);
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->printf("%.26s", profileUpdater.errorText());
+    gfx->setCursor(5, 170);
+    gfx->print("Tap header to exit");
+  } else if (profileUpdater.state() == SensorProfileUpdater::State::Success) {
+    gfx->setCursor(5, 150);
+    gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+    gfx->print("ACK sent");
+    gfx->setCursor(5, 170);
+    gfx->print("Loading new config...");
+  } else {
+    gfx->setCursor(5, 150);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->print("Run PC upload tool");
+  }
+
+  gfx->drawLine(5, 265, 165, 265, RGB565_DARKGREY);
+  gfx->setCursor(18, 285);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->print("Tap header = cancel");
+  gfx->flush();
 }
 
 void drawSensorInfoPage() {

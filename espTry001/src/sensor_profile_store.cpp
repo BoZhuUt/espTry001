@@ -21,10 +21,15 @@ bool SensorProfileStore::begin(const char *path) {
   if (!LittleFS.begin(false)) {
     return fail("LittleFS mount failed");
   }
-  if (!loadRuntimeFile(path)) {
+  if (!activateFile(path)) {
     // loadRuntimeFile() 已记录具体原因；保持 Built-in 回退模式。
     return false;
   }
+  return true;
+}
+
+bool SensorProfileStore::activateFile(const char *path) {
+  if (!loadRuntimeFile(path)) return false;
   runtimeActive_ = true;
   lastError_[0] = '\0';
   return true;
