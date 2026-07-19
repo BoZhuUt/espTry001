@@ -22,6 +22,10 @@ const SensorProfile *findSensorProfile(uint32_t productNum) {
   return nullptr;
 }
 
+const char *builtInProfileConfigVersion() {
+  return kBuiltInProfileConfigVersion;
+}
+
 SensorProfilePoller::SensorProfilePoller(HardwareSerial &serial)
     : serial_(serial) {}
 

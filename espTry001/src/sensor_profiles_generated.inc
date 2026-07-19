@@ -1,6 +1,8 @@
 // 此文件由 generate_sensor_profiles.py 自动生成，请勿手工修改。
 // 配置来源：config/sensor_profiles.json
 
+const char kBuiltInProfileConfigVersion[] = "2026.07.19.1";
+
 const SensorPollBlock kPn55995Blocks[] = {
   {45050, 3},
   {46001, 2},

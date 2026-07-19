@@ -11,7 +11,7 @@ enum class SensorValueType : uint8_t {
 
 // 一次 FC03 连续读取任务。地址采用设备资料中的 1-based 写法。
 struct SensorPollBlock {
-  uint16_t address1Based;
+  uint32_t address1Based;
   uint16_t registerCount;
 };
 
@@ -37,8 +37,10 @@ struct SensorProfile {
 // 每页显示 4 个字段，最多 4 页。
 constexpr uint8_t kMaxSensorFields = 16;
 
-// 根据发现阶段读到的 PN 查找内置配置；不支持时返回 nullptr。
+// 根据 PN 查找编译进固件的回退配置；不支持时返回 nullptr。
 const SensorProfile *findSensorProfile(uint32_t productNum);
+// 返回生成内置表时读取到的 JSON config_version。
+const char *builtInProfileConfigVersion();
 
 // 参数轮询状态机。它直接操作 HardwareSerial，不使用 ModbusMaster 的
 // 同步等待接口，因此设备不响应时也不会卡住触摸和界面。
@@ -58,7 +60,8 @@ public:
   bool update(uint8_t &lastError);
 
 private:
-  static constexpr size_t kResponseBufferSize = 32;
+  // 16 个连续 Float 最多返回 32 个寄存器，即 69 字节 RTU 响应。
+  static constexpr size_t kResponseBufferSize = 128;
   static constexpr uint32_t kResponseTimeoutMs = 500;
   static constexpr uint32_t kInterBlockDelayMs = 20;
   static constexpr uint32_t kScanIntervalMs = 1000;

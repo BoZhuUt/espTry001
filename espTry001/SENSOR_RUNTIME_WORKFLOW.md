@@ -12,6 +12,8 @@
 | `config/sensor_profiles.json` | 人工维护的 PN 与显示参数配置（唯一配置入口） |
 | `generate_sensor_profiles.py` | 编译前校验 JSON、合并连续地址并生成 C++ 表 |
 | `src/sensor_profiles_generated.inc` | 自动生成的固件内置表，禁止手工修改 |
+| `src/sensor_profile_store.h/.cpp` | 启动时加载、校验 LittleFS JSON，并管理内置回退 |
+| `data/sensor_profiles.json` | 前置脚本同步生成的 LittleFS 镜像输入文件 |
 | `SENSOR_PROFILE_HOT_UPDATE_PLAN.md` | 将来通过 JSON 热更新参数表的规划 |
 
 ## 2. 总体流程
@@ -42,6 +44,25 @@
 
 发现和参数轮询都是状态机。`main.cpp` 的 `loop()` 必须持续调用它们的
 `update()`，不能用 `while` 等待响应，否则触摸、ADC 和屏幕会失去响应。
+
+### 2.1 启动配置选择
+
+```text
+启动 SensorProfileStore
+        |
+        | 挂载 LittleFS（失败时不自动格式化）
+        v
+读取 /sensor_profiles.json
+        |
+        | 解析并执行与生成器一致的校验
+        v
+有效 ────────────── 无效/缺失/挂载失败
+  |                         |
+  v                         v
+使用 LittleFS Profile      使用固件内置 Profile
+```
+
+系统信息页显示当前来源、`config_version`，回退时还会显示简短原因。有效的 LittleFS 文件是完整覆盖配置，不会与内置 PN 列表混合；这样可以避免误以为某个已从文件删除的 PN 仍被支持。
 
 ## 3. 地址发现阶段
 
@@ -154,7 +175,19 @@ python generate_sensor_profiles.py
 
 配置错误会直接显示 PN、字段位置和错误原因，并让构建失败，防止错误表被烧入设备。
 
-## 9. 维护时不要踩的坑
+## 9. 上传 LittleFS 配置
+
+第一次使用或修改 JSON 后执行：
+
+```powershell
+pio run -t uploadfs
+```
+
+前置脚本会先把 `config/sensor_profiles.json` 规范化同步到 `data/sensor_profiles.json`，再由 PlatformIO 生成并上传 LittleFS 镜像。这里只更新文件系统，不重新编译业务代码；设备重新启动后加载新配置。
+
+烧录全新设备时，需要分别上传固件和文件系统。没有上传文件系统也能正常启动，但系统信息页会显示 `Profile: Built-in`。
+
+## 10. 维护时不要踩的坑
 
 - 不要在 `loop()` 中使用同步的 `ModbusMaster::readHoldingRegisters()` 连续轮询；从站不响应时它会阻塞界面。
 - 不要同时修改 JSON 和自动生成的 `.inc`；JSON 是唯一人工维护入口。
@@ -162,3 +195,4 @@ python generate_sensor_profiles.py
 - PN 55995 的 float 是 CDAB，设备名则是每个寄存器低字节字符在前，这两种字节规则不要混淆。
 - 地址 0 发现完成后，所有正常参数读取必须使用发现到的真实地址。
 - 一次总线上不要连接多个会响应地址 0 的传感器。
+- 不要把 `LittleFS.begin(false)` 改成自动格式化；现场配置损坏时应该回退并保留文件，便于排查。

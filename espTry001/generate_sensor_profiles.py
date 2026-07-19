@@ -15,6 +15,11 @@ from typing import Any
 
 MAX_PROFILES = 32
 MAX_FIELDS = 16
+MAX_PROFILE_NAME_BYTES = 23
+MAX_FIELD_KEY_BYTES = 23
+MAX_FIELD_LABEL_BYTES = 23
+MAX_CONFIG_VERSION_BYTES = 23
+MAX_JSON_FILE_SIZE = 64 * 1024
 SCHEMA_VERSION = 1
 TYPE_INFO = {
     "uint16": (1, "SensorValueType::UInt16"),
@@ -33,6 +38,11 @@ def cpp_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def utf8_size(value: str) -> int:
+    """设备端使用 UTF-8 char 数组，因此限制编码后的字节数而非字符数。"""
+    return len(value.encode("utf-8"))
+
+
 def validate_field(field: dict[str, Any], context: str) -> dict[str, Any]:
     """校验一个字段，并补充寄存器数量和对应的 C++ 枚举。"""
     required = ("key", "label", "function", "address", "address_base",
@@ -41,8 +51,12 @@ def validate_field(field: dict[str, Any], context: str) -> dict[str, Any]:
         require(name in field, f"{context}: 缺少字段 {name}")
     require(isinstance(field["key"], str) and field["key"],
             f"{context}: key 必须是非空字符串")
+    require(utf8_size(field["key"]) <= MAX_FIELD_KEY_BYTES,
+            f"{context}: key 的 UTF-8 长度不能超过 {MAX_FIELD_KEY_BYTES} 字节")
     require(isinstance(field["label"], str) and field["label"],
             f"{context}: label 必须是非空字符串")
+    require(utf8_size(field["label"]) <= MAX_FIELD_LABEL_BYTES,
+            f"{context}: label 的 UTF-8 长度不能超过 {MAX_FIELD_LABEL_BYTES} 字节")
     require(field["function"] == 3,
             f"{context}: 当前固件只支持功能码 03")
     require(field["address_base"] == 1,
@@ -93,8 +107,10 @@ def validate_config(data: Any) -> list[dict[str, Any]]:
     require(isinstance(data, dict), "JSON 根节点必须是对象")
     require(data.get("schema_version") == SCHEMA_VERSION,
             f"schema_version 必须为 {SCHEMA_VERSION}")
-    require(isinstance(data.get("config_version"), str),
-            "config_version 必须是字符串")
+    require(isinstance(data.get("config_version"), str) and
+            data["config_version"], "config_version 必须是非空字符串")
+    require(utf8_size(data["config_version"]) <= MAX_CONFIG_VERSION_BYTES,
+            f"config_version 不能超过 {MAX_CONFIG_VERSION_BYTES} 字节")
     profiles = data.get("profiles")
     require(isinstance(profiles, list) and profiles, "profiles 必须是非空数组")
     require(len(profiles) <= MAX_PROFILES,
@@ -112,6 +128,8 @@ def validate_config(data: Any) -> list[dict[str, Any]]:
         seen_pn.add(product_num)
         require(isinstance(profile.get("name"), str) and profile["name"],
                 f"{context}: name 必须是非空字符串")
+        require(utf8_size(profile["name"]) <= MAX_PROFILE_NAME_BYTES,
+                f"{context}: name 不能超过 {MAX_PROFILE_NAME_BYTES} 字节")
         raw_fields = profile.get("fields")
         require(isinstance(raw_fields, list) and raw_fields,
                 f"{context}: fields 必须是非空数组")
@@ -127,11 +145,14 @@ def validate_config(data: Any) -> list[dict[str, Any]]:
     return result
 
 
-def generate_cpp(profiles: list[dict[str, Any]], source_name: str) -> str:
+def generate_cpp(profiles: list[dict[str, Any]], source_name: str,
+                 config_version: str) -> str:
     """把校验后的 Profile 转换为可直接 include 的 C++ 定义。"""
     lines = [
         "// 此文件由 generate_sensor_profiles.py 自动生成，请勿手工修改。",
         f"// 配置来源：{source_name}",
+        "",
+        f"const char kBuiltInProfileConfigVersion[] = {cpp_string(config_version)};",
         "",
     ]
     for profile in profiles:
@@ -168,15 +189,29 @@ def main(project_dir: Path) -> None:
     """生成文件；内容未变化时不修改时间戳，避免无意义重编译。"""
     source = project_dir / "config" / "sensor_profiles.json"
     output = project_dir / "src" / "sensor_profiles_generated.inc"
+    runtime_json = project_dir / "data" / "sensor_profiles.json"
     with source.open("r", encoding="utf-8") as file:
-        profiles = validate_config(json.load(file))
-    generated = generate_cpp(profiles, source.relative_to(project_dir).as_posix())
+        data = json.load(file)
+    profiles = validate_config(data)
+    generated = generate_cpp(profiles, source.relative_to(project_dir).as_posix(),
+                             data["config_version"])
     old_content = output.read_text(encoding="utf-8") if output.exists() else None
     if old_content != generated:
         output.write_text(generated, encoding="utf-8", newline="\n")
         print(f"*** Generated {output.name}: {len(profiles)} profile(s) ***")
     else:
         print(f"*** Sensor profiles unchanged: {len(profiles)} profile(s) ***")
+
+    # LittleFS 镜像使用同一份规范化 JSON，避免 config/ 与 data/ 手工维护漂移。
+    runtime_content = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    require(len(runtime_content.encode("utf-8")) <= MAX_JSON_FILE_SIZE,
+            f"LittleFS JSON 不能超过 {MAX_JSON_FILE_SIZE} 字节")
+    runtime_json.parent.mkdir(parents=True, exist_ok=True)
+    old_runtime = (runtime_json.read_text(encoding="utf-8")
+                   if runtime_json.exists() else None)
+    if old_runtime != runtime_content:
+        runtime_json.write_text(runtime_content, encoding="utf-8", newline="\n")
+        print(f"*** Synced LittleFS file: {runtime_json.name} ***")
 
 
 try:

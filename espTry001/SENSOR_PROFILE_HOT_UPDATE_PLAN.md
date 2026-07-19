@@ -3,7 +3,7 @@
 > 项目：ESP32-S3 RS485 检测工装  
 > 初始规划：2026-07-17  
 > 最近更新：2026-07-18  
-> 状态：地址发现、身份读取和内置 Profile 已完成；JSON/LittleFS 热更新尚未实施
+> 状态：LittleFS 运行时 JSON 加载与内置回退已完成；USB 热更新尚未实施
 
 当前运行细节和维护方法见 `SENSOR_RUNTIME_WORKFLOW.md`。本文重点保留热更新的目标、数据模型和后续实施步骤。
 
@@ -19,19 +19,22 @@
 - PN `55995` 的 8 个显示参数；
 - 连续寄存器合并读取；
 - 已建立 `sensor_profiles.json`，并由 Python 在编译前校验、合并读取块及生成固件默认表；
+- 启动时加载 LittleFS `/sensor_profiles.json`，校验后复制到固定容量运行时结构；
+- LittleFS 缺失、挂载失败或配置无效时自动使用固件内置表；
+- 系统信息页显示配置来源、版本和回退原因；
 - 非阻塞地址发现和参数轮询，通信超时不会卡住触摸；
 - 详情页每页显示 4 个参数，点击底部翻页。
 
 尚未完成：
 
 - 通用 JSON schema 的完整数据类型和字序支持；
-- LittleFS 配置加载、校验、备份和默认回退；
+- LittleFS 配置备份和原子替换；
 - USB CONFIG 模式与上传协议；
 - PC 端上传工具。
 
 ## 1. 背景和目标
 
-当前工程已经具备两路 4-20mA 采样、屏幕和触摸、USB CDC 与 RS485 透传、USB 本地 Modbus 从站 247，以及触摸切换 PASS/MASTER 模式。MASTER 模式已经能够自动发现地址、读取身份并按 PN 选择固件内置配置；下一步是把内置配置扩展为可通过 USB 更新的运行时配置。
+当前工程已经具备两路 4-20mA 采样、屏幕和触摸、USB CDC 与 RS485 透传、USB 本地 Modbus 从站 247，以及触摸切换 PASS/MASTER 模式。MASTER 模式能够自动发现地址、读取身份，并优先按 LittleFS JSON 选择 PN 配置，加载失败时使用固件内置配置。
 
 目标：
 
@@ -259,18 +262,21 @@ t365Raw：46039～46040
 采用“固件默认配置 + LittleFS 运行时覆盖”：
 
 ```text
-/profiles.json       当前有效配置
-/profiles.backup     上一个有效配置
-/profiles.uploading  上传临时文件
+/sensor_profiles.json       当前有效配置
+/sensor_profiles.backup     上一个有效配置（待实现）
+/sensor_profiles.uploading  上传临时文件（待实现）
 ```
 
-启动时：
+当前启动流程：
 
-1. 加载 `/profiles.json`；
-2. 校验 JSON、schema、字段类型和地址范围；
-3. 成功后转换为固定大小的 C++ 结构体数组；
-4. 失败时使用固件内置默认 Profile；
-5. 系统信息页显示配置版本和来源。
+1. 挂载 LittleFS（失败时不自动格式化）；
+2. 加载 `/sensor_profiles.json`；
+3. 校验 JSON、schema、重复 PN/Key、字段类型、地址范围和重叠；
+4. 成功后转换为固定大小的 C++ 结构体数组；
+5. 失败时使用固件内置默认 Profile；
+6. 系统信息页显示配置版本、来源和回退原因。
+
+当前运行时上限：32 个 Profile、每个 16 个字段、JSON 文件最大 64KB。备份和上传临时文件将在 USB 更新阶段实现。
 
 ## 11. USB 串口热更新
 
@@ -380,13 +386,15 @@ CONFIG 模式与正常 Modbus 模式必须互斥，避免 JSON 被转发到 RS48
 
 验收：现有传感器功能不变，但 `main.cpp` 不再写死业务寄存器。
 
-### 阶段 D：LittleFS JSON
+### 阶段 D：LittleFS JSON（基础版本已完成）
 
-- [ ] 定稿 schema v1；
-- [ ] 增加 JSON 解析和严格校验；
-- [ ] 转换为固定大小的运行时结构；
-- [ ] 增加固件默认配置回退；
-- [ ] 显示配置版本和来源。
+- [x] 定稿当前基础 schema v1；
+- [x] 增加 ArduinoJson 7.4.3 解析和严格校验；
+- [x] 转换为固定大小的运行时结构；
+- [x] 增加固件默认配置回退；
+- [x] 显示配置版本、来源和回退原因；
+- [x] 支持 PlatformIO `uploadfs` 独立更新配置；
+- [ ] 在 USB 上传阶段增加备份、临时文件和原子替换。
 
 验收：替换 LittleFS 配置即可增加或修改 Profile。
 
@@ -423,12 +431,12 @@ CONFIG 模式与正常 Modbus 模式必须互斥，避免 JSON 被转发到 RS48
 
 ## 16. 推荐的下一步
 
-下一步进入阶段 C 后半段和阶段 D：
+下一步先完成硬件验收，再进入阶段 E：
 
-1. 在现有 schema v1 上增加其余数据类型、字序、scale、offset 和 unit；
-2. 选择并引入 ESP32 运行时 JSON 解析库；
-3. 启用 LittleFS，先实现“生成的固件默认配置 + 文件覆盖 + 校验失败回退”；
-4. 让运行时解析器采用与 Python 生成器相同的校验规则；
-5. 使用预置文件验证成功后，再实现 USB CONFIG 上传模式。
+1. 上传固件和 LittleFS，确认系统页显示 `Profile: LittleFS`；
+2. 不上传/破坏配置文件，确认显示 `Profile: Built-in` 且 PN 仍可工作；
+3. 只修改 JSON 并执行 `uploadfs`，确认无需重新编译固件即可改变支持列表；
+4. 再设计 USB CONFIG 入口、长度、CRC32、ACK/NAK 和原子替换；
+5. 后续按需要扩展数据类型、字序、scale、offset 和 unit。
 
-暂时不要直接做串口上传。先让同一套 Profile 引擎能够同时加载“固件内置 PN 55995”和 LittleFS 中的等价 JSON，确认两者显示结果完全一致。
+USB 上传前，先在硬件上确认同一份 PN 配置使用 LittleFS 和 Built-in 两种来源时显示结果完全一致。

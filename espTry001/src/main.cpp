@@ -4,6 +4,7 @@
 #include "esp_lcd_touch_axs5106l.h"  // 引入同级目录下的微雪触摸库
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
+#include "sensor_profile_store.h"
 
 // ==========================================
 // 1. 硬件引脚与通信参数配置
@@ -120,6 +121,7 @@ Arduino_GFX *gfx = new Arduino_ST7789(
 ModbusMaster node; 
 SensorDiscovery sensorDiscovery(Serial1);
 SensorProfilePoller profilePoller(Serial1);
+SensorProfileStore profileStore;
 
 // ==========================================
 // 4. 微雪官方原厂屏幕初始化微代码
@@ -226,6 +228,9 @@ void setup()
 {
   Serial.begin(115200); 
   delay(100);
+
+  // 优先加载 LittleFS JSON；挂载、文件或校验失败时自动使用固件内置表。
+  profileStore.begin();
 
   // 1. 屏幕底层硬件初始化
   if (gfx->begin()) {
@@ -348,7 +353,7 @@ void loop()
     sensorDiscovery.update();
     if (sensorDiscovery.state() == SensorDiscovery::State::Success) {
       if (!profileLookupComplete) {
-        activeProfile = findSensorProfile(sensorDiscovery.result().productNum);
+        activeProfile = profileStore.find(sensorDiscovery.result().productNum);
         profileLookupComplete = true;
         if (activeProfile != nullptr) {
           profilePoller.begin(sensorDiscovery.result().slaveAddress,
@@ -678,17 +683,24 @@ void drawAuthorPage() {
     gfx->printf("V1.0.1\n");           // 保底显示
   #endif
 
-  gfx->setCursor(5, 140);
+  gfx->setCursor(5, 130);
   gfx->printf("esp32-utility\n");
 
   gfx->setTextSize(1);
-  gfx->setCursor(5, 180);
+  gfx->setCursor(5, 165);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
-  gfx->printf("Contact: Info Support\n");
+  gfx->printf("Profile: %s\n", profileStore.sourceText());
+  gfx->setCursor(5, 182);
+  gfx->printf("Config: %s\n", profileStore.configVersion());
+  if (!profileStore.usingLittleFs()) {
+    gfx->setCursor(5, 199);
+    gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+    gfx->printf("Fallback: %.18s", profileStore.lastError());
+  }
 
   // 已修复：改用库内标准英式拼写 RGB565_DARKGREY
-  gfx->drawLine(5, 210, 165, 210, RGB565_DARKGREY);
-  gfx->setCursor(5, 230);
+  gfx->drawLine(5, 222, 165, 222, RGB565_DARKGREY);
+  gfx->setCursor(5, 240);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
 }
