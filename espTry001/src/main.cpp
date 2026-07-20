@@ -462,6 +462,16 @@ void loop()
             gfx->print("TX: 00 03 A028 0001");
             break;
 
+          case SensorDiscovery::State::DiscoveringSpecialAddress:
+            gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+            gfx->print("Special discovery...");
+            gfx->setCursor(5, 217);
+            gfx->printf("Try: %u/%u", sensorDiscovery.attempt(),
+                        sensorDiscovery.maxAttempts());
+            gfx->setCursor(5, 232);
+            gfx->print("TX: 00 67 ... 21 E6");
+            break;
+
           case SensorDiscovery::State::ReadingIdentity:
             gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
             gfx->print("Reading identity...");
@@ -474,16 +484,29 @@ void loop()
             gfx->print("Regs: 41001-41014");
             break;
 
+          case SensorDiscovery::State::ReadingProductNumber:
+            gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+            gfx->print("Reading PN only...");
+            gfx->setCursor(5, 217);
+            gfx->printf("Addr: %u  Try: %u/%u",
+                        sensorDiscovery.result().slaveAddress,
+                        sensorDiscovery.attempt(),
+                        sensorDiscovery.maxAttempts());
+            gfx->setCursor(5, 232);
+            gfx->print("Regs: 41005-41006");
+            break;
+
           case SensorDiscovery::State::Success:
             gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
             gfx->printf("Sensor found  Addr:%u", sensorDiscovery.result().slaveAddress);
             gfx->setCursor(5, 220);
             gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
             gfx->print("Name: ");
-            if (sensorDiscovery.result().deviceName[0] != '\0') {
-              gfx->print(sensorDiscovery.result().deviceName);
+            // 面向操作员的名称来自 JSON Profile；身份区名称只参与底层发现结果保存。
+            if (activeProfile != nullptr && activeProfile->name != nullptr) {
+              gfx->print(activeProfile->name);
             } else {
-              gfx->print("(empty)");
+              gfx->print("Unsupported PN");
             }
             gfx->setCursor(5, 237);
             gfx->printf("PN: %lu", (unsigned long)sensorDiscovery.result().productNum);
@@ -840,7 +863,10 @@ void drawSensorInfoPage() {
   gfx->print("Device Name:");
   gfx->setCursor(5, 126);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-  gfx->print(identity.deviceName[0] != '\0' ? identity.deviceName : "(empty)");
+  // 详情页设备名称必须与热更新 JSON 中的 name 保持一致。
+  gfx->print(activeProfile != nullptr && activeProfile->name != nullptr
+                 ? activeProfile->name
+                 : "Unsupported PN");
 
   drawSensorParameterArea();
   gfx->flush();

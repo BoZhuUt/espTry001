@@ -29,9 +29,32 @@ void SensorDiscovery::sendAddressRequest() {
                   State::DiscoveringAddress);
 }
 
+void SensorDiscovery::sendSpecialAddressRequest() {
+  // 厂商私有发现帧。末尾 21 E6 是前 14 字节的标准 Modbus CRC16。
+  static const uint8_t request[] = {
+    0x00, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0xE6
+  };
+
+  while (serial_.available()) serial_.read();
+  responseLength_ = 0;
+  expectedLength_ = 16;
+  retryWaiting_ = false;
+  attempt_++;
+  state_ = State::DiscoveringSpecialAddress;
+  requestStartTime_ = millis();
+  serial_.write(request, sizeof(request));
+  serial_.flush();
+}
+
 void SensorDiscovery::sendIdentityRequest() {
   sendReadRequest(result_.slaveAddress, kIdentityRegister,
                   kIdentityRegisterCount, State::ReadingIdentity);
+}
+
+void SensorDiscovery::sendProductNumberRequest() {
+  sendReadRequest(result_.slaveAddress, kProductRegister,
+                  kProductRegisterCount, State::ReadingProductNumber);
 }
 
 void SensorDiscovery::sendReadRequest(uint8_t slaveAddress,
@@ -68,17 +91,28 @@ void SensorDiscovery::sendReadRequest(uint8_t slaveAddress,
 void SensorDiscovery::update() {
   // 这里只消费当前已经到达的字节，不等待串口，因此不会阻塞 UI。
   if (state_ != State::DiscoveringAddress &&
-      state_ != State::ReadingIdentity) return;
+      state_ != State::DiscoveringSpecialAddress &&
+      state_ != State::ReadingIdentity &&
+      state_ != State::ReadingProductNumber) return;
 
   // 失败后只记录下一次发送时间，不在 retryOrFail() 中立即重发。
   // 这样等待 2 秒期间 loop() 仍可处理触摸、ADC 和屏幕刷新。
   if (retryWaiting_) {
     if ((int32_t)(millis() - retryAtTime_) >= 0) {
       retryWaiting_ = false;
-      if (state_ == State::ReadingIdentity) {
-        sendIdentityRequest();
-      } else {
-        sendAddressRequest();
+      switch (state_) {
+        case State::ReadingIdentity:
+          sendIdentityRequest();
+          break;
+        case State::ReadingProductNumber:
+          sendProductNumberRequest();
+          break;
+        case State::DiscoveringSpecialAddress:
+          sendSpecialAddressRequest();
+          break;
+        default:
+          sendAddressRequest();
+          break;
       }
     }
     return;
@@ -91,7 +125,10 @@ void SensorDiscovery::update() {
     }
 
     response_[responseLength_++] = serial_.read();
-    if (responseLength_ >= 2 && (response_[1] & 0x80)) {
+    if (state_ == State::DiscoveringSpecialAddress) {
+      // 0x67 响应没有 FC03 的 byte-count 字段，协议规定固定为 16 字节。
+      expectedLength_ = 16;
+    } else if (responseLength_ >= 2 && (response_[1] & 0x80)) {
       expectedLength_ = 5;
     } else if (responseLength_ >= 3) {
       expectedLength_ = (size_t)response_[2] + 5;
@@ -125,6 +162,11 @@ void SensorDiscovery::handleResponse() {
     return;
   }
 
+  if (state_ == State::DiscoveringSpecialAddress) {
+    handleSpecialAddressResponse();
+    return;
+  }
+
   if (response_[1] & 0x80) {
     exceptionCode_ = response_[2];
     retryOrFail(Error::ExceptionResponse);
@@ -138,9 +180,28 @@ void SensorDiscovery::handleResponse() {
 
   if (state_ == State::DiscoveringAddress) {
     handleAddressResponse();
+  } else if (state_ == State::ReadingProductNumber) {
+    handleProductNumberResponse();
   } else {
     handleIdentityResponse();
   }
+}
+
+void SensorDiscovery::handleSpecialAddressResponse() {
+  if (responseLength_ != 16 || response_[1] != 0x67) {
+    retryOrFail(responseLength_ != 16 ? Error::InvalidLength
+                                     : Error::InvalidFunction);
+    return;
+  }
+  if (response_[0] == 0 || response_[0] > 247) {
+    retryOrFail(Error::InvalidAddress);
+    return;
+  }
+
+  result_.slaveAddress = response_[0];
+  attempt_ = 0;
+  error_ = Error::None;
+  sendProductNumberRequest();
 }
 
 void SensorDiscovery::handleAddressResponse() {
@@ -216,6 +277,32 @@ void SensorDiscovery::handleIdentityResponse() {
   state_ = State::Success;
 }
 
+void SensorDiscovery::handleProductNumberResponse() {
+  if (response_[0] != result_.slaveAddress) {
+    retryOrFail(Error::InvalidAddress);
+    return;
+  }
+  if (response_[2] != kProductRegisterCount * 2 ||
+      responseLength_ != (size_t)(kProductRegisterCount * 2 + 5)) {
+    retryOrFail(Error::InvalidLength);
+    return;
+  }
+
+  uint16_t productWord1 = responseRegister(0);
+  uint16_t productWord2 = responseRegister(1);
+  result_.productNum = kProductLowWordFirst
+      ? ((uint32_t)productWord2 << 16) | productWord1
+      : ((uint32_t)productWord1 << 16) | productWord2;
+  if (result_.productNum == 0) {
+    retryOrFail(Error::InvalidProductNumber);
+    return;
+  }
+
+  // 特殊设备不保证提供状态和名称；Result 在 start() 时已清零，保持为空即可。
+  error_ = Error::None;
+  state_ = State::Success;
+}
+
 void SensorDiscovery::retryOrFail(Error error) {
   error_ = error;
   if (attempt_ < maxAttempts_) {
@@ -224,6 +311,14 @@ void SensorDiscovery::retryOrFail(Error error) {
     expectedLength_ = 0;
     retryWaiting_ = true;
     retryAtTime_ = millis() + retryIntervalMs_;
+  } else if (state_ == State::DiscoveringAddress) {
+    // 普通地址 0 查询三次均失败后，自动进入独立的三次 0x67 发现阶段。
+    attempt_ = 0;
+    responseLength_ = 0;
+    expectedLength_ = 0;
+    retryWaiting_ = false;
+    error_ = Error::None;
+    sendSpecialAddressRequest();
   } else {
     retryWaiting_ = false;
     state_ = State::Failed;
@@ -254,6 +349,7 @@ const char *SensorDiscovery::errorText() const {
     case Error::InvalidAddress: return "Invalid Address";
     case Error::InvalidFunction: return "Invalid Function";
     case Error::InvalidLength: return "Invalid Length";
+    case Error::InvalidProductNumber: return "Invalid PN";
     case Error::ExceptionResponse: return "Modbus Exception";
     case Error::BufferOverflow: return "Buffer Overflow";
   }

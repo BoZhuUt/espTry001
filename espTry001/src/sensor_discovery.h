@@ -10,17 +10,22 @@ public:
   static constexpr uint16_t kDiscoveryQuantity = 1;
   static constexpr uint16_t kIdentityRegister = 41000; // 41001, 1-based
   static constexpr uint16_t kIdentityRegisterCount = 14; // 41001~41014
+  // 特殊 0x67 发现方式只保证 PN 存在，因此发现地址后仅读取 41005~41006。
+  static constexpr uint16_t kProductRegister = 41004; // 41005, 1-based
+  static constexpr uint16_t kProductRegisterCount = 2;
   static constexpr bool kProductLowWordFirst = true; // CDAB
   static constexpr bool kNameHighByteFirst = false; // 每个寄存器低字节字符在前
-  // 单次请求最多等待 500 ms；失败后间隔 2 s 再试，最多发送 5 次。
+  // 单次请求最多等待 500 ms；失败后间隔 2 s 再试，每阶段最多发送 3 次。
   static constexpr uint32_t kDefaultTimeoutMs = 500;
   static constexpr uint32_t kDefaultRetryIntervalMs = 2000;
-  static constexpr uint8_t kDefaultMaxAttempts = 5;
+  static constexpr uint8_t kDefaultMaxAttempts = 3;
 
   enum class State : uint8_t {
     Idle,
     DiscoveringAddress,
+    DiscoveringSpecialAddress,
     ReadingIdentity,
+    ReadingProductNumber,
     Success,
     Failed
   };
@@ -32,6 +37,7 @@ public:
     InvalidAddress,
     InvalidFunction,
     InvalidLength,
+    InvalidProductNumber,
     ExceptionResponse,
     BufferOverflow
   };
@@ -88,7 +94,11 @@ private:
   bool retryWaiting_ = false;
 
   void sendAddressRequest();  // 地址 0、FC03、读取资料地址 41001
+  // 普通地址 0 发现连续失败后，发送固定的厂商 0x67 发现报文。
+  void sendSpecialAddressRequest();
   void sendIdentityRequest(); // 使用真实地址读取资料地址 41001~41014
+  // 特殊设备可能没有完整身份区，只读取 41005~41006 的 PN。
+  void sendProductNumberRequest();
   // 组装并发送一帧 FC03 请求，同时切换到指定等待状态。
   void sendReadRequest(uint8_t slaveAddress, uint16_t startAddress,
                        uint16_t quantity, State waitingState);
@@ -96,8 +106,11 @@ private:
   void handleResponse();
   // 从响应帧的从站地址字节取得设备真实地址。
   void handleAddressResponse();
+  // 特殊响应固定为 16 字节，真实地址位于响应第 0 字节。
+  void handleSpecialAddressResponse();
   // 解析状态、PN（CDAB）和 16 字节设备名称。
   void handleIdentityResponse();
+  void handleProductNumberResponse();
   // 当前阶段失败时安排延时重试，达到次数上限后进入 Failed。
   void retryOrFail(Error error);
   // 从 FC03 数据区读取第 index 个寄存器。
