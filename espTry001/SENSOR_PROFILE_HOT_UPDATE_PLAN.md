@@ -404,6 +404,7 @@ CONFIG 模式与正常 Modbus 模式必须互斥，避免 JSON 被转发到 RS48
 - [x] 实现临时文件、备份与原子替换；
 - [x] 实现 ACK/NAK；
 - [x] 编写 `tools/upload_sensor_profiles.py`；
+- [x] 增加无需 Python 环境的 Windows WinForms 图形上位机；
 - [x] 成功后自动重启；
 - [ ] 完成异常与断电可靠性硬件测试。
 

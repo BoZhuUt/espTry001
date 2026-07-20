@@ -200,6 +200,23 @@ CONFIG 模式会强制停止 MASTER、RS485 透传和 USB 本地 Modbus，USB CD
 
 ### 10.2 PC 上传命令
 
+推荐使用 Windows 图形上位机，双击：
+
+```text
+tools/Start_Profile_Updater.bat
+```
+
+界面操作：
+
+1. `Refresh` 扫描 COM 口；
+2. 选择 ESP32 的 COM 口；
+3. `Browse` 选择 JSON，默认指向工程的 `config/sensor_profiles.json`；
+4. 检查界面显示的版本、PN 数量和 PN 列表；
+5. 先让设备进入 `CONFIG UPLOAD`，再点击 `Upload Profile`；
+6. 观察进度条、日志和最终 ACK/NAK。
+
+该上位机使用 Windows 自带 PowerShell + WinForms，不依赖 Python。命令行方式仍然保留：
+
 ```powershell
 python tools/upload_sensor_profiles.py COM21 config/sensor_profiles.json
 ```
