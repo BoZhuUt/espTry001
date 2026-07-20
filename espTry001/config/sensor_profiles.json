@@ -43,6 +43,14 @@
         {"key": "s365HighZero_DI", "label": "s365HighZero_DI", "function": 3, "address": 45051, "address_base": 1, "type": "uint16", "decimals": 0},
         {"key": "t365Zero_DI", "label": "t365Zero_DI", "function": 3, "address": 45052, "address_base": 1, "type": "uint16", "decimals": 0}
       ]
+    },
+    {
+      "product_num": 50692,
+      "name": "ST-588",
+      "fields": [
+        {"key": "Value", "label": "sensorValue", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "mA", "label": "4-20mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
     }
   ]
 }
