@@ -1,7 +1,7 @@
 // 此文件由 generate_sensor_profiles.py 自动生成，请勿手工修改。
 // 配置来源：config/sensor_profiles.json
 
-const char kBuiltInProfileConfigVersion[] = "2026.07.19.2";
+const char kBuiltInProfileConfigVersion[] = "2026.07.20.1";
 
 const SensorPollBlock kPn55995Blocks[] = {
   {45050, 3},
@@ -10,6 +10,23 @@ const SensorPollBlock kPn55995Blocks[] = {
 };
 
 const SensorField kPn55995Fields[] = {
+  {"sensorValue", 1, 0, SensorValueType::Float32CDAB, 3},
+  {"s365LowRaw", 2, 0, SensorValueType::Float32CDAB, 2},
+  {"s365HighRaw", 2, 2, SensorValueType::Float32CDAB, 2},
+  {"s470Raw", 2, 4, SensorValueType::Float32CDAB, 2},
+  {"t365Raw", 2, 6, SensorValueType::Float32CDAB, 2},
+  {"s365LowZero_DI", 0, 0, SensorValueType::UInt16, 0},
+  {"s365HighZero_DI", 0, 1, SensorValueType::UInt16, 0},
+  {"t365Zero_DI", 0, 2, SensorValueType::UInt16, 0},
+};
+
+const SensorPollBlock kPn56377Blocks[] = {
+  {45050, 3},
+  {46001, 2},
+  {46033, 8},
+};
+
+const SensorField kPn56377Fields[] = {
   {"sensorValue", 1, 0, SensorValueType::Float32CDAB, 3},
   {"s365LowRaw", 2, 0, SensorValueType::Float32CDAB, 2},
   {"s365HighRaw", 2, 2, SensorValueType::Float32CDAB, 2},
@@ -45,6 +62,14 @@ const SensorProfile kProfiles[] = {
     sizeof(kPn55995Blocks) / sizeof(kPn55995Blocks[0]),
     kPn55995Fields,
     sizeof(kPn55995Fields) / sizeof(kPn55995Fields[0])
+  },
+  {
+    56377,
+    "ST-730SS-T",
+    kPn56377Blocks,
+    sizeof(kPn56377Blocks) / sizeof(kPn56377Blocks[0]),
+    kPn56377Fields,
+    sizeof(kPn56377Fields) / sizeof(kPn56377Fields[0])
   },
   {
     56600,

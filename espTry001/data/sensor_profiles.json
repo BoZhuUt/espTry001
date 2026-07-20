@@ -1,10 +1,93 @@
 {
   "schema_version": 1,
-  "config_version": "2026.07.19.2",
+  "config_version": "2026.07.20.1",
   "profiles": [
     {
       "product_num": 55995,
       "name": "ST-731SS-T",
+      "fields": [
+        {
+          "key": "sensorValue",
+          "label": "sensorValue",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 3
+        },
+        {
+          "key": "s365LowRaw",
+          "label": "s365LowRaw",
+          "function": 3,
+          "address": 46033,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365HighRaw",
+          "label": "s365HighRaw",
+          "function": 3,
+          "address": 46035,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s470Raw",
+          "label": "s470Raw",
+          "function": 3,
+          "address": 46037,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365Raw",
+          "label": "t365Raw",
+          "function": 3,
+          "address": 46039,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365LowZero_DI",
+          "label": "s365LowZero_DI",
+          "function": 3,
+          "address": 45050,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365HighZero_DI",
+          "label": "s365HighZero_DI",
+          "function": 3,
+          "address": 45051,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Zero_DI",
+          "label": "t365Zero_DI",
+          "function": 3,
+          "address": 45052,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 56377,
+      "name": "ST-730SS-T",
       "fields": [
         {
           "key": "sensorValue",
