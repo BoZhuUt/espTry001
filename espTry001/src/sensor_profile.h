@@ -59,6 +59,13 @@ public:
   // 每完成一个读取块（成功、异常或超时）返回 true，并更新 lastError。
   bool update(uint8_t &lastError);
 
+  // 返回当前扫描序号。每完成一轮（所有 block 轮询一遍）递增。
+  uint32_t scanSequence() const { return scanSequence_; }
+
+  // 尝试取走"一轮完成"标志。新一轮刚完成时返回 true。
+  // 调用方应在返回 true 后立即读取 values/valid 数组。
+  bool takeScanCompleted();
+
 private:
   // 16 个连续 Float 最多返回 32 个寄存器，即 69 字节 RTU 响应。
   static constexpr size_t kResponseBufferSize = 128;
@@ -83,5 +90,7 @@ private:
   size_t expectedLength_ = 0;
   uint32_t requestStartMs_ = 0;
   uint32_t nextRequestMs_ = 0;
+  uint32_t scanSequence_ = 0;
+  bool scanCompleted_ = false;
   bool waiting_ = false;
 };

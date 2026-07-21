@@ -96,10 +96,10 @@ src/sensor_firmware_updater.h/.cpp
 - [x] 确认使用 SD_MMC 4-bit，GPIO 为 CLK16、CMD15、D0～D3=17/18/13/14；
 - [x] 确认 CMD、D0～D3 上拉电阻已安装；
 - [x] 确认 GPIO19 未连接，不具备 Card Detect；
-- [ ] 初始化 SD，识别卡类型、总容量和剩余容量；
+- [x] 初始化 SD，识别卡类型、文件系统容量和剩余容量；
 - [ ] 创建 `/diagnostic.txt`，写入、关闭、重新打开并核对内容；
 - [ ] 连续写入至少 10 MB，确认没有随机写入失败；
-- [ ] System Info 显示 `SD: Ready/Missing/Error`、容量和最近错误；
+- [x] System Info 显示 `SD: Ready/Missing/Error`、剩余容量和最近错误；
 - [ ] 未插卡启动和运行中意外拔卡不影响现有 PASS、MASTER、触摸和显示；
 - [ ] 第一版明确不支持运行中重新插卡，重新插卡后需要重启设备；
 
@@ -108,6 +108,20 @@ src/sensor_firmware_updater.h/.cpp
 预计改动：`SdStorage` 100～180 行，`main.cpp`/UI 约 50～100 行。
 
 ## 5. 阶段 B：MASTER 数据记录
+
+> 2026-07-21 状态：首版代码和实机功能已完成。模拟写卡已验证 Session、CSV 结构、16 字段连续数据及停止时 flush；随后已切换为真实 MASTER 记录，传感器发现、PN/Profile 匹配、整轮参数记录和 PASS/CONFIG 安全关闭均工作正常。长时间稳定性、写满和意外拔卡测试仍待完成。
+
+已落地内容：
+
+- [x] `SensorProfilePoller::scanSequence()` 和 `takeScanCompleted()`；
+- [x] MASTER 匹配 JSON Profile 后自动创建对应 PN 的日志；
+- [x] 每轮完整 Profile 扫描写一行，同时记录 CH1/CH2 mA；
+- [x] NVS Session ID、配置/固件版本文件头和 `uptime_ms` 时间源；
+- [x] 固定环形缓冲、5 秒 flush、32 MB 分卷和 CSV 长度边界保护；
+- [x] 切换 PASS 或进入 `CONFIG UPLOAD` 时 flush 并关闭文件；
+- [x] 模拟数据与真实传感器实机测试通过；
+- [ ] 10 MB、2 小时及 24 小时长稳测试；
+- [ ] SD 写满和运行中意外拔卡测试。
 
 ### 5.1 完整扫描事件
 

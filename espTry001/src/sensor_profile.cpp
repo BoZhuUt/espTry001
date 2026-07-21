@@ -40,6 +40,7 @@ void SensorProfilePoller::begin(uint8_t slaveAddress,
   responseLength_ = 0;
   expectedLength_ = 0;
   waiting_ = false;
+  scanCompleted_ = false;
   nextRequestMs_ = millis();
 }
 
@@ -48,6 +49,15 @@ void SensorProfilePoller::cancel() {
   waiting_ = false;
   responseLength_ = 0;
   expectedLength_ = 0;
+  scanCompleted_ = false;
+}
+
+bool SensorProfilePoller::takeScanCompleted() {
+  if (scanCompleted_) {
+    scanCompleted_ = false;
+    return true;
+  }
+  return false;
 }
 
 bool SensorProfilePoller::update(uint8_t &lastError) {
@@ -147,6 +157,8 @@ void SensorProfilePoller::finishCurrentBlock(uint8_t error) {
   blockIndex_++;
   if (blockIndex_ >= profile_->blockCount) {
     blockIndex_ = 0;
+    scanSequence_++;
+    scanCompleted_ = true;
     nextRequestMs_ = millis() + kScanIntervalMs;
   } else {
     nextRequestMs_ = millis() + kInterBlockDelayMs;

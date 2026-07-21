@@ -6,6 +6,8 @@
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
+#include "sd_storage.h"
+#include "data_logger.h"
 
 // ==========================================
 // 1. 硬件引脚与通信参数配置
@@ -127,6 +129,19 @@ SensorDiscovery sensorDiscovery(Serial1);
 SensorProfilePoller profilePoller(Serial1);
 SensorProfileStore profileStore;
 SensorProfileUpdater profileUpdater;
+SdStorage sdStorage;
+DataLogger dataLogger(sdStorage);
+
+// SD 卡模拟数据测试：无传感器时每秒递增并写入
+#define SD_SIMULATE_LOG 0  // 1: synthetic SD test; 0: log real MASTER scans.
+#if SD_SIMULATE_LOG
+static constexpr uint32_t kSimulatedProductNum = 53607;
+static uint32_t simScanSeq = 0;
+static uint32_t simLastLogMs = 0;
+static constexpr uint32_t simLogIntervalMs = 1000;  // 模拟每秒一条
+static float simValues[kMaxSensorFields] = {0};
+static bool simValid[kMaxSensorFields] = {false};
+#endif
 
 // ==========================================
 // 4. 微雪官方原厂屏幕初始化微代码
@@ -236,6 +251,11 @@ void setup()
 
   // 优先加载 LittleFS JSON；挂载、文件或校验失败时自动使用固件内置表。
   profileStore.begin();
+#ifdef AUTO_VERSION
+  dataLogger.setMetadata(profileStore.configVersion(), AUTO_VERSION);
+#else
+  dataLogger.setMetadata(profileStore.configVersion(), "development");
+#endif
 
   // 1. 屏幕底层硬件初始化
   if (gfx->begin()) {
@@ -261,6 +281,29 @@ void setup()
 
   // 4. 初始化触摸屏
   initAXS5106L();
+
+  // 5. 初始化 SD 卡
+  if (sdStorage.begin()) {
+    Serial.println("[SD] SD card initialized OK");
+#if SD_SIMULATE_LOG
+    // 模拟数据测试：使用内置 Profile 第一个 PN 构造模拟日志
+    const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
+    if (simProfile == nullptr) {
+      // 如果配置中没有 53607，取第一个
+      simProfile = findSensorProfile(kSimulatedProductNum);
+    }
+    if (simProfile != nullptr) {
+      dataLogger.setIdentity(15, simProfile->productNum, simProfile->name, simProfile);
+      for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
+        simValid[i] = true;
+      }
+      dataLogger.start();
+      simLastLogMs = millis();
+    }
+#endif
+  } else {
+    Serial.println("[SD] No SD card, logging disabled");
+  }
 }
 
 void loop()
@@ -290,6 +333,8 @@ void loop()
       }
     } else if (currentPage == UiPage::Dashboard && ty >= 40 && ty < 80) {
       // 点击 Mode 区域，在纯透传与 Modbus 主站之间手动切换。
+      // Finish the current CSV before changing sensor/discovery state.
+      dataLogger.stop();
       masterMode = !masterMode;
       while (Serial.available()) Serial.read();
       while (Serial1.available()) Serial1.read();
@@ -402,6 +447,12 @@ void loop()
           profilePoller.begin(sensorDiscovery.result().slaveAddress,
                               *activeProfile, profileValues,
                               profileValueValid);
+          // One logging session belongs to one discovered address/PN/Profile.
+          // start() safely does nothing when the SD card is unavailable.
+          dataLogger.setIdentity(sensorDiscovery.result().slaveAddress,
+                                 sensorDiscovery.result().productNum,
+                                 activeProfile->name, activeProfile);
+          dataLogger.start();
         }
       }
 
@@ -411,8 +462,48 @@ void loop()
           gfx->flush();
         }
       }
+
+      // Real logging is disabled while the dedicated SD simulation is enabled,
+      // so actual sensor rows cannot be mixed into the synthetic test file.
+#if !SD_SIMULATE_LOG
+      if (activeProfile != nullptr && profilePoller.takeScanCompleted()) {
+        dataLogger.onScanComplete(
+            profilePoller.scanSequence(),
+            profileValues, profileValueValid, activeProfile->fieldCount,
+            current1Ma, current2Ma);
+      }
+#else
+      profilePoller.takeScanCompleted();
+#endif
     }
   }
+
+  // ----------------------------------------------------------------
+  // SD 卡模拟数据测试
+  // ----------------------------------------------------------------
+#if SD_SIMULATE_LOG
+  if (dataLogger.isRecording() && !masterMode) {
+    uint32_t now = millis();
+    if ((uint32_t)(now - simLastLogMs) >= simLogIntervalMs) {
+      simLastLogMs = now;
+      simScanSeq++;
+      // 模拟数据：每个字段递增
+      const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
+      if (simProfile == nullptr) simProfile = findSensorProfile(kSimulatedProductNum);
+      if (simProfile != nullptr) {
+        for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
+          simValues[i] = (float)(simScanSeq * simProfile->fieldCount + i) * 0.1f;
+          simValid[i] = true;
+        }
+        dataLogger.onScanComplete(simScanSeq, simValues, simValid,
+                                  simProfile->fieldCount, current1Ma, current2Ma);
+      }
+    }
+  }
+#endif
+
+  // SD 日志写入推进（非阻塞）
+  dataLogger.update();
 
   // ----------------------------------------------------------------
   // 核心功能 3：UI 动态数据刷新
@@ -758,9 +849,25 @@ void drawAuthorPage() {
     gfx->printf("Fallback: %.18s", profileStore.lastError());
   }
 
+  // SD 卡状态
+  gfx->setCursor(5, 216);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->printf("SD: %s", sdStorage.stateText());
+  if (sdStorage.state() == SdStorage::State::Ready) {
+    gfx->printf(" %.0fMB free", (double)(sdStorage.freeBytes() / 1048576));
+    if (dataLogger.isRecording()) {
+      gfx->setCursor(5, 232);
+      gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+      gfx->printf("Log: %lu records", (unsigned long)dataLogger.recordCount());
+    }
+  } else if (sdStorage.state() == SdStorage::State::Error) {
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->printf(" %.12s", sdStorage.lastError());
+  }
+
   // 已修复：改用库内标准英式拼写 RGB565_DARKGREY
-  gfx->drawLine(5, 222, 165, 222, RGB565_DARKGREY);
-  gfx->setCursor(5, 240);
+  gfx->drawLine(5, 250, 165, 250, RGB565_DARKGREY);
+  gfx->setCursor(5, 255);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
 
@@ -772,6 +879,7 @@ void drawAuthorPage() {
 
 void enterConfigMode() {
   // 停止所有使用 USB/RS485 的业务，避免 JSON 上传与 Modbus 混流。
+  dataLogger.stop();  // Flush and close the SD file before CONFIG UPLOAD.
   configMode = true;
   masterMode = false;
   sensorDiscovery.cancel();
