@@ -8,6 +8,7 @@
 #include "sensor_profile_update.h"
 #include "sd_storage.h"
 #include "data_logger.h"
+#include "log_export_server.h"
 
 // ==========================================
 // 1. 硬件引脚与通信参数配置
@@ -54,6 +55,10 @@ void drawSensorInfoPage();
 void drawSensorParameterArea();
 void enterConfigMode();
 void drawConfigUpdatePage();
+void enterToolsMenu();
+void drawToolsMenuPage();
+void enterLogExportMode();
+void drawLogExportPage();
 void initAXS5106L();               
 bool checkTouchAXS(int &x, int &y);
 void processUsbModbusFrame();
@@ -64,7 +69,9 @@ float readCalibratedMilliVolts(uint8_t pin);
 enum class UiPage : uint8_t {
   Dashboard,
   SystemInfo,
-  SensorInfo
+  SensorInfo,
+  ToolsMenu,
+  LogExport
 };
 
 UiPage currentPage = UiPage::Dashboard;
@@ -84,6 +91,7 @@ unsigned long lastUsbByteTimeUs = 0;
 const SensorProfile *activeProfile = nullptr;
 bool profileLookupComplete = false;
 bool configMode = false;
+bool logExportMode = false;
 float profileValues[kMaxSensorFields] = {0};
 bool profileValueValid[kMaxSensorFields] = {false};
 uint8_t parameterPage = 0;
@@ -131,6 +139,7 @@ SensorProfileStore profileStore;
 SensorProfileUpdater profileUpdater;
 SdStorage sdStorage;
 DataLogger dataLogger(sdStorage);
+LogExportServer logExportServer;
 
 // SD 卡模拟数据测试：无传感器时每秒递增并写入
 #define SD_SIMULATE_LOG 0  // 1: synthetic SD test; 0: log real MASTER scans.
@@ -366,7 +375,32 @@ void loop()
       drawAuthorPage();
       delay(400);
     } else if (currentPage == UiPage::SystemInfo && ty >= 270) {
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::ToolsMenu;
+      drawToolsMenuPage();
+      delay(400);
+    } else if (currentPage == UiPage::ToolsMenu && ty > 0 && ty < 40) {
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::SystemInfo;
+      drawAuthorPage();
+      delay(400);
+    } else if (currentPage == UiPage::ToolsMenu && ty >= 60 && ty < 120) {
       enterConfigMode();
+      delay(400);
+    } else if (currentPage == UiPage::ToolsMenu && ty >= 130 && ty < 190) {
+      enterLogExportMode();
+      delay(400);
+    } else if (currentPage == UiPage::ToolsMenu && ty >= 200 && ty < 260) {
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::SystemInfo;
+      drawAuthorPage();
+      delay(400);
+    } else if (currentPage == UiPage::LogExport && ty > 0 && ty < 40) {
+      logExportServer.cancel();
+      logExportMode = false;
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::SystemInfo;
+      drawAuthorPage();
       delay(400);
     } else if (currentPage == UiPage::SensorInfo && ty >= 280) {
       if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
@@ -407,6 +441,31 @@ void loop()
       Serial.flush();
       delay(50);
       ESP.restart();
+    }
+    delay(1);
+    return;
+  }
+
+  // LOG EXPORT 模式独占 USB CDC，禁止 Modbus 透传和本地从站响应。
+  if (logExportMode) {
+    logExportServer.update(Serial);
+    static LogExportServer::State lastExportState =
+        LogExportServer::State::Idle;
+    static uint32_t lastExportDrawMs = 0;
+    LogExportServer::State exportState = logExportServer.state();
+    bool stateChanged = exportState != lastExportState;
+    bool progressDue = (uint32_t)(millis() - lastExportDrawMs) >= 300;
+    if (stateChanged || progressDue) {
+      drawLogExportPage();
+      lastExportState = exportState;
+      lastExportDrawMs = millis();
+    }
+    if (logExportServer.shouldExit()) {
+      logExportServer.cancel();
+      logExportMode = false;
+      gfx->fillScreen(RGB565_BLACK);
+      currentPage = UiPage::SystemInfo;
+      drawAuthorPage();
     }
     delay(1);
     return;
@@ -873,8 +932,8 @@ void drawAuthorPage() {
 
   gfx->fillRect(5, 280, 165, 35, RGB565_BLUE);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
-  gfx->setCursor(25, 293);
-  gfx->print("CONFIG UPLOAD");
+  gfx->setCursor(35, 293);
+  gfx->print("TOOLS MENU");
 }
 
 void enterConfigMode() {
@@ -940,6 +999,160 @@ void drawConfigUpdatePage() {
   gfx->setCursor(18, 285);
   gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
   gfx->print("Tap header = cancel");
+  gfx->flush();
+}
+
+void drawToolsMenuPage() {
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(5, 15);
+  gfx->print("TOOLS MENU");
+  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+  gfx->setCursor(5, 50);
+  gfx->print("Tap header to go back");
+
+  // 选项 1：CONFIG UPLOAD
+  gfx->fillRect(5, 60, 162, 56, RGB565_BLUE);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+  gfx->setTextSize(2);
+  gfx->setCursor(15, 80);
+  gfx->print("1.CONFIG");
+  gfx->setCursor(15, 98);
+  gfx->print("  UPLOAD");
+
+  // 选项 2：LOG EXPORT
+  gfx->fillRect(5, 130, 162, 56, RGB565_DARKGREEN);
+  gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREEN);
+  gfx->setTextSize(2);
+  gfx->setCursor(15, 150);
+  gfx->print("2.LOG");
+  gfx->setCursor(15, 168);
+  gfx->print("  EXPORT");
+
+  // 选项 3：BACK
+  gfx->fillRect(5, 200, 162, 56, RGB565_DARKGREY);
+  gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+  gfx->setTextSize(2);
+  gfx->setCursor(55, 225);
+  gfx->print("3.BACK");
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+  gfx->setCursor(15, 270);
+  gfx->print("Connect PC tool via USB");
+  gfx->setCursor(15, 285);
+  gfx->print("before tapping LOG EXPORT");
+  gfx->flush();
+}
+
+void enterLogExportMode() {
+  // 停止所有使用 USB/RS485 的业务，避免 ESPLOG1 与 Modbus 混流。
+  dataLogger.stop();  // Flush and close the SD CSV before export.
+  masterMode = false;
+  sensorDiscovery.cancel();
+  profilePoller.cancel();
+  activeProfile = nullptr;
+  profileLookupComplete = false;
+  usbModbusFrameLength = 0;
+  while (Serial.available()) Serial.read();
+  while (Serial1.available()) Serial1.read();
+#ifdef AUTO_VERSION
+  logExportServer.begin(sdStorage, profileStore, dataLogger, AUTO_VERSION);
+#else
+  logExportServer.begin(sdStorage, profileStore, dataLogger, "development");
+#endif
+  if (logExportServer.state() == LogExportServer::State::Failed) {
+    // SD 不可用时仍进入页面，由 UI 显示错误，允许触摸退出。
+  }
+  logExportMode = true;
+  gfx->fillScreen(RGB565_BLACK);
+  currentPage = UiPage::LogExport;
+  drawLogExportPage();
+}
+
+void drawLogExportPage() {
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(5, 15);
+  gfx->print("LOG EXPORT");
+  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setCursor(5, 50);
+  gfx->print("USB protocol: ESPLOG1");
+
+  gfx->setCursor(5, 68);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->print("Status:");
+  gfx->setCursor(55, 68);
+  gfx->print(logExportServer.statusText());
+
+  // SD 不可用时的错误显示
+  if (logExportServer.state() == LogExportServer::State::Failed) {
+    gfx->setCursor(5, 90);
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->print("SD not ready");
+    gfx->setCursor(5, 106);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->print("Insert card & restart");
+  } else if (logExportServer.state() == LogExportServer::State::WaitingCommand) {
+    gfx->setCursor(5, 90);
+    gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+    gfx->print("Ready for PC commands");
+  }
+
+  // 当前传输文件
+  const char *file = logExportServer.currentFile();
+  if (file != nullptr && file[0] != '\0') {
+    gfx->setCursor(5, 110);
+    gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+    gfx->print("File:");
+    gfx->setCursor(5, 124);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    // 文件名可能很长，截断显示后 20 字符
+    size_t len = strlen(file);
+    const char *show = file;
+    if (len > 24) show = file + len - 24;
+    gfx->print(show);
+
+    // 进度
+    uint32_t offset = logExportServer.transferOffset();
+    uint32_t total = logExportServer.transferTotal();
+    gfx->setCursor(5, 145);
+    gfx->printf("%lu / %lu bytes",
+                (unsigned long)offset, (unsigned long)total);
+    if (total > 0) {
+      uint8_t pct = (uint8_t)(offset * 100 / total);
+      gfx->setCursor(5, 160);
+      gfx->printf("%u%%", pct);
+      // 进度条
+      gfx->drawRect(5, 175, 162, 12, RGB565_WHITE);
+      gfx->fillRect(6, 176, (uint16_t)(pct * 160 / 100), 10, RGB565_GREEN);
+    }
+  }
+
+  // 错误信息
+  const char *err = logExportServer.errorText();
+  if (err != nullptr && err[0] != '\0') {
+    gfx->setCursor(5, 200);
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->print("Err: ");
+    gfx->print(err);
+  }
+
+  gfx->drawLine(5, 250, 165, 250, RGB565_DARKGREY);
+  gfx->setCursor(15, 265);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->print("Tap header to exit");
+  gfx->setCursor(15, 285);
+  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+  gfx->print("Run PC exporter tool");
   gfx->flush();
 }
 
