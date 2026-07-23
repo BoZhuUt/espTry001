@@ -5,6 +5,8 @@
 > 当前目标：只整理并稳定现有 1.47 平台，不接入 2.8 平台驱动，不引入 LVGL  
 > 长期目标：形成可复用的业务层和清晰的硬件/UI边界，为 2.8 平台及 LVGL 迁移做准备
 
+> 2026-07-23进度：阶段1、阶段2均已完成并通过1.47实机回归；下一步进入阶段3，建立AppMode、AppState和AppController。
+
 ## 1. 为什么现在重构
 
 当前工程的主要功能已经可用：
@@ -307,29 +309,41 @@ USB CDC当前承载：
 
 ### 阶段0：固定基线
 
-- [ ] 确认当前Git工作区只包含预期内容；
+- [x] 确认当前Git工作区只包含预期内容；
 - [ ] 给当前1.47稳定版本建立Git标签；
-- [ ] 记录RAM、Flash、启动时间和主要功能测试结果；
-- [ ] 确认 `waveshare28/` 不参与当前PlatformIO构建；
-- [ ] 建立回归检查表。
+- [x] 记录本次构建占用：RAM 16.3%，Flash 15.4%；启动时间和实机结果待测；
+- [x] 确认 `waveshare28/` 不参与当前PlatformIO构建；
+- [x] 建立回归检查表。
 
 ### 阶段1：提取板级代码，不改变行为
 
-- [ ] 新建 `board/board_config.h`，移动当前LCD、触摸、RS485、ADC和SD引脚；
-- [ ] 提取ST7789初始化和背光控制；
-- [ ] 提取AXS5106L初始化、读取与旋转转换；
-- [ ] 提取ADC滤波和mA换算；
-- [ ] 保持函数调用顺序和刷新周期不变；
-- [ ] 编译并完成显示、触摸和ADC回归。
+- [x] 新建 `board/board_config.h`，移动当前LCD、触摸、RS485、ADC和SD引脚；
+- [x] 提取ST7789初始化和背光控制；
+- [x] 提取AXS5106L初始化、读取与旋转转换；
+- [x] 提取ADC滤波和mA换算；
+- [x] 保持函数调用顺序和刷新周期不变；
+- [x] PlatformIO release编译通过（V1.0.21）；
+- [x] 烧录并完成显示、触摸、ADC及主要业务实机回归。
 
 ### 阶段2：提取UI页面，不改变行为
 
-- [ ] 建立UiManager；
-- [ ] 按页面移动绘制函数；
-- [ ] 将固定触摸判断转换为UI Action；
-- [ ] 页面只绘制传入状态，不直接启动或停止业务模块；
-- [ ] 保持当前172×320布局完全一致；
-- [ ] 回归所有页面和点击区域。
+- [x] 建立UiManager；
+- [x] 按页面将静态及动态绘制函数移动到UiManager；
+- [x] 新建 `UiPage`、`UiAction` 和独立触摸输入模块；
+- [x] 将固定触摸判断转换为UI Action，业务动作仍由main执行；
+- [x] 建立 `UiManager`，迁移Dashboard静态区域、模式、PASS/传输提示和Tools页面；
+- [x] 使用只读ViewModel迁移System Info和Config Upload页面；
+- [x] System Info/Config Upload迁移后PlatformIO release编译通过（V1.0.21）；
+- [x] 使用只读ViewModel迁移Log Export页面；
+- [x] 使用只读ViewModel迁移Sensor Info页面及4项分页参数区域；
+- [x] Sensor Info迁移后PlatformIO release编译通过（V1.0.21）；
+- [x] 使用只读ViewModel迁移Dashboard电流、发现进度、PN及错误状态；
+- [x] 页面只绘制传入状态，不直接启动或停止业务模块；
+- [x] 页面切换清屏和局部刷新统一通过UiManager，不在main直接绘图；
+- [x] 保持当前172×320触摸命中范围及判断顺序一致；
+- [x] PlatformIO release编译通过（V1.0.21）；
+- [x] 阶段2收尾编译通过，main仅在板级触摸初始化时读取显示尺寸；
+- [x] 回归所有页面和点击区域。
 
 ### 阶段3：建立AppMode、AppState和AppController
 

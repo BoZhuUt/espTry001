@@ -14,14 +14,6 @@ public:
     Error            // 运行中出现 I/O 错误（如拔卡）
   };
 
-  // SD_MMC 4-bit 引脚映射
-  static constexpr int8_t kPinCLK = 16;
-  static constexpr int8_t kPinCMD = 15;
-  static constexpr int8_t kPinD0  = 17;
-  static constexpr int8_t kPinD1  = 18;
-  static constexpr int8_t kPinD2  = 13;
-  static constexpr int8_t kPinD3  = 14;
-
   // 初始化 SD_MMC 4-bit 模式。只应在 setup() 中调用一次。
   bool begin();
 

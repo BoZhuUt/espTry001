@@ -1,4 +1,5 @@
 #include "sd_storage.h"
+#include "board/board_config.h"
 
 const char *SdStorage::stateText() const {
   switch (state_) {
@@ -13,7 +14,9 @@ bool SdStorage::begin() {
   if (state_ == State::Ready) return true;
 
   // 配置自定义 4-bit 引脚映射：CLK, CMD, D0, D1, D2, D3
-  SD_MMC.setPins(kPinCLK, kPinCMD, kPinD0, kPinD1, kPinD2, kPinD3);
+  SD_MMC.setPins(BoardConfig::kSdClk, BoardConfig::kSdCmd,
+                 BoardConfig::kSdD0, BoardConfig::kSdD1,
+                 BoardConfig::kSdD2, BoardConfig::kSdD3);
 
   // mode1bit=false → 4-bit 模式；format_on_fail=false → 不自动格式化
   if (!SD_MMC.begin("/sdcard", false, false)) {
