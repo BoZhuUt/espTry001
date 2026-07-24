@@ -5,7 +5,7 @@
 > 当前目标：只整理并稳定现有 1.47 平台，不接入 2.8 平台驱动，不引入 LVGL  
 > 长期目标：形成可复用的业务层和清晰的硬件/UI边界，为 2.8 平台及 LVGL 迁移做准备
 
-> 2026-07-23进度：阶段1、阶段2均已完成并通过1.47实机回归；下一步进入阶段3，建立AppMode、AppState和AppController。
+> 2026-07-24进度：阶段1、阶段2、阶段3均已完成并通过1.47实机回归；下一步进入阶段4，统一USB服务。
 
 ## 1. 为什么现在重构
 
@@ -347,12 +347,32 @@ USB CDC当前承载：
 
 ### 阶段3：建立AppMode、AppState和AppController
 
-- [ ] 统一PASS、MASTER、CONFIG、LOG EXPORT模式；
-- [ ] 将模式切换顺序集中到AppController；
-- [ ] 建立状态快照；
-- [ ] 删除分散的跨模块启停代码；
-- [ ] 保持现有单线程执行；
-- [ ] 回归全部工作流。
+- [x] 使用唯一AppMode统一PASS、MASTER发现/轮询、CONFIG和LOG EXPORT模式；
+- [x] 建立第一版AppState，集中保存AppMode和UiPage；
+- [x] 删除masterMode、configMode和logExportMode三个独立布尔状态；
+- [x] AppMode/AppState第一步PlatformIO release编译通过（V1.0.22）；
+- [x] 建立AppController，作为AppMode和UiPage的唯一写入者；
+- [x] AppController状态控制第一步PlatformIO release编译通过（V1.0.22）；
+- [x] 将PASS/MASTER的日志关闭、缓冲清理、轮询复位和发现启停顺序迁入AppController；
+- [x] PASS/MASTER完整切换迁移后PlatformIO release编译通过（V1.0.22）；
+- [x] 将CONFIG/LOG EXPORT的日志关闭、串口清理、协议启动和退出顺序迁入AppController；
+- [x] 为资源交接顺序和原因补充AppController内联注释；
+- [x] 将模式切换顺序集中到AppController；
+- [x] 建立Dashboard、Sensor Info、System Info、CONFIG和LOG EXPORT固定状态快照；
+- [x] 删除main中分散的跨模块启停代码；
+- [x] CONFIG/LOG EXPORT切换迁移后PlatformIO release编译通过（V1.0.22）；
+- [x] 保持现有单线程执行；
+- [x] 建立Dashboard固定状态快照，复制电流、发现、身份和错误文本；
+- [x] Dashboard状态快照接入后PlatformIO release编译通过（V1.0.22）；
+- [x] 建立Sensor Info固定状态快照，复制最多16字段及分页状态；
+- [x] Sensor Info状态快照接入后PlatformIO release编译通过（V1.0.22）；
+- [x] 建立System Info固定状态快照，复制Profile、SD和记录状态；
+- [x] System Info状态快照接入后PlatformIO release编译通过（V1.0.22）；
+- [x] 建立CONFIG和LOG EXPORT固定状态快照，复制协议进度、文件名和错误文本；
+- [x] 阶段3全部状态快照接入后PlatformIO release编译通过（V1.0.22）；
+- [x] 修复ESPLOG1大文件导出时USB CDC短写导致4096字节块截断的问题：256字节分段并按write返回值补发；
+- [x] 4.18MB CSV通过ESPLOG1完整下载并完成CRC32校验；
+- [x] 回归全部工作流。
 
 ### 阶段4：统一USB服务
 
@@ -382,6 +402,7 @@ USB CDC当前承载：
 
 ### 阶段7：稳定性与清理
 
+- [x] 阶段3中间版本MASTER连续运行12小时，未发现死机或卡屏（2026-07-24阶段性记录，不替代最终24小时验收）；
 - [ ] 连续运行2小时；
 - [ ] 运行24小时并检查队列、堆和Task栈高水位；
 - [ ] 反复切换PASS/MASTER至少100次；

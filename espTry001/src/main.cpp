@@ -1,4 +1,6 @@
 #include <ModbusMaster.h> 
+#include "app/app_controller.h"
+#include "app/app_state.h"
 #include "board/analog_input.h"
 #include "board/board_config.h"
 #include "board/display_driver.h"
@@ -27,26 +29,33 @@
 // 2. 前置函数声明与全局变量
 // ==========================================
 void drawAuthorPage();
+SystemInfoView buildSystemInfoView();
 void drawSensorInfoPage();
 void drawSensorParameterArea();
 SensorInfoView buildSensorInfoView();
 DashboardView buildDashboardView();
+void updateDashboardStateSnapshot();
+void updateSensorStateSnapshot();
+void updateSystemStateSnapshot();
 void enterConfigMode();
 void drawConfigUpdatePage();
+ConfigUpdateView buildConfigUpdateView();
+void updateConfigUpdateStateSnapshot();
 void enterToolsMenu();
 void enterLogExportMode();
 void drawLogExportPage();
+LogExportView buildLogExportView();
+void updateLogExportStateSnapshot();
 void processUsbModbusFrame();
 void sendLocalModbusResponse(const uint8_t *request, size_t length);
 uint16_t modbusCrc16(const uint8_t *data, size_t length);
 
-UiPage currentPage = UiPage::Dashboard;
+AppState appState;
 unsigned long lastSampleTime = 0;
 unsigned long lastModbusTime = 0;
 uint16_t modbusRegValues[REG_COUNT] = {0};
 uint8_t modbusResult = 0xFF;               
 bool touchOnline = false; 
-bool masterMode = false; // false: USB-RS485 透传；true: Modbus 主站轮询
 uint16_t adc1Raw = 0;
 uint16_t adc2Raw = 0;
 float current1Ma = 0.0f;
@@ -56,11 +65,11 @@ size_t usbModbusFrameLength = 0;
 unsigned long lastUsbByteTimeUs = 0;
 const SensorProfile *activeProfile = nullptr;
 bool profileLookupComplete = false;
-bool configMode = false;
-bool logExportMode = false;
 float profileValues[kMaxSensorFields] = {0};
 bool profileValueValid[kMaxSensorFields] = {false};
-uint8_t parameterPage = 0;
+
+static_assert(kAppMaxSensorFields == kMaxSensorFields,
+              "AppState and SensorProfile field limits must match");
 
 float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
 #if MODBUS_FLOAT_WORD_SWAP
@@ -82,6 +91,12 @@ SdStorage sdStorage;
 DataLogger dataLogger(sdStorage);
 LogExportServer logExportServer;
 UiManager ui;
+AppController appController(
+    appState, dataLogger, sensorDiscovery, profilePoller, profileStore,
+    profileUpdater, logExportServer, sdStorage, Serial, Serial1,
+    usbModbusFrameLength, modbusResult, lastModbusTime, activeProfile,
+    profileLookupComplete, appState.sensor.parameterPage, profileValueValid,
+    kMaxSensorFields);
 
 // SD 卡模拟数据测试：无传感器时每秒递增并写入
 #define SD_SIMULATE_LOG 0  // 1: synthetic SD test; 0: log real MASTER scans.
@@ -112,7 +127,7 @@ void setup()
 
   // 1. 屏幕底层硬件初始化
   if (beginBoardDisplay()) {
-    ui.drawDashboardStatic(masterMode);
+    ui.drawDashboardStatic(appState.isMaster());
   }
 
   // 2. 初始化串口与 485
@@ -170,62 +185,45 @@ void loop()
     Serial.printf("Touch Event -> X: %d, Y: %d\n", tx, ty);
 #endif
     UiInputContext inputContext;
-    inputContext.configMode = configMode;
+    inputContext.configMode = appState.isConfigUpload();
     inputContext.sensorDetailsAvailable =
-        masterMode &&
+        appState.isMaster() &&
         sensorDiscovery.state() == SensorDiscovery::State::Success;
-    UiAction action = resolveTouchAction(currentPage, tx, ty, inputContext);
+    UiAction action = resolveTouchAction(appState.page, tx, ty, inputContext);
 
     switch (action) {
       case UiAction::CancelConfigAndRestart:
         // CONFIG 模式退出时重启，重新加载最后一个有效配置。
-        profileUpdater.cancel();
+        appController.cancelConfigUpload();
         Serial.flush();
         delay(50);
         ESP.restart();
         break;
 
       case UiAction::TogglePassMaster:
-        // Finish the current CSV before changing sensor/discovery state.
-        dataLogger.stop();
-        masterMode = !masterMode;
-        while (Serial.available()) Serial.read();
-        while (Serial1.available()) Serial1.read();
-        usbModbusFrameLength = 0;
-        modbusResult = 0xFF;
-        lastModbusTime = 0;
-        activeProfile = nullptr;
-        profilePoller.cancel();
-        profileLookupComplete = false;
-        parameterPage = 0;
-        memset(profileValueValid, 0, sizeof(profileValueValid));
-        if (masterMode) {
-          sensorDiscovery.start();
-        } else {
-          sensorDiscovery.cancel();
-        }
+        appController.togglePassMaster();
         ui.clearScreen();
-        ui.drawDashboardStatic(masterMode);
+        ui.drawDashboardStatic(appState.isMaster());
         delay(400);
         break;
 
       case UiAction::OpenSensorInfo:
-        currentPage = UiPage::SensorInfo;
-        parameterPage = 0;
+        appController.showPage(UiPage::SensorInfo);
+        appState.sensor.parameterPage = 0;
         drawSensorInfoPage();
         delay(400);
         break;
 
       case UiAction::OpenSystemInfo:
         ui.clearScreen();
-        currentPage = UiPage::SystemInfo;
+        appController.showPage(UiPage::SystemInfo);
         drawAuthorPage();
         delay(400);
         break;
 
       case UiAction::OpenToolsMenu:
         ui.clearScreen();
-        currentPage = UiPage::ToolsMenu;
+        appController.showPage(UiPage::ToolsMenu);
         ui.drawToolsMenuPage();
         delay(400);
         break;
@@ -241,20 +239,23 @@ void loop()
         break;
 
       case UiAction::BackToSystemInfo:
-        if (currentPage == UiPage::LogExport) {
-          logExportServer.cancel();
-          logExportMode = false;
+        if (appState.page == UiPage::LogExport) {
+          appController.exitLogExport();
+        } else {
+          appController.showPage(UiPage::SystemInfo);
         }
         ui.clearScreen();
-        currentPage = UiPage::SystemInfo;
         drawAuthorPage();
         delay(400);
         break;
 
       case UiAction::NextSensorParameterPage:
-        if (activeProfile != nullptr && activeProfile->fieldCount > 4) {
-          uint8_t pageCount = (activeProfile->fieldCount + 3) / 4;
-          parameterPage = (parameterPage + 1) % pageCount;
+        if (appState.sensor.fieldCount > kUiSensorRowsPerPage) {
+          uint8_t pageCount =
+              (appState.sensor.fieldCount + kUiSensorRowsPerPage - 1) /
+              kUiSensorRowsPerPage;
+          appState.sensor.parameterPage =
+              (appState.sensor.parameterPage + 1) % pageCount;
           drawSensorParameterArea();
           ui.flush();
         }
@@ -263,8 +264,8 @@ void loop()
 
       case UiAction::BackToDashboard:
         ui.clearScreen();
-        currentPage = UiPage::Dashboard;
-        ui.drawDashboardStatic(masterMode);
+        appController.showPage(UiPage::Dashboard);
+        ui.drawDashboardStatic(appState.isMaster());
         delay(400);
         break;
 
@@ -274,7 +275,7 @@ void loop()
   }
 
   // CONFIG 模式独占 USB CDC，禁止 JSON 被本地 Modbus 解析或转发到 RS485。
-  if (configMode) {
+  if (appState.isConfigUpload()) {
     profileUpdater.update(Serial);
     static SensorProfileUpdater::State lastUpdateState =
         SensorProfileUpdater::State::Idle;
@@ -301,7 +302,7 @@ void loop()
   }
 
   // LOG EXPORT 模式独占 USB CDC，禁止 Modbus 透传和本地从站响应。
-  if (logExportMode) {
+  if (appState.isLogExport()) {
     logExportServer.update(Serial);
     static LogExportServer::State lastExportState =
         LogExportServer::State::Idle;
@@ -315,10 +316,8 @@ void loop()
       lastExportDrawMs = millis();
     }
     if (logExportServer.shouldExit()) {
-      logExportServer.cancel();
-      logExportMode = false;
+      appController.exitLogExport();
       ui.clearScreen();
-      currentPage = UiPage::SystemInfo;
       drawAuthorPage();
     }
     delay(1);
@@ -344,15 +343,16 @@ void loop()
     processUsbModbusFrame();
   }
 
-  if (!masterMode) {
+  if (!appState.isMaster()) {
     if (Serial1.available()) {
       while (Serial1.available()) Serial.write(Serial1.read());
-      if (currentPage == UiPage::Dashboard) ui.showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
+      if (appState.page == UiPage::Dashboard) ui.showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
     }
   }
   else {
     sensorDiscovery.update();
     if (sensorDiscovery.state() == SensorDiscovery::State::Success) {
+      appController.markMasterPolling();
       if (!profileLookupComplete) {
         activeProfile = profileStore.find(sensorDiscovery.result().productNum);
         profileLookupComplete = true;
@@ -370,7 +370,7 @@ void loop()
       }
 
       if (activeProfile != nullptr && profilePoller.update(modbusResult)) {
-        if (currentPage == UiPage::SensorInfo) {
+        if (appState.page == UiPage::SensorInfo) {
           drawSensorParameterArea();
           ui.flush();
         }
@@ -395,7 +395,7 @@ void loop()
   // SD 卡模拟数据测试
   // ----------------------------------------------------------------
 #if SD_SIMULATE_LOG
-  if (dataLogger.isRecording() && !masterMode) {
+  if (dataLogger.isRecording() && !appState.isMaster()) {
     uint32_t now = millis();
     if ((uint32_t)(now - simLastLogMs) >= simLogIntervalMs) {
       simLastLogMs = now;
@@ -431,16 +431,17 @@ void loop()
     current1Ma = channel1.milliAmps;
     current2Ma = channel2.milliAmps;
 
-    if (currentPage == UiPage::Dashboard) {
+    if (appState.page == UiPage::Dashboard) {
+      updateDashboardStateSnapshot();
       ui.drawDashboardDynamic(buildDashboardView());
     }
   }
 
   static unsigned long lastClearTime = 0;
-  if (!masterMode && (millis() - lastClearTime > 150)) {
-    if (currentPage == UiPage::Dashboard) {
+  if (!appState.isMaster() && (millis() - lastClearTime > 150)) {
+    if (appState.page == UiPage::Dashboard) {
       // 传输方向只短暂显示；底部模式切换提示始终保留。
-      ui.clearTransferStatus(masterMode);
+      ui.clearTransferStatus(appState.isMaster());
     }
     ui.flush();
     lastClearTime = millis();
@@ -449,46 +450,92 @@ void loop()
 
 DashboardView buildDashboardView() {
   DashboardView view;
-  view.masterMode = masterMode;
-  view.channel1Ma = current1Ma;
-  view.channel2Ma = current2Ma;
-  view.attempt = sensorDiscovery.attempt();
-  view.maxAttempts = sensorDiscovery.maxAttempts();
-  view.slaveAddress = sensorDiscovery.result().slaveAddress;
-  view.productNum = sensorDiscovery.result().productNum;
-  view.deviceName = activeProfile != nullptr && activeProfile->name != nullptr
-                        ? activeProfile->name
-                        : "Unsupported PN";
-  view.errorText = sensorDiscovery.errorText();
-  view.exceptionResponse =
-      sensorDiscovery.error() == SensorDiscovery::Error::ExceptionResponse;
-  view.exceptionCode = sensorDiscovery.exceptionCode();
+  view.masterMode = appState.isMaster();
+  const DashboardState &snapshot = appState.dashboard;
+  view.channel1Ma = snapshot.channel1Ma;
+  view.channel2Ma = snapshot.channel2Ma;
+  view.attempt = snapshot.attempt;
+  view.maxAttempts = snapshot.maxAttempts;
+  view.slaveAddress = snapshot.slaveAddress;
+  view.productNum = snapshot.productNum;
+  view.deviceName = snapshot.deviceName;
+  view.errorText = snapshot.errorText;
+  view.exceptionResponse = snapshot.exceptionResponse;
+  view.exceptionCode = snapshot.exceptionCode;
 
-  switch (sensorDiscovery.state()) {
-    case SensorDiscovery::State::DiscoveringAddress:
+  switch (snapshot.discoveryPhase) {
+    case AppDiscoveryPhase::DiscoveringAddress:
       view.discoveryState = UiDiscoveryState::DiscoveringAddress;
       break;
-    case SensorDiscovery::State::DiscoveringSpecialAddress:
+    case AppDiscoveryPhase::DiscoveringSpecialAddress:
       view.discoveryState = UiDiscoveryState::DiscoveringSpecialAddress;
       break;
-    case SensorDiscovery::State::ReadingIdentity:
+    case AppDiscoveryPhase::ReadingIdentity:
       view.discoveryState = UiDiscoveryState::ReadingIdentity;
       break;
-    case SensorDiscovery::State::ReadingProductNumber:
+    case AppDiscoveryPhase::ReadingProductNumber:
       view.discoveryState = UiDiscoveryState::ReadingProductNumber;
       break;
-    case SensorDiscovery::State::Success:
+    case AppDiscoveryPhase::Success:
       view.discoveryState = UiDiscoveryState::Success;
       break;
-    case SensorDiscovery::State::Failed:
+    case AppDiscoveryPhase::Failed:
       view.discoveryState = UiDiscoveryState::Failed;
       break;
-    case SensorDiscovery::State::Idle:
+    case AppDiscoveryPhase::Idle:
     default:
       view.discoveryState = UiDiscoveryState::Idle;
       break;
   }
   return view;
+}
+
+void updateDashboardStateSnapshot() {
+  DashboardState &snapshot = appState.dashboard;
+  snapshot.channel1Ma = current1Ma;
+  snapshot.channel2Ma = current2Ma;
+  snapshot.attempt = sensorDiscovery.attempt();
+  snapshot.maxAttempts = sensorDiscovery.maxAttempts();
+  snapshot.slaveAddress = sensorDiscovery.result().slaveAddress;
+  snapshot.productNum = sensorDiscovery.result().productNum;
+  snapshot.exceptionResponse =
+      sensorDiscovery.error() == SensorDiscovery::Error::ExceptionResponse;
+  snapshot.exceptionCode = sensorDiscovery.exceptionCode();
+
+  // Copy text into AppState-owned buffers. This avoids retaining pointers into
+  // the hot-update Profile store or SensorDiscovery's mutable error storage.
+  const char *deviceName =
+      activeProfile != nullptr && activeProfile->name != nullptr
+          ? activeProfile->name
+          : "Unsupported PN";
+  snprintf(snapshot.deviceName, sizeof(snapshot.deviceName), "%s", deviceName);
+  snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
+           sensorDiscovery.errorText());
+
+  switch (sensorDiscovery.state()) {
+    case SensorDiscovery::State::DiscoveringAddress:
+      snapshot.discoveryPhase = AppDiscoveryPhase::DiscoveringAddress;
+      break;
+    case SensorDiscovery::State::DiscoveringSpecialAddress:
+      snapshot.discoveryPhase = AppDiscoveryPhase::DiscoveringSpecialAddress;
+      break;
+    case SensorDiscovery::State::ReadingIdentity:
+      snapshot.discoveryPhase = AppDiscoveryPhase::ReadingIdentity;
+      break;
+    case SensorDiscovery::State::ReadingProductNumber:
+      snapshot.discoveryPhase = AppDiscoveryPhase::ReadingProductNumber;
+      break;
+    case SensorDiscovery::State::Success:
+      snapshot.discoveryPhase = AppDiscoveryPhase::Success;
+      break;
+    case SensorDiscovery::State::Failed:
+      snapshot.discoveryPhase = AppDiscoveryPhase::Failed;
+      break;
+    case SensorDiscovery::State::Idle:
+    default:
+      snapshot.discoveryPhase = AppDiscoveryPhase::Idle;
+      break;
+  }
 }
 
 // ==========================================
@@ -552,7 +599,7 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length) {
   uint16_t localRegisters[LOCAL_REG_COUNT] = {0};
   floatToModbusRegisters(current1Ma, localRegisters[0], localRegisters[1]);
   floatToModbusRegisters(current2Ma, localRegisters[2], localRegisters[3]);
-  localRegisters[4] = masterMode ? 1 : 0;
+  localRegisters[4] = appState.isMaster() ? 1 : 0;
   localRegisters[5] = adc1Raw;
   localRegisters[6] = adc2Raw;
 
@@ -577,150 +624,247 @@ void processUsbModbusFrame() {
 
   if (usbModbusFrame[0] == LOCAL_SLAVE_ID) {
     sendLocalModbusResponse(usbModbusFrame, usbModbusFrameLength);
-  } else if (!masterMode) {
+  } else if (!appState.isMaster()) {
     // 非本地地址保持透明转发，CRC 与功能码由下游设备处理。
     Serial1.write(usbModbusFrame, usbModbusFrameLength);
     Serial1.flush();
-    if (currentPage == UiPage::Dashboard) ui.showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+    if (appState.page == UiPage::Dashboard) ui.showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
   }
   usbModbusFrameLength = 0;
 }
 
 void drawAuthorPage() {
+  updateSystemStateSnapshot();
+  ui.drawSystemInfoPage(buildSystemInfoView());
+}
+
+SystemInfoView buildSystemInfoView() {
+  const SystemState &snapshot = appState.system;
   SystemInfoView view;
-#ifdef AUTO_VERSION
-  view.firmwareVersion = AUTO_VERSION;
-#else
-  view.firmwareVersion = "V1.0.1";
-#endif
-  view.profileSource = profileStore.sourceText();
-  view.configVersion = profileStore.configVersion();
-  view.profileFallback = !profileStore.usingLittleFs();
-  view.profileError = profileStore.lastError();
-  view.sdStateText = sdStorage.stateText();
-  view.sdFreeBytes = sdStorage.freeBytes();
-  view.recording = dataLogger.isRecording();
-  view.logRecordCount = dataLogger.recordCount();
-  view.sdError = sdStorage.lastError();
-  switch (sdStorage.state()) {
-    case SdStorage::State::Ready:
+  view.firmwareVersion = snapshot.firmwareVersion;
+  view.profileSource = snapshot.profileSource;
+  view.configVersion = snapshot.configVersion;
+  view.profileFallback = snapshot.profileFallback;
+  view.profileError = snapshot.profileError;
+  view.sdStateText = snapshot.storageStateText;
+  view.sdFreeBytes = snapshot.storageFreeBytes;
+  view.recording = snapshot.recording;
+  view.logRecordCount = snapshot.logRecordCount;
+  view.sdError = snapshot.storageError;
+  switch (snapshot.storageState) {
+    case AppStorageState::Ready:
       view.sdState = UiSdState::Ready;
       break;
-    case SdStorage::State::Error:
+    case AppStorageState::Error:
       view.sdState = UiSdState::Error;
       break;
+    case AppStorageState::Missing:
     default:
       view.sdState = UiSdState::Missing;
       break;
   }
-  ui.drawSystemInfoPage(view);
+  return view;
+}
+
+void updateSystemStateSnapshot() {
+  SystemState &snapshot = appState.system;
+#ifdef AUTO_VERSION
+  const char *firmwareVersion = AUTO_VERSION;
+#else
+  const char *firmwareVersion = "V1.0.1";
+#endif
+
+  // Own every string in AppState. Profile hot update and SD error reporting
+  // may reuse their internal buffers after this snapshot has been published.
+  snprintf(snapshot.firmwareVersion, sizeof(snapshot.firmwareVersion), "%s",
+           firmwareVersion);
+  snprintf(snapshot.profileSource, sizeof(snapshot.profileSource), "%s",
+           profileStore.sourceText());
+  snprintf(snapshot.configVersion, sizeof(snapshot.configVersion), "%s",
+           profileStore.configVersion());
+  snapshot.profileFallback = !profileStore.usingLittleFs();
+  snprintf(snapshot.profileError, sizeof(snapshot.profileError), "%s",
+           profileStore.lastError());
+  snprintf(snapshot.storageStateText, sizeof(snapshot.storageStateText), "%s",
+           sdStorage.stateText());
+  snapshot.storageFreeBytes = sdStorage.freeBytes();
+  snapshot.recording = dataLogger.isRecording();
+  snapshot.logRecordCount = dataLogger.recordCount();
+  snprintf(snapshot.storageError, sizeof(snapshot.storageError), "%s",
+           sdStorage.lastError());
+
+  switch (sdStorage.state()) {
+    case SdStorage::State::Ready:
+      snapshot.storageState = AppStorageState::Ready;
+      break;
+    case SdStorage::State::Error:
+      snapshot.storageState = AppStorageState::Error;
+      break;
+    case SdStorage::State::NotInitialized:
+    default:
+      snapshot.storageState = AppStorageState::Missing;
+      break;
+  }
 }
 
 void enterConfigMode() {
-  // 停止所有使用 USB/RS485 的业务，避免 JSON 上传与 Modbus 混流。
-  dataLogger.stop();  // Flush and close the SD file before CONFIG UPLOAD.
-  configMode = true;
-  masterMode = false;
-  sensorDiscovery.cancel();
-  profilePoller.cancel();
-  activeProfile = nullptr;
-  profileLookupComplete = false;
-  usbModbusFrameLength = 0;
-  while (Serial.available()) Serial.read();
-  while (Serial1.available()) Serial1.read();
-  profileUpdater.begin(profileStore);
+  // AppController按固定顺序停止日志/RS485并清空残留字节，然后启动ESPCFG1。
+  appController.enterConfigUpload();
   drawConfigUpdatePage();
 }
 
 void drawConfigUpdatePage() {
+  updateConfigUpdateStateSnapshot();
+  ui.drawConfigUpdatePage(buildConfigUpdateView());
+}
+
+ConfigUpdateView buildConfigUpdateView() {
+  const ConfigUpdateState &snapshot = appState.configUpdate;
   ConfigUpdateView view;
-  view.statusText = profileUpdater.statusText();
-  view.expectedLength = profileUpdater.expectedLength();
-  view.receivedLength = profileUpdater.receivedLength();
-  view.errorText = profileUpdater.errorText();
-  if (profileUpdater.state() == SensorProfileUpdater::State::Failed) {
+  view.statusText = snapshot.statusText;
+  view.expectedLength = snapshot.expectedLength;
+  view.receivedLength = snapshot.receivedLength;
+  view.errorText = snapshot.errorText;
+  if (snapshot.state == AppConfigUpdateState::Failed) {
     view.state = UiConfigState::Failed;
-  } else if (profileUpdater.state() == SensorProfileUpdater::State::Success) {
+  } else if (snapshot.state == AppConfigUpdateState::Success) {
     view.state = UiConfigState::Success;
   }
-  ui.drawConfigUpdatePage(view);
+  return view;
+}
+
+void updateConfigUpdateStateSnapshot() {
+  ConfigUpdateState &snapshot = appState.configUpdate;
+  snprintf(snapshot.statusText, sizeof(snapshot.statusText), "%s",
+           profileUpdater.statusText());
+  snapshot.expectedLength = profileUpdater.expectedLength();
+  snapshot.receivedLength = profileUpdater.receivedLength();
+  snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
+           profileUpdater.errorText());
+  snapshot.state = AppConfigUpdateState::Active;
+  if (profileUpdater.state() == SensorProfileUpdater::State::Failed) {
+    snapshot.state = AppConfigUpdateState::Failed;
+  } else if (profileUpdater.state() == SensorProfileUpdater::State::Success) {
+    snapshot.state = AppConfigUpdateState::Success;
+  }
 }
 
 void enterLogExportMode() {
-  // 停止所有使用 USB/RS485 的业务，避免 ESPLOG1 与 Modbus 混流。
-  dataLogger.stop();  // Flush and close the SD CSV before export.
-  masterMode = false;
-  sensorDiscovery.cancel();
-  profilePoller.cancel();
-  activeProfile = nullptr;
-  profileLookupComplete = false;
-  usbModbusFrameLength = 0;
-  while (Serial.available()) Serial.read();
-  while (Serial1.available()) Serial1.read();
+  // AppController会先flush/close CSV，再让ESPLOG1取得SD与USB使用权。
 #ifdef AUTO_VERSION
-  logExportServer.begin(sdStorage, profileStore, dataLogger, AUTO_VERSION);
+  appController.enterLogExport(AUTO_VERSION);
 #else
-  logExportServer.begin(sdStorage, profileStore, dataLogger, "development");
+  appController.enterLogExport("development");
 #endif
-  if (logExportServer.state() == LogExportServer::State::Failed) {
-    // SD 不可用时仍进入页面，由 UI 显示错误，允许触摸退出。
-  }
-  logExportMode = true;
   ui.clearScreen();
-  currentPage = UiPage::LogExport;
   drawLogExportPage();
 }
 
 void drawLogExportPage() {
+  updateLogExportStateSnapshot();
+  ui.drawLogExportPage(buildLogExportView());
+}
+
+LogExportView buildLogExportView() {
+  const LogExportState &snapshot = appState.logExport;
   LogExportView view;
-  view.statusText = logExportServer.statusText();
-  view.currentFile = logExportServer.currentFile();
-  view.transferOffset = logExportServer.transferOffset();
-  view.transferTotal = logExportServer.transferTotal();
-  view.errorText = logExportServer.errorText();
-  if (logExportServer.state() == LogExportServer::State::Failed) {
+  view.statusText = snapshot.statusText;
+  view.currentFile = snapshot.currentFile;
+  view.transferOffset = snapshot.transferOffset;
+  view.transferTotal = snapshot.transferTotal;
+  view.errorText = snapshot.errorText;
+  if (snapshot.state == AppLogExportState::Failed) {
     view.state = UiLogExportState::Failed;
-  } else if (logExportServer.state() ==
-             LogExportServer::State::WaitingCommand) {
+  } else if (snapshot.state == AppLogExportState::WaitingCommand) {
     view.state = UiLogExportState::WaitingCommand;
   }
-  ui.drawLogExportPage(view);
+  return view;
+}
+
+void updateLogExportStateSnapshot() {
+  LogExportState &snapshot = appState.logExport;
+  snprintf(snapshot.statusText, sizeof(snapshot.statusText), "%s",
+           logExportServer.statusText());
+  snprintf(snapshot.currentFile, sizeof(snapshot.currentFile), "%s",
+           logExportServer.currentFile());
+  snapshot.transferOffset = logExportServer.transferOffset();
+  snapshot.transferTotal = logExportServer.transferTotal();
+  snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
+           logExportServer.errorText());
+  snapshot.state = AppLogExportState::Active;
+  if (logExportServer.state() == LogExportServer::State::Failed) {
+    snapshot.state = AppLogExportState::Failed;
+  } else if (logExportServer.state() ==
+             LogExportServer::State::WaitingCommand) {
+    snapshot.state = AppLogExportState::WaitingCommand;
+  }
 }
 
 void drawSensorInfoPage() {
+  updateSensorStateSnapshot();
   ui.drawSensorInfoPage(buildSensorInfoView());
 }
 
 void drawSensorParameterArea() {
+  updateSensorStateSnapshot();
   ui.drawSensorParameterArea(buildSensorInfoView());
 }
 
 SensorInfoView buildSensorInfoView() {
-  const SensorDiscovery::Result &identity = sensorDiscovery.result();
+  const SensorState &snapshot = appState.sensor;
   SensorInfoView view;
-  view.slaveAddress = identity.slaveAddress;
-  view.productNum = identity.productNum;
-  if (activeProfile == nullptr) return view;
+  view.slaveAddress = snapshot.slaveAddress;
+  view.productNum = snapshot.productNum;
+  view.deviceName = snapshot.deviceName;
+  view.supported = snapshot.supported;
+  if (!snapshot.supported) return view;
 
-  view.supported = true;
-  view.deviceName = activeProfile->name != nullptr
-                        ? activeProfile->name
-                        : "Unsupported PN";
   view.pageCount =
-      (activeProfile->fieldCount + kUiSensorRowsPerPage - 1) /
+      (snapshot.fieldCount + kUiSensorRowsPerPage - 1) /
       kUiSensorRowsPerPage;
-  view.pageNumber = parameterPage + 1;
+  view.pageNumber = snapshot.parameterPage + 1;
 
-  uint8_t startIndex = parameterPage * kUiSensorRowsPerPage;
+  uint8_t startIndex = snapshot.parameterPage * kUiSensorRowsPerPage;
   for (uint8_t row = 0; row < kUiSensorRowsPerPage; ++row) {
     uint8_t fieldIndex = startIndex + row;
-    if (fieldIndex >= activeProfile->fieldCount) break;
-    const SensorField &field = activeProfile->fields[fieldIndex];
+    if (fieldIndex >= snapshot.fieldCount) break;
+    const SensorFieldState &field = snapshot.fields[fieldIndex];
     SensorParameterView &parameter = view.rows[view.rowCount++];
     parameter.label = field.label;
-    parameter.value = profileValues[fieldIndex];
-    parameter.valid = profileValueValid[fieldIndex];
+    parameter.value = field.value;
+    parameter.valid = field.valid;
     parameter.decimals = field.decimals;
   }
   return view;
+}
+
+void updateSensorStateSnapshot() {
+  SensorState &snapshot = appState.sensor;
+  const SensorDiscovery::Result &identity = sensorDiscovery.result();
+  snapshot.slaveAddress = identity.slaveAddress;
+  snapshot.productNum = identity.productNum;
+  snapshot.scanSequence = profilePoller.scanSequence();
+  snapshot.supported = activeProfile != nullptr;
+  snapshot.fieldCount = 0;
+
+  const char *deviceName =
+      activeProfile != nullptr && activeProfile->name != nullptr
+          ? activeProfile->name
+          : "Unsupported PN";
+  snprintf(snapshot.deviceName, sizeof(snapshot.deviceName), "%s", deviceName);
+
+  if (activeProfile == nullptr) return;
+
+  // Copy all configured fields, not only the visible page. A future UI task
+  // can therefore change pages without touching ProfileStore or poller memory.
+  snapshot.fieldCount =
+      min(activeProfile->fieldCount, (uint8_t)kAppMaxSensorFields);
+  for (uint8_t index = 0; index < snapshot.fieldCount; ++index) {
+    const SensorField &source = activeProfile->fields[index];
+    SensorFieldState &target = snapshot.fields[index];
+    snprintf(target.label, sizeof(target.label), "%s", source.label);
+    target.value = profileValues[index];
+    target.valid = profileValueValid[index];
+    target.decimals = source.decimals;
+  }
 }

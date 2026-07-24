@@ -112,10 +112,41 @@ void LogExportServer::fail(const char *message) {
   state_ = State::Failed;
 }
 
+bool LogExportServer::writeAll(const uint8_t *data, size_t length) {
+  if (usb_ == nullptr || data == nullptr) return false;
+
+  size_t written = 0;
+  uint32_t lastProgressMs = millis();
+  while (written < length) {
+    size_t chunk = length - written;
+    if (chunk > kUsbWriteChunkSize) chunk = kUsbWriteChunkSize;
+
+    // write() returns the number of bytes actually accepted. USB CDC is
+    // allowed to return a short count; retry the remainder instead of silently
+    // dropping it and entering WaitingAck with an incomplete DATA block.
+    size_t accepted = usb_->write(data + written, chunk);
+    if (accepted > 0) {
+      written += accepted;
+      lastProgressMs = millis();
+      delay(0);  // Let the USB task drain its TX buffer between chunks.
+      continue;
+    }
+
+    if ((uint32_t)(millis() - lastProgressMs) >= kUsbWriteTimeoutMs) {
+      return false;
+    }
+    delay(1);
+  }
+  return true;
+}
+
 void LogExportServer::sendLine(const char *line) {
   if (usb_ == nullptr) return;
-  usb_->write((const uint8_t *)line, strlen(line));
-  usb_->write('\n');
+  if (!writeAll((const uint8_t *)line, strlen(line)) ||
+      !writeAll((const uint8_t *)"\n", 1)) {
+    fail("USB write timeout");
+    return;
+  }
   usb_->flush();
 }
 
@@ -516,10 +547,21 @@ void LogExportServer::continueGet() {
   transferBlockLen_ = n;
   transferBlockCrc_ = crc32Final(crc32Update(0xFFFFFFFF, block_, n));
 
-  // 发 DATA <len>\r\n + 二进制 + CRC <hex>\n
-  usb_->printf("DATA %zu\r\n", n);
-  usb_->write(block_, n);
-  usb_->printf("CRC %08X\n", (unsigned int)transferBlockCrc_);
+  // Send DATA header, binary payload and CRC trailer as one logical frame.
+  // Every byte must be accepted before entering WaitingAck; otherwise the PC
+  // waits for a 4096-byte block while the device waits for an ACK forever.
+  char header[32];
+  char trailer[32];
+  int headerLength = snprintf(header, sizeof(header), "DATA %zu\r\n", n);
+  int trailerLength = snprintf(trailer, sizeof(trailer), "CRC %08X\n",
+                               (unsigned int)transferBlockCrc_);
+  if (headerLength <= 0 || trailerLength <= 0 ||
+      !writeAll((const uint8_t *)header, (size_t)headerLength) ||
+      !writeAll(block_, n) ||
+      !writeAll((const uint8_t *)trailer, (size_t)trailerLength)) {
+    fail("USB write timeout");
+    return;
+  }
   usb_->flush();
 
   state_ = State::WaitingAck;

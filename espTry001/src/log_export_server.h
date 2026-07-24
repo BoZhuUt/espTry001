@@ -44,6 +44,10 @@ class LogExportServer {
   static constexpr size_t kLogsPrefixLen = 6;
   // 单块二进制大小，4KB = USB FS 包整数倍，匹配 ESPCFG1 经验值
   static constexpr size_t kBlockSize = 4096;
+  // ESP32-S3 native USB CDC may accept only part of a large write when its TX
+  // buffer is nearly full. Send in small pieces and retry short writes.
+  static constexpr size_t kUsbWriteChunkSize = 256;
+  static constexpr uint32_t kUsbWriteTimeoutMs = 10000;
   // 命令行缓冲
   static constexpr size_t kCommandBuffer = 160;
   // 最大文件名长度（含 /logs/ 前缀）
@@ -114,6 +118,7 @@ class LogExportServer {
   // 内部方法
   void resetSession();
   void fail(const char *message);
+  bool writeAll(const uint8_t *data, size_t length);
   void sendLine(const char *line);
   void sendLineFmt(const char *fmt, ...);
   bool readCommand(Stream &usb);
