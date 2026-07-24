@@ -5,7 +5,7 @@
 > 当前目标：只整理并稳定现有 1.47 平台，不接入 2.8 平台驱动，不引入 LVGL  
 > 长期目标：形成可复用的业务层和清晰的硬件/UI边界，为 2.8 平台及 LVGL 迁移做准备
 
-> 2026-07-24进度：阶段1、阶段2、阶段3均已完成并通过1.47实机回归；下一步进入阶段4，统一USB服务。
+> 2026-07-24进度：阶段1至阶段4均已完成并通过1.47实机回归；下一步进入阶段5，迁移StorageTask。
 
 ## 1. 为什么现在重构
 
@@ -376,11 +376,17 @@ USB CDC当前承载：
 
 ### 阶段4：统一USB服务
 
-- [ ] 集中USB帧接收和协议选择；
-- [ ] 保持本地Modbus、ESPCFG1和ESPLOG1协议不变；
-- [ ] 明确独占模式；
-- [ ] 收敛调试输出，避免污染二进制协议；
-- [ ] 回归三个USB协议和PASS转发。
+- [x] 新建UsbService，迁移USB RTU组帧和地址247本地分发；
+- [x] 迁移USB→RS485、RS485→USB的PASS双向转发；
+- [x] AppController切换协议所有权时通过UsbService清空残帧；
+- [x] 普通Modbus/PASS迁移后PlatformIO release编译通过（V1.0.23）；
+- [x] 将Modbus RTU、ESPCFG1和ESPLOG1的update入口统一路由到UsbService；
+- [x] 集中USB帧接收和协议选择；
+- [x] 保持本地Modbus、ESPCFG1和ESPLOG1协议不变；
+- [x] 明确CONFIG和LOG EXPORT独占USB，禁止Modbus组帧读取其载荷；
+- [x] 使用默认关闭的USB_DEBUG_LOG统一收敛SD和记录文本日志，协议输出不受影响；
+- [x] 阶段4收尾PlatformIO release编译通过（V1.0.23，RAM 16.8%，Flash 15.5%）；
+- [x] 实机回归本地Modbus地址247、ESPCFG1、ESPLOG1和PASS双向转发。
 
 ### 阶段5：迁移StorageTask
 

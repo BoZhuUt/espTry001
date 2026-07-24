@@ -8,6 +8,7 @@
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
+#include "usb/usb_service.h"
 
 // Owns application mode transitions and the ordered stop/reset/start sequence
 // needed when a resource changes owner. It never draws UI.
@@ -21,9 +22,9 @@ public:
                 SensorProfileUpdater &profileUpdater,
                 LogExportServer &logExportServer,
                 SdStorage &sdStorage,
+                UsbService &usbService,
                 Stream &usb,
                 HardwareSerial &rs485,
-                size_t &usbModbusFrameLength,
                 uint8_t &modbusResult,
                 unsigned long &lastModbusTime,
                 const SensorProfile *&activeProfile,
@@ -61,9 +62,9 @@ private:
   SensorProfileUpdater &profileUpdater_;
   LogExportServer &logExportServer_;
   SdStorage &sdStorage_;
+  UsbService &usbService_;
   Stream &usb_;
   HardwareSerial &rs485_;
-  size_t &usbModbusFrameLength_;
   uint8_t &modbusResult_;
   unsigned long &lastModbusTime_;
   const SensorProfile *&activeProfile_;

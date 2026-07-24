@@ -9,9 +9,9 @@ AppController::AppController(
     SensorProfileUpdater &profileUpdater,
     LogExportServer &logExportServer,
     SdStorage &sdStorage,
+    UsbService &usbService,
     Stream &usb,
     HardwareSerial &rs485,
-    size_t &usbModbusFrameLength,
     uint8_t &modbusResult,
     unsigned long &lastModbusTime,
     const SensorProfile *&activeProfile,
@@ -27,9 +27,9 @@ AppController::AppController(
       profileUpdater_(profileUpdater),
       logExportServer_(logExportServer),
       sdStorage_(sdStorage),
+      usbService_(usbService),
       usb_(usb),
       rs485_(rs485),
-      usbModbusFrameLength_(usbModbusFrameLength),
       modbusResult_(modbusResult),
       lastModbusTime_(lastModbusTime),
       activeProfile_(activeProfile),
@@ -102,7 +102,7 @@ void AppController::showPage(UiPage page) {
 }
 
 void AppController::resetMasterSession() {
-  usbModbusFrameLength_ = 0;
+  usbService_.clearRtuFrame();
   modbusResult_ = 0xFF;
   lastModbusTime_ = 0;
   activeProfile_ = nullptr;
@@ -132,6 +132,6 @@ void AppController::prepareExclusiveUsbMode(AppMode mode) {
   profilePoller_.cancel();
   activeProfile_ = nullptr;
   profileLookupComplete_ = false;
-  usbModbusFrameLength_ = 0;
+  usbService_.clearRtuFrame();
   drainSerialInputs();
 }

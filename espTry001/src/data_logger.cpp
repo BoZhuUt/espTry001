@@ -1,4 +1,5 @@
 #include "data_logger.h"
+#include "debug_log.h"
 #include <nvs_flash.h>
 #include <nvs.h>
 #include <stdarg.h>
@@ -67,8 +68,8 @@ void DataLogger::start() {
   if (!createFile()) return;
 
   recording_ = true;
-  Serial.printf("[Log] Recording started: %s, session=%lu\n",
-                fileName_, (unsigned long)sessionId_);
+  DEBUG_LOG_PRINTF("[Log] Recording started: %s, session=%lu\n",
+                   fileName_, (unsigned long)sessionId_);
 }
 
 void DataLogger::stop() {
@@ -81,8 +82,8 @@ void DataLogger::stop() {
   }
 
   recording_ = false;
-  Serial.printf("[Log] Stopped, %lu records saved\n",
-                (unsigned long)recordCount_);
+  DEBUG_LOG_PRINTF("[Log] Stopped, %lu records saved\n",
+                   (unsigned long)recordCount_);
 }
 
 bool DataLogger::createFile() {

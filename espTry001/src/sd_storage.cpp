@@ -1,5 +1,6 @@
 #include "sd_storage.h"
 #include "board/board_config.h"
+#include "debug_log.h"
 
 const char *SdStorage::stateText() const {
   switch (state_) {
@@ -22,7 +23,7 @@ bool SdStorage::begin() {
   if (!SD_MMC.begin("/sdcard", false, false)) {
     snprintf(lastError_, sizeof(lastError_), "SD_MMC begin failed");
     state_ = State::NotInitialized;
-    Serial.println("[SD] SD_MMC begin failed, no card?");
+    DEBUG_LOG_PRINTLN("[SD] SD_MMC begin failed, no card?");
     return false;
   }
 
@@ -30,7 +31,7 @@ bool SdStorage::begin() {
   if (total == 0) {
     snprintf(lastError_, sizeof(lastError_), "Card size = 0");
     state_ = State::NotInitialized;
-    Serial.println("[SD] Card size reported as 0");
+    DEBUG_LOG_PRINTLN("[SD] Card size reported as 0");
     SD_MMC.end();
     return false;
   }
@@ -43,10 +44,10 @@ bool SdStorage::begin() {
     return false;
   }
 
-  Serial.printf("[SD] %s, %.1f GB, free %.1f MB\n",
-                cardType(),
-                totalBytes() / 1073741824.0,
-                freeBytes() / 1048576.0);
+  DEBUG_LOG_PRINTF("[SD] %s, %.1f GB, free %.1f MB\n",
+                   cardType(),
+                   totalBytes() / 1073741824.0,
+                   freeBytes() / 1048576.0);
 
   return true;
 }
@@ -82,11 +83,11 @@ bool SdStorage::ensureDir(const char *path) {
   if (state_ != State::Ready) return false;
   if (SD_MMC.exists(path)) return true;
   if (SD_MMC.mkdir(path)) {
-    Serial.printf("[SD] Created directory: %s\n", path);
+    DEBUG_LOG_PRINTF("[SD] Created directory: %s\n", path);
     return true;
   }
   snprintf(lastError_, sizeof(lastError_), "mkdir %s failed", path);
-  Serial.printf("[SD] mkdir %s failed\n", path);
+  DEBUG_LOG_PRINTF("[SD] mkdir %s failed\n", path);
   return false;
 }
 
@@ -103,5 +104,5 @@ bool SdStorage::exists(const char *path) {
 void SdStorage::setError(const char *message) {
   snprintf(lastError_, sizeof(lastError_), "%.63s", message);
   state_ = State::Error;
-  Serial.printf("[SD] Error: %s\n", message);
+  DEBUG_LOG_PRINTF("[SD] Error: %s\n", message);
 }

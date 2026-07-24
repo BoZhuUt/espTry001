@@ -11,9 +11,11 @@
 #include "sensor_profile_update.h"
 #include "sd_storage.h"
 #include "data_logger.h"
+#include "debug_log.h"
 #include "log_export_server.h"
 #include "ui/ui_input.h"
 #include "ui/ui_manager.h"
+#include "usb/usb_service.h"
 
 #define SLAVE_ID            15
 #define REG_START_ADDR      46036  // 表中 46037，按 1-based 地址换算为协议地址 46036
@@ -22,8 +24,6 @@
 
 #define LOCAL_SLAVE_ID           247
 #define LOCAL_REG_COUNT          7
-#define USB_MODBUS_MAX_FRAME     256
-#define USB_MODBUS_FRAME_GAP_US  5000
 
 // ==========================================
 // 2. 前置函数声明与全局变量
@@ -46,7 +46,6 @@ void enterLogExportMode();
 void drawLogExportPage();
 LogExportView buildLogExportView();
 void updateLogExportStateSnapshot();
-void processUsbModbusFrame();
 void sendLocalModbusResponse(const uint8_t *request, size_t length);
 uint16_t modbusCrc16(const uint8_t *data, size_t length);
 
@@ -60,9 +59,6 @@ uint16_t adc1Raw = 0;
 uint16_t adc2Raw = 0;
 float current1Ma = 0.0f;
 float current2Ma = 0.0f;
-uint8_t usbModbusFrame[USB_MODBUS_MAX_FRAME] = {0};
-size_t usbModbusFrameLength = 0;
-unsigned long lastUsbByteTimeUs = 0;
 const SensorProfile *activeProfile = nullptr;
 bool profileLookupComplete = false;
 float profileValues[kMaxSensorFields] = {0};
@@ -91,10 +87,12 @@ SdStorage sdStorage;
 DataLogger dataLogger(sdStorage);
 LogExportServer logExportServer;
 UiManager ui;
+UsbService usbService(Serial, Serial1, profileUpdater, logExportServer,
+                      LOCAL_SLAVE_ID, sendLocalModbusResponse);
 AppController appController(
     appState, dataLogger, sensorDiscovery, profilePoller, profileStore,
-    profileUpdater, logExportServer, sdStorage, Serial, Serial1,
-    usbModbusFrameLength, modbusResult, lastModbusTime, activeProfile,
+    profileUpdater, logExportServer, sdStorage, usbService, Serial, Serial1,
+    modbusResult, lastModbusTime, activeProfile,
     profileLookupComplete, appState.sensor.parameterPage, profileValueValid,
     kMaxSensorFields);
 
@@ -145,7 +143,7 @@ void setup()
 
   // 5. 初始化 SD 卡
   if (sdStorage.begin()) {
-    Serial.println("[SD] SD card initialized OK");
+    DEBUG_LOG_PRINTLN("[SD] SD card initialized OK");
 #if SD_SIMULATE_LOG
     // 模拟数据测试：使用内置 Profile 第一个 PN 构造模拟日志
     const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
@@ -163,7 +161,7 @@ void setup()
     }
 #endif
   } else {
-    Serial.println("[SD] No SD card, logging disabled");
+    DEBUG_LOG_PRINTLN("[SD] No SD card, logging disabled");
   }
 }
 
@@ -274,9 +272,12 @@ void loop()
     }
   }
 
+  // UsbService is the single USB protocol router. It advances exactly one of
+  // Modbus RTU, ESPCFG1 or ESPLOG1 according to the current AppMode.
+  usbService.update(appState.mode);
+
   // CONFIG 模式独占 USB CDC，禁止 JSON 被本地 Modbus 解析或转发到 RS485。
   if (appState.isConfigUpload()) {
-    profileUpdater.update(Serial);
     static SensorProfileUpdater::State lastUpdateState =
         SensorProfileUpdater::State::Idle;
     static uint32_t lastUpdateLength = UINT32_MAX;
@@ -303,7 +304,6 @@ void loop()
 
   // LOG EXPORT 模式独占 USB CDC，禁止 Modbus 透传和本地从站响应。
   if (appState.isLogExport()) {
-    logExportServer.update(Serial);
     static LogExportServer::State lastExportState =
         LogExportServer::State::Idle;
     static uint32_t lastExportDrawMs = 0;
@@ -327,29 +327,18 @@ void loop()
   // ----------------------------------------------------------------
   // 核心功能 2：后台双向透传与 Modbus 轮询
   // ----------------------------------------------------------------
-  // USB 侧先按 RTU 帧间隔收包：ID 247 本地响应，其余 ID 在 PASS 模式下转发。
-  while (Serial.available()) {
-    uint8_t value = Serial.read();
-    if (usbModbusFrameLength < USB_MODBUS_MAX_FRAME) {
-      usbModbusFrame[usbModbusFrameLength++] = value;
-    } else {
-      // 超长帧无效，丢弃并重新同步下一帧。
-      usbModbusFrameLength = 0;
+  // UsbService owns USB RTU framing, local address 247 dispatch, and PASS
+  // forwarding. It reports only a semantic activity event back to the UI.
+  UsbTransferActivity usbActivity = usbService.takeTransferActivity();
+  if (appState.page == UiPage::Dashboard) {
+    if (usbActivity == UsbTransferActivity::UsbToRs485) {
+      ui.showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
+    } else if (usbActivity == UsbTransferActivity::Rs485ToUsb) {
+      ui.showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
     }
-    lastUsbByteTimeUs = micros();
-  }
-  if (usbModbusFrameLength > 0 &&
-      (unsigned long)(micros() - lastUsbByteTimeUs) >= USB_MODBUS_FRAME_GAP_US) {
-    processUsbModbusFrame();
   }
 
-  if (!appState.isMaster()) {
-    if (Serial1.available()) {
-      while (Serial1.available()) Serial.write(Serial1.read());
-      if (appState.page == UiPage::Dashboard) ui.showTransferStatus("RS485 -> USB (Pass)", RGB565_BLUE);
-    }
-  }
-  else {
+  if (appState.isMaster()) {
     sensorDiscovery.update();
     if (sensorDiscovery.state() == SensorDiscovery::State::Success) {
       appController.markMasterPolling();
@@ -617,20 +606,6 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length) {
   response[responseLength++] = crc & 0xFF;
   response[responseLength++] = crc >> 8;
   Serial.write(response, responseLength);
-}
-
-void processUsbModbusFrame() {
-  if (usbModbusFrameLength == 0) return;
-
-  if (usbModbusFrame[0] == LOCAL_SLAVE_ID) {
-    sendLocalModbusResponse(usbModbusFrame, usbModbusFrameLength);
-  } else if (!appState.isMaster()) {
-    // 非本地地址保持透明转发，CRC 与功能码由下游设备处理。
-    Serial1.write(usbModbusFrame, usbModbusFrameLength);
-    Serial1.flush();
-    if (appState.page == UiPage::Dashboard) ui.showTransferStatus("USB -> RS485 (Pass)", RGB565_RED);
-  }
-  usbModbusFrameLength = 0;
 }
 
 void drawAuthorPage() {
