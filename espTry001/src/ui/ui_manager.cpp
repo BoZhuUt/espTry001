@@ -151,10 +151,21 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
   gfx->printf("SD: %s", view.sdStateText);
   if (view.sdState == UiSdState::Ready) {
     gfx->printf(" %.0fMB free", (double)(view.sdFreeBytes / 1048576));
-    if (view.recording) {
-      gfx->setCursor(5, 232);
+    gfx->setCursor(5, 232);
+    if (view.storageDroppedSnapshots > 0) {
+      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+      gfx->printf("Q:%u/%u Lost:%lu", view.storageQueueDepth,
+                  view.storageQueuePeak,
+                  (unsigned long)view.storageDroppedSnapshots);
+    } else if (view.recording) {
       gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
-      gfx->printf("Log: %lu records", (unsigned long)view.logRecordCount);
+      gfx->printf("Log:%lu Q:%u/%u", (unsigned long)view.logRecordCount,
+                  view.storageQueueDepth, view.storageQueuePeak);
+    } else {
+      gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+      gfx->printf("Q:%u/%u Stack:%u", view.storageQueueDepth,
+                  view.storageQueuePeak,
+                  (unsigned int)view.storageTaskStackHighWater);
     }
   } else if (view.sdState == UiSdState::Error) {
     gfx->setTextColor(RGB565_RED, RGB565_BLACK);

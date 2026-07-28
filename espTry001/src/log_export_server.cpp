@@ -51,7 +51,9 @@ void LogExportServer::begin(SdStorage &sd, SensorProfileStore &store,
   sd_ = &sd;
   store_ = &store;
   logger_ = &logger;
-  firmwareVersion_ = firmwareVersion != nullptr ? firmwareVersion : "unknown";
+  snprintf(firmwareVersion_, sizeof(firmwareVersion_), "%s",
+           firmwareVersion != nullptr ? firmwareVersion : "unknown");
+  errorText_[0] = '\0';
 
   if (sd_->state() != SdStorage::State::Ready) {
     fail("SD not ready");
@@ -74,6 +76,7 @@ void LogExportServer::resetSession() {
   transferFileHandle_ = File();
   cmdLen_ = 0;
   cmdLine_[0] = '\0';
+  listCount_ = 0;
   listRemaining_ = 0;
   statFile_[0] = '\0';
   statCrc_ = 0xFFFFFFFF;
@@ -94,6 +97,7 @@ const char *LogExportServer::statusText() const {
   switch (state_) {
     case State::Idle:              return "Idle";
     case State::WaitingCommand:    return "Ready (ESPLOG1)";
+    case State::ListingCounting:   return "Counting logs";
     case State::Listing:           return "Listing";
     case State::StatRunning:       return "STAT running";
     case State::GetRespond:        return "Sending block";
@@ -128,7 +132,11 @@ bool LogExportServer::writeAll(const uint8_t *data, size_t length) {
     if (accepted > 0) {
       written += accepted;
       lastProgressMs = millis();
-      delay(0);  // Let the USB task drain its TX buffer between chunks.
+      // StorageTask is not Arduino's loopTask. Explicitly flush and yield after
+      // each USB FS-sized piece so the CDC driver drains its TX buffer before
+      // this lower-priority task queues more data.
+      usb_->flush();
+      delay(1);
       continue;
     }
 
@@ -142,8 +150,15 @@ bool LogExportServer::writeAll(const uint8_t *data, size_t length) {
 
 void LogExportServer::sendLine(const char *line) {
   if (usb_ == nullptr) return;
-  if (!writeAll((const uint8_t *)line, strlen(line)) ||
-      !writeAll((const uint8_t *)"\n", 1)) {
+  size_t lineLength = strlen(line);
+  if (lineLength + 1 >= kCommandBuffer) {
+    fail("Response line too long");
+    return;
+  }
+  char framedLine[kCommandBuffer];
+  memcpy(framedLine, line, lineLength);
+  framedLine[lineLength] = '\n';
+  if (!writeAll((const uint8_t *)framedLine, lineLength + 1)) {
     fail("USB write timeout");
     return;
   }
@@ -227,6 +242,9 @@ void LogExportServer::update(Stream &usb) {
 
   // 长事务推进：LIST/STAT/GET 等多帧状态
   switch (state_) {
+    case State::ListingCounting:
+      continueListingCount();
+      break;
     case State::Listing:
       continueListing();
       break;
@@ -330,7 +348,9 @@ void LogExportServer::handleCommand(const char *line) {
 }
 
 // ---------------------------------------------------------------------------
-// LIST 实现：先扫一遍目录计数并缓存 count，再逐条发送
+// LIST 实现：第一遍每次 update() 只扫描一个目录项，得到 count 后
+// 重新打开目录；第二遍仍每次只发送一条。慢卡或大量日志不会长时间
+// 阻塞 StorageTask，也不会让 PC 在 COUNT 首行之前无响应。
 // ---------------------------------------------------------------------------
 
 void LogExportServer::startListing() {
@@ -345,22 +365,25 @@ void LogExportServer::startListing() {
     return;
   }
 
-  // 扫一遍计数
-  uint32_t count = 0;
+  listCount_ = 0;
+  listRemaining_ = 0;
+  state_ = State::ListingCounting;
+}
+
+void LogExportServer::continueListingCount() {
   File entry = listDir_.openNextFile();
-  while (entry) {
-    if (!entry.isDirectory()) {
+  if (entry) {
+    if (!entry.isDirectory() && entry.name() != nullptr) {
       const char *name = entry.name();
-      if (name != nullptr) {
-        size_t len = strlen(name);
-        if (len > 4 && strcasecmp(name + len - 4, ".csv") == 0) {
-          count++;
-        }
+      size_t len = strlen(name);
+      if (len > 4 && strcasecmp(name + len - 4, ".csv") == 0) {
+        listCount_++;
       }
     }
     entry.close();
-    entry = listDir_.openNextFile();
+    return;
   }
+
   // rewind 需要重新打开目录，因为 openNextFile 迭代器没有公开 rewind
   listDir_.close();
   listDir_ = SD_MMC.open(kLogsDir);
@@ -369,9 +392,9 @@ void LogExportServer::startListing() {
     return;
   }
 
-  listRemaining_ = count;
-  sendLineFmt("COUNT %lu", (unsigned long)count);
-  if (count == 0) {
+  listRemaining_ = listCount_;
+  sendLineFmt("COUNT %lu", (unsigned long)listCount_);
+  if (listCount_ == 0) {
     sendLine("END");
     listDir_.close();
     state_ = State::WaitingCommand;

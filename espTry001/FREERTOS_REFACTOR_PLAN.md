@@ -5,7 +5,7 @@
 > 当前目标：只整理并稳定现有 1.47 平台，不接入 2.8 平台驱动，不引入 LVGL  
 > 长期目标：形成可复用的业务层和清晰的硬件/UI边界，为 2.8 平台及 LVGL 迁移做准备
 
-> 2026-07-24进度：阶段1至阶段4均已完成并通过1.47实机回归；下一步进入阶段5，迁移StorageTask。
+> 2026-07-28进度：阶段1至阶段5均已完成并通过1.47实机回归；下一步进入阶段6，迁移Rs485Task。
 
 ## 1. 为什么现在重构
 
@@ -390,12 +390,16 @@ USB CDC当前承载：
 
 ### 阶段5：迁移StorageTask
 
-- [ ] 建立日志命令队列和SensorSnapshot队列；
-- [ ] DataLogger只由StorageTask调用；
-- [ ] LogExportServer的SD访问与记录互斥；
-- [ ] 实现停止确认事件，确认flush/close后再切换模式；
-- [ ] 增加队列满、写入失败和Task栈水位诊断；
-- [ ] 回归CSV、Session、分卷、导出和删除。
+- [x] 建立固定长度日志命令队列和SensorSnapshot队列；
+- [x] DataLogger只由StorageTask调用，loopTask只复制并投递完整扫描快照；
+- [x] LogExportServer由StorageTask推进，ESPLOG1文件访问与CSV记录互斥；
+- [x] 实现停止确认事件，确认flush/close后再切换PASS、CONFIG或LOG EXPORT；
+- [x] 增加队列深度/峰值/丢失数、写入错误和Task栈水位固定状态诊断；
+- [x] 阶段5代码PlatformIO release编译通过（V1.0.24-S5USB1，RAM 19.7%，Flash 15.8%）；
+- [x] 将ESPLOG1 LIST目录计数改为逐项非阻塞扫描，并修复PC端首行临界超时；
+- [x] 使用固定StreamBuffer桥接StorageTask与UsbService，SD文件操作留在StorageTask，物理USB CDC读写回归loopTask；
+- [x] ESPLOG1实机回归通过：列出4个日志、单文件下载及4文件连续下载均成功，逐文件CRC32校验通过（2026-07-28，V1.0.24-S5USB1）；
+- [x] 回归CSV、Session、分卷、导出和删除；阶段5其余功能未发现问题（2026-07-28）。
 
 ### 阶段6：迁移Rs485Task
 

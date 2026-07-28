@@ -3,8 +3,8 @@
 #include <Arduino.h>
 
 #include "app/app_state.h"
-#include "log_export_server.h"
 #include "sensor_profile_update.h"
+#include "usb/storage_usb_bridge.h"
 
 enum class UsbTransferActivity : uint8_t {
   None,
@@ -24,7 +24,7 @@ public:
 
   UsbService(Stream &usb, HardwareSerial &rs485,
              SensorProfileUpdater &profileUpdater,
-             LogExportServer &logExportServer,
+             StorageUsbBridge &logExportBridge,
              uint8_t localSlaveId,
              LocalFrameHandler localFrameHandler);
 
@@ -35,6 +35,7 @@ public:
 
   // Drop a partial RTU request whenever USB protocol ownership changes.
   void clearRtuFrame();
+  void clearLogExportTransport();
 
   UsbTransferActivity takeTransferActivity();
 
@@ -46,7 +47,7 @@ private:
   Stream &usb_;
   HardwareSerial &rs485_;
   SensorProfileUpdater &profileUpdater_;
-  LogExportServer &logExportServer_;
+  StorageUsbBridge &logExportBridge_;
   uint8_t localSlaveId_;
   LocalFrameHandler localFrameHandler_;
 

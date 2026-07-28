@@ -113,30 +113,36 @@ namespace PyxisSensorDataExporter
         {
             _port.DiscardInBuffer();
             SendLine("LIST");
-            string countLine = ReadLine();
-            if (!countLine.StartsWith("COUNT "))
-                throw new Exception("LIST 响应异常: " + countLine);
-            int count = int.Parse(countLine.Substring(6).Trim());
-
-            var entries = new List<LogFileEntry>(count);
-            for (int i = 0; i < count; i++)
+            int oldTimeout = _port.ReadTimeout;
+            _port.ReadTimeout = 30000; // 慢卡或日志较多时，目录统计可能超过 5 秒
+            try
             {
-                string line = ReadLine();
-                string[] f = line.Split('\t');
-                if (f.Length < 4)
-                    throw new Exception("LIST 条目格式错: " + line);
-                entries.Add(new LogFileEntry
+                string countLine = ReadLine();
+                if (!countLine.StartsWith("COUNT "))
+                    throw new Exception("LIST 响应异常: " + countLine);
+                int count = int.Parse(countLine.Substring(6).Trim());
+
+                var entries = new List<LogFileEntry>(count);
+                for (int i = 0; i < count; i++)
                 {
-                    Path = f[0],
-                    Size = long.Parse(f[1]),
-                    Session = long.Parse(f[2]),
-                    Pn = long.Parse(f[3])
-                });
+                    string line = ReadLine();
+                    string[] f = line.Split('\t');
+                    if (f.Length < 4)
+                        throw new Exception("LIST 条目格式错: " + line);
+                    entries.Add(new LogFileEntry
+                    {
+                        Path = f[0],
+                        Size = long.Parse(f[1]),
+                        Session = long.Parse(f[2]),
+                        Pn = long.Parse(f[3])
+                    });
+                }
+                string end = ReadLine();
+                if (end != "END")
+                    throw new Exception("LIST 未以 END 结束: " + end);
+                return entries;
             }
-            string end = ReadLine();
-            if (end != "END")
-                throw new Exception("LIST 未以 END 结束: " + end);
-            return entries;
+            finally { _port.ReadTimeout = oldTimeout; }
         }
 
         /// <summary>查询文件大小和 CRC32（返回 size, crc32）</summary>
@@ -276,39 +282,76 @@ namespace PyxisSensorDataExporter
             catch { /* 退出时忽略通信异常 */ }
         }
 
+        public void AbortTransfer()
+        {
+            try
+            {
+                // CANCEL is harmless in WaitingCommand and returns a device
+                // stuck in WaitingAck to its command state.
+                SendLine("CANCEL");
+                Thread.Sleep(100);
+                _port.DiscardInBuffer();
+            }
+            catch { /* 后续操作会报告真正的连接错误 */ }
+        }
+
         // ---- 内部 ----
 
         private byte[] GetBlock(string path, long offset, int length, ref int resendCount)
         {
             SendLine(string.Format("GET {0} {1} {2}", path, offset, length));
-            string first = ReadLine();
-            if (first == "EOF") return null;
-            if (first.StartsWith("ERR"))
-                throw new Exception("GET 失败: " + first);
-            if (!first.StartsWith("DATA "))
-                throw new Exception("GET 响应异常: " + first);
-
-            int expectedLen = int.Parse(first.Substring(5).Trim());
-            byte[] data = ReadBinary(expectedLen);
-
-            string crcLine = ReadLine();
-            if (!crcLine.StartsWith("CRC "))
-                throw new Exception("GET CRC 行异常: " + crcLine);
-            uint blockCrc = uint.Parse(crcLine.Substring(4).Trim(),
-                                       System.Globalization.NumberStyles.HexNumber);
-
-            uint actualCrc = Crc32.Compute(data, 0, data.Length);
-            if (actualCrc != blockCrc)
+            while (true)
             {
-                if (resendCount >= 3)
-                    throw new Exception("块 CRC 重试超限");
-                resendCount++;
-                SendLine("RESEND");
-                return GetBlock(path, offset, length, ref resendCount);
+                try
+                {
+                    string first = ReadLine();
+                    if (first == "EOF") return null;
+                    if (first.StartsWith("ERR"))
+                        throw new Exception("GET 失败: " + first);
+                    if (!first.StartsWith("DATA "))
+                        throw new IOException("GET 响应异常: " + first);
+
+                    int expectedLen = int.Parse(first.Substring(5).Trim());
+                    byte[] data = ReadBinary(expectedLen);
+
+                    string crcLine = ReadLine();
+                    if (!crcLine.StartsWith("CRC "))
+                        throw new IOException("GET CRC 行异常: " + crcLine);
+                    uint blockCrc = uint.Parse(
+                        crcLine.Substring(4).Trim(),
+                        System.Globalization.NumberStyles.HexNumber);
+
+                    uint actualCrc = Crc32.Compute(data, 0, data.Length);
+                    if (actualCrc != blockCrc)
+                        throw new InvalidDataException(string.Format(
+                            "块 CRC 不匹配: 期望 {0:X8}, 实际 {1:X8}",
+                            blockCrc, actualCrc));
+
+                    resendCount = 0;
+                    SendLine("ACK");
+                    return data;
+                }
+                catch (Exception ex)
+                {
+                    bool retryable = ex is TimeoutException ||
+                                     ex is IOException ||
+                                     ex is InvalidDataException;
+                    if (!retryable) throw;
+                    if (resendCount >= 3)
+                    {
+                        try { SendLine("CANCEL"); } catch { }
+                        throw new Exception(
+                            "数据块重试超限: " + ex.Message, ex);
+                    }
+
+                    resendCount++;
+                    // Discard a late CRC trailer or partial payload before
+                    // asking the device to seek back and resend this block.
+                    Thread.Sleep(100);
+                    _port.DiscardInBuffer();
+                    SendLine("RESEND");
+                }
             }
-            resendCount = 0;
-            SendLine("ACK");
-            return data;
         }
 
         private void SendLine(string line)
@@ -326,6 +369,9 @@ namespace PyxisSensorDataExporter
             {
                 int b = ReadByte();
                 if (b < 0) continue;
+                // ReadTimeout is an idle timeout. Once bytes start arriving,
+                // allow a full timeout window for the line ending.
+                deadline = DateTime.UtcNow.AddMilliseconds(_port.ReadTimeout);
                 if (b == '\n')
                 {
                     if (sb.Length > 0 && sb[sb.Length - 1] == '\r')
@@ -343,7 +389,7 @@ namespace PyxisSensorDataExporter
             int read = 0;
             int oldTimeout = _port.ReadTimeout;
             _port.ReadTimeout = 5000;
-            var deadline = DateTime.UtcNow.AddSeconds(60); // 总超时 60 秒
+            var deadline = DateTime.UtcNow.AddSeconds(15); // 单块失败后尽快触发 RESEND
             try
             {
                 while (read < count)
@@ -689,6 +735,7 @@ namespace PyxisSensorDataExporter
                         catch (Exception ex)
                         {
                             failed++;
+                            _client.AbortTransfer();
                             Log(string.Format("文件 {0} 下载失败: {1}", en.FileName, ex.Message));
                         }
                     }

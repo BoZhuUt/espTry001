@@ -2,13 +2,13 @@
 
 UsbService::UsbService(Stream &usb, HardwareSerial &rs485,
                        SensorProfileUpdater &profileUpdater,
-                       LogExportServer &logExportServer,
+                       StorageUsbBridge &logExportBridge,
                        uint8_t localSlaveId,
                        LocalFrameHandler localFrameHandler)
     : usb_(usb),
       rs485_(rs485),
       profileUpdater_(profileUpdater),
-      logExportServer_(logExportServer),
+      logExportBridge_(logExportBridge),
       localSlaveId_(localSlaveId),
       localFrameHandler_(localFrameHandler) {}
 
@@ -20,7 +20,9 @@ void UsbService::update(AppMode mode) {
     return;
   }
   if (mode == AppMode::LogExport) {
-    logExportServer_.update(usb_);
+    // StorageTask owns ESPLOG1 file operations, but only loopTask touches the
+    // physical CDC object. The fixed bridge preserves both ownership rules.
+    logExportBridge_.pump(usb_);
     return;
   }
   if (mode == AppMode::Fault) return;
@@ -42,6 +44,10 @@ void UsbService::clearRtuFrame() {
   rtuFrameLength_ = 0;
   lastUsbByteTimeUs_ = 0;
   activity_ = UsbTransferActivity::None;
+}
+
+void UsbService::clearLogExportTransport() {
+  logExportBridge_.reset();
 }
 
 UsbTransferActivity UsbService::takeTransferActivity() {

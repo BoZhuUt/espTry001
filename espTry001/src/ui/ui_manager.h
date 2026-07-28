@@ -19,6 +19,10 @@ struct SystemInfoView {
   uint64_t sdFreeBytes = 0;
   bool recording = false;
   uint32_t logRecordCount = 0;
+  uint8_t storageQueueDepth = 0;
+  uint8_t storageQueuePeak = 0;
+  uint32_t storageDroppedSnapshots = 0;
+  UBaseType_t storageTaskStackHighWater = 0;
   const char *sdError = "";
 };
 

@@ -71,7 +71,10 @@ private:
   static constexpr size_t kResponseBufferSize = 128;
   static constexpr uint32_t kResponseTimeoutMs = 500;
   static constexpr uint32_t kInterBlockDelayMs = 20;
-  static constexpr uint32_t kScanIntervalMs = 1000;
+  // The connected sensors refresh their own measurements on an approximately
+  // four-second cadence. Use a clearly different fixed period to avoid a slow
+  // beat between the sensor update clock and the tool polling clock.
+  static constexpr uint32_t kScanIntervalMs = 5000;
 
   void sendCurrentBlock();                        // 发送当前块的 FC03 请求
   void finishCurrentBlock(uint8_t error);         // 标记有效性并安排下一块

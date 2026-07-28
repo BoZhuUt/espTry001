@@ -28,6 +28,7 @@ class LogExportServer {
   enum class State : uint8_t {
     Idle,             // 未启动
     WaitingCommand,   // 主等待态，解析一行命令
+    ListingCounting,  // 分步扫描目录并统计 CSV 数量
     Listing,          // 枚举 /logs/*.csv，分批发送
     StatRunning,      // 流式计算 CRC32
     GetRespond,       // 准备 DATA 头并发送一块
@@ -46,7 +47,10 @@ class LogExportServer {
   static constexpr size_t kBlockSize = 4096;
   // ESP32-S3 native USB CDC may accept only part of a large write when its TX
   // buffer is nearly full. Send in small pieces and retry short writes.
-  static constexpr size_t kUsbWriteChunkSize = 256;
+  // Native USB CDC can report a successful large write before every byte has
+  // actually left its internal TX buffer. Keep transport writes to one USB FS
+  // packet and flush/yield between packets.
+  static constexpr size_t kUsbWriteChunkSize = 64;
   static constexpr uint32_t kUsbWriteTimeoutMs = 10000;
   // 命令行缓冲
   static constexpr size_t kCommandBuffer = 160;
@@ -76,7 +80,7 @@ class LogExportServer {
   SdStorage *sd_ = nullptr;
   SensorProfileStore *store_ = nullptr;
   DataLogger *logger_ = nullptr;
-  const char *firmwareVersion_ = "unknown";
+  char firmwareVersion_[32] = "unknown";
 
   Stream *usb_ = nullptr;
   State state_ = State::Idle;
@@ -90,6 +94,7 @@ class LogExportServer {
 
   // LIST 状态
   File listDir_;               // 打开的 /logs 目录
+  uint32_t listCount_ = 0;     // 第一遍分步扫描得到的 CSV 数量
   uint32_t listRemaining_ = 0; // 尚未发送的条目数（0 表示未知或扫描中）
 
   // STAT 状态
@@ -127,6 +132,7 @@ class LogExportServer {
   static bool parseFileNameMeta(const char *name, uint32_t *pn,
                                 uint32_t *session);
   void startListing();
+  void continueListingCount();
   void continueListing();
   void finishListing();
   void startStat(const char *path);

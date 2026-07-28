@@ -2,13 +2,11 @@
 
 AppController::AppController(
     AppState &state,
-    DataLogger &dataLogger,
+    StorageService &storageService,
     SensorDiscovery &sensorDiscovery,
     SensorProfilePoller &profilePoller,
     SensorProfileStore &profileStore,
     SensorProfileUpdater &profileUpdater,
-    LogExportServer &logExportServer,
-    SdStorage &sdStorage,
     UsbService &usbService,
     Stream &usb,
     HardwareSerial &rs485,
@@ -20,13 +18,11 @@ AppController::AppController(
     bool *profileValueValid,
     size_t profileValueValidCount)
     : state_(state),
-      dataLogger_(dataLogger),
+      storageService_(storageService),
       sensorDiscovery_(sensorDiscovery),
       profilePoller_(profilePoller),
       profileStore_(profileStore),
       profileUpdater_(profileUpdater),
-      logExportServer_(logExportServer),
-      sdStorage_(sdStorage),
       usbService_(usbService),
       usb_(usb),
       rs485_(rs485),
@@ -40,7 +36,10 @@ AppController::AppController(
 
 bool AppController::togglePassMaster() {
   // A logging session must be closed before its sensor identity is reset.
-  dataLogger_.stop();
+  if (!storageService_.stopLoggingAndWait()) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
 
   state_.mode = state_.isMaster()
                     ? AppMode::PassThrough
@@ -64,31 +63,37 @@ void AppController::markMasterPolling() {
   }
 }
 
-void AppController::enterConfigUpload() {
-  prepareExclusiveUsbMode(AppMode::ConfigUpload);
+bool AppController::enterConfigUpload() {
+  if (!prepareExclusiveUsbMode(AppMode::ConfigUpload)) return false;
 
   // Start ESPCFG1 only after old Modbus bytes have been discarded. A partial
   // RTU frame must never be interpreted as an upload request.
   profileUpdater_.begin(profileStore_);
+  return true;
 }
 
 void AppController::cancelConfigUpload() {
   profileUpdater_.cancel();
 }
 
-void AppController::enterLogExport(const char *firmwareVersion) {
-  prepareExclusiveUsbMode(AppMode::LogExport);
+bool AppController::enterLogExport(const char *firmwareVersion) {
+  if (!prepareExclusiveUsbMode(AppMode::LogExport)) return false;
 
-  // prepareExclusiveUsbMode() has already flushed and closed the active CSV,
-  // so LogExportServer can safely open files on the same SD card.
-  logExportServer_.begin(sdStorage_, profileStore_, dataLogger_,
-                         firmwareVersion);
+  // StorageTask has acknowledged flush/close before it starts ESPLOG1.
+  if (!storageService_.beginLogExport(firmwareVersion)) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
   state_.page = UiPage::LogExport;
+  return true;
 }
 
 void AppController::exitLogExport() {
   // Close any active LIST/STAT/GET file handle before PASS regains USB.
-  logExportServer_.cancel();
+  if (!storageService_.cancelLogExportAndWait()) {
+    state_.mode = AppMode::Fault;
+    return;
+  }
   returnToPassThrough(UiPage::SystemInfo);
 }
 
@@ -120,18 +125,23 @@ void AppController::drainSerialInputs() {
   while (rs485_.available()) rs485_.read();
 }
 
-void AppController::prepareExclusiveUsbMode(AppMode mode) {
+bool AppController::prepareExclusiveUsbMode(AppMode mode) {
   // Transition order matters:
   // 1. Flush/close CSV while its sensor identity is still valid.
   // 2. Publish the exclusive mode so main stops Modbus processing.
   // 3. Stop RS485 discovery/polling and forget the active Profile.
   // 4. Drop partial USB/RTU bytes before ESPCFG1 or ESPLOG1 starts.
-  dataLogger_.stop();
+  if (!storageService_.stopLoggingAndWait()) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
   state_.mode = mode;
   sensorDiscovery_.cancel();
   profilePoller_.cancel();
   activeProfile_ = nullptr;
   profileLookupComplete_ = false;
   usbService_.clearRtuFrame();
+  usbService_.clearLogExportTransport();
   drainSerialInputs();
+  return true;
 }

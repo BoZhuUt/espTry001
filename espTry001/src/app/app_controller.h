@@ -1,9 +1,7 @@
 #pragma once
 
 #include "app_state.h"
-#include "data_logger.h"
-#include "log_export_server.h"
-#include "sd_storage.h"
+#include "services/storage_service.h"
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
@@ -15,13 +13,11 @@
 class AppController {
 public:
   AppController(AppState &state,
-                DataLogger &dataLogger,
+                StorageService &storageService,
                 SensorDiscovery &sensorDiscovery,
                 SensorProfilePoller &profilePoller,
                 SensorProfileStore &profileStore,
                 SensorProfileUpdater &profileUpdater,
-                LogExportServer &logExportServer,
-                SdStorage &sdStorage,
                 UsbService &usbService,
                 Stream &usb,
                 HardwareSerial &rs485,
@@ -41,9 +37,9 @@ public:
   // CONFIG and LOG EXPORT take exclusive ownership of USB CDC. These methods
   // stop sensor/log activity and clear stale serial bytes before the selected
   // application protocol starts.
-  void enterConfigUpload();
+  bool enterConfigUpload();
   void cancelConfigUpload();
-  void enterLogExport(const char *firmwareVersion);
+  bool enterLogExport(const char *firmwareVersion);
   void exitLogExport();
 
   void returnToPassThrough(UiPage page);
@@ -52,16 +48,14 @@ public:
 private:
   void resetMasterSession();
   void drainSerialInputs();
-  void prepareExclusiveUsbMode(AppMode mode);
+  bool prepareExclusiveUsbMode(AppMode mode);
 
   AppState &state_;
-  DataLogger &dataLogger_;
+  StorageService &storageService_;
   SensorDiscovery &sensorDiscovery_;
   SensorProfilePoller &profilePoller_;
   SensorProfileStore &profileStore_;
   SensorProfileUpdater &profileUpdater_;
-  LogExportServer &logExportServer_;
-  SdStorage &sdStorage_;
   UsbService &usbService_;
   Stream &usb_;
   HardwareSerial &rs485_;

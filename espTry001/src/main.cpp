@@ -13,9 +13,11 @@
 #include "data_logger.h"
 #include "debug_log.h"
 #include "log_export_server.h"
+#include "services/storage_service.h"
 #include "ui/ui_input.h"
 #include "ui/ui_manager.h"
 #include "usb/usb_service.h"
+#include "usb/storage_usb_bridge.h"
 
 #define SLAVE_ID            15
 #define REG_START_ADDR      46036  // 表中 46037，按 1-based 地址换算为协议地址 46036
@@ -24,6 +26,12 @@
 
 #define LOCAL_SLAVE_ID           247
 #define LOCAL_REG_COUNT          7
+
+#ifdef AUTO_VERSION
+#define FIRMWARE_VERSION_TEXT AUTO_VERSION
+#else
+#define FIRMWARE_VERSION_TEXT "development"
+#endif
 
 // ==========================================
 // 2. 前置函数声明与全局变量
@@ -87,12 +95,15 @@ SdStorage sdStorage;
 DataLogger dataLogger(sdStorage);
 LogExportServer logExportServer;
 UiManager ui;
-UsbService usbService(Serial, Serial1, profileUpdater, logExportServer,
+StorageUsbBridge logExportUsbBridge;
+UsbService usbService(Serial, Serial1, profileUpdater, logExportUsbBridge,
                       LOCAL_SLAVE_ID, sendLocalModbusResponse);
+StorageService storageService(sdStorage, dataLogger, logExportServer,
+                              profileStore, logExportUsbBridge);
 AppController appController(
-    appState, dataLogger, sensorDiscovery, profilePoller, profileStore,
-    profileUpdater, logExportServer, sdStorage, usbService, Serial, Serial1,
-    modbusResult, lastModbusTime, activeProfile,
+    appState, storageService, sensorDiscovery, profilePoller, profileStore,
+    profileUpdater, usbService, Serial, Serial1, modbusResult, lastModbusTime,
+    activeProfile,
     profileLookupComplete, appState.sensor.parameterPage, profileValueValid,
     kMaxSensorFields);
 
@@ -117,11 +128,8 @@ void setup()
 
   // 优先加载 LittleFS JSON；挂载、文件或校验失败时自动使用固件内置表。
   profileStore.begin();
-#ifdef AUTO_VERSION
-  dataLogger.setMetadata(profileStore.configVersion(), AUTO_VERSION);
-#else
-  dataLogger.setMetadata(profileStore.configVersion(), "development");
-#endif
+  storageService.setMetadata(profileStore.configVersion(),
+                             FIRMWARE_VERSION_TEXT);
 
   // 1. 屏幕底层硬件初始化
   if (beginBoardDisplay()) {
@@ -142,26 +150,36 @@ void setup()
       gfx->getRotation(), gfx->width(), gfx->height());
 
   // 5. 初始化 SD 卡
-  if (sdStorage.begin()) {
-    DEBUG_LOG_PRINTLN("[SD] SD card initialized OK");
+  if (!logExportUsbBridge.begin()) {
+    DEBUG_LOG_PRINTLN("[USB] ESPLOG1 bridge initialization failed");
+  }
+  if (storageService.begin()) {
+    StorageService::Status storageStatus;
+    storageService.getStatus(storageStatus);
+    bool sdReady = storageStatus.storageState == SdStorage::State::Ready;
+    if (sdReady) {
+      DEBUG_LOG_PRINTLN("[SD] SD card initialized OK");
 #if SD_SIMULATE_LOG
-    // 模拟数据测试：使用内置 Profile 第一个 PN 构造模拟日志
-    const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
-    if (simProfile == nullptr) {
-      // 如果配置中没有 53607，取第一个
-      simProfile = findSensorProfile(kSimulatedProductNum);
-    }
-    if (simProfile != nullptr) {
-      dataLogger.setIdentity(15, simProfile->productNum, simProfile->name, simProfile);
-      for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
-        simValid[i] = true;
+      // 模拟数据测试：使用内置 Profile 第一个 PN 构造模拟日志
+      const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
+      if (simProfile == nullptr) {
+        // 如果配置中没有 53607，取第一个
+        simProfile = findSensorProfile(kSimulatedProductNum);
       }
-      dataLogger.start();
-      simLastLogMs = millis();
-    }
+      if (simProfile != nullptr) {
+        for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
+          simValid[i] = true;
+        }
+        storageService.startLogging(15, simProfile->productNum,
+                                    simProfile->name, simProfile);
+        simLastLogMs = millis();
+      }
 #endif
+    } else {
+      DEBUG_LOG_PRINTLN("[SD] No SD card, logging disabled");
+    }
   } else {
-    DEBUG_LOG_PRINTLN("[SD] No SD card, logging disabled");
+    DEBUG_LOG_PRINTLN("[SD] StorageTask initialization failed");
   }
 }
 
@@ -307,7 +325,9 @@ void loop()
     static LogExportServer::State lastExportState =
         LogExportServer::State::Idle;
     static uint32_t lastExportDrawMs = 0;
-    LogExportServer::State exportState = logExportServer.state();
+    StorageService::Status storageStatus;
+    storageService.getStatus(storageStatus);
+    LogExportServer::State exportState = storageStatus.exportState;
     bool stateChanged = exportState != lastExportState;
     bool progressDue = (uint32_t)(millis() - lastExportDrawMs) >= 300;
     if (stateChanged || progressDue) {
@@ -315,7 +335,7 @@ void loop()
       lastExportState = exportState;
       lastExportDrawMs = millis();
     }
-    if (logExportServer.shouldExit()) {
+    if (storageStatus.exportShouldExit) {
       appController.exitLogExport();
       ui.clearScreen();
       drawAuthorPage();
@@ -351,10 +371,10 @@ void loop()
                               profileValueValid);
           // One logging session belongs to one discovered address/PN/Profile.
           // start() safely does nothing when the SD card is unavailable.
-          dataLogger.setIdentity(sensorDiscovery.result().slaveAddress,
-                                 sensorDiscovery.result().productNum,
-                                 activeProfile->name, activeProfile);
-          dataLogger.start();
+          storageService.startLogging(
+              sensorDiscovery.result().slaveAddress,
+              sensorDiscovery.result().productNum, activeProfile->name,
+              activeProfile);
         }
       }
 
@@ -369,7 +389,7 @@ void loop()
       // so actual sensor rows cannot be mixed into the synthetic test file.
 #if !SD_SIMULATE_LOG
       if (activeProfile != nullptr && profilePoller.takeScanCompleted()) {
-        dataLogger.onScanComplete(
+        storageService.enqueueSnapshot(
             profilePoller.scanSequence(),
             profileValues, profileValueValid, activeProfile->fieldCount,
             current1Ma, current2Ma);
@@ -384,7 +404,7 @@ void loop()
   // SD 卡模拟数据测试
   // ----------------------------------------------------------------
 #if SD_SIMULATE_LOG
-  if (dataLogger.isRecording() && !appState.isMaster()) {
+  if (storageService.isRecording() && !appState.isMaster()) {
     uint32_t now = millis();
     if ((uint32_t)(now - simLastLogMs) >= simLogIntervalMs) {
       simLastLogMs = now;
@@ -397,15 +417,13 @@ void loop()
           simValues[i] = (float)(simScanSeq * simProfile->fieldCount + i) * 0.1f;
           simValid[i] = true;
         }
-        dataLogger.onScanComplete(simScanSeq, simValues, simValid,
-                                  simProfile->fieldCount, current1Ma, current2Ma);
+        storageService.enqueueSnapshot(
+            simScanSeq, simValues, simValid, simProfile->fieldCount,
+            current1Ma, current2Ma);
       }
     }
   }
 #endif
-
-  // SD 日志写入推进（非阻塞）
-  dataLogger.update();
 
   // ----------------------------------------------------------------
   // 核心功能 3：UI 动态数据刷新
@@ -625,6 +643,10 @@ SystemInfoView buildSystemInfoView() {
   view.sdFreeBytes = snapshot.storageFreeBytes;
   view.recording = snapshot.recording;
   view.logRecordCount = snapshot.logRecordCount;
+  view.storageQueueDepth = snapshot.storageQueueDepth;
+  view.storageQueuePeak = snapshot.storageQueuePeak;
+  view.storageDroppedSnapshots = snapshot.storageDroppedSnapshots;
+  view.storageTaskStackHighWater = snapshot.storageTaskStackHighWater;
   view.sdError = snapshot.storageError;
   switch (snapshot.storageState) {
     case AppStorageState::Ready:
@@ -643,11 +665,9 @@ SystemInfoView buildSystemInfoView() {
 
 void updateSystemStateSnapshot() {
   SystemState &snapshot = appState.system;
-#ifdef AUTO_VERSION
-  const char *firmwareVersion = AUTO_VERSION;
-#else
-  const char *firmwareVersion = "V1.0.1";
-#endif
+  StorageService::Status storageStatus;
+  storageService.getStatus(storageStatus);
+  const char *firmwareVersion = FIRMWARE_VERSION_TEXT;
 
   // Own every string in AppState. Profile hot update and SD error reporting
   // may reuse their internal buffers after this snapshot has been published.
@@ -661,14 +681,19 @@ void updateSystemStateSnapshot() {
   snprintf(snapshot.profileError, sizeof(snapshot.profileError), "%s",
            profileStore.lastError());
   snprintf(snapshot.storageStateText, sizeof(snapshot.storageStateText), "%s",
-           sdStorage.stateText());
-  snapshot.storageFreeBytes = sdStorage.freeBytes();
-  snapshot.recording = dataLogger.isRecording();
-  snapshot.logRecordCount = dataLogger.recordCount();
+           storageStatus.storageStateText);
+  snapshot.storageFreeBytes = storageStatus.storageFreeBytes;
+  snapshot.recording = storageStatus.recording;
+  snapshot.logRecordCount = storageStatus.logRecordCount;
+  snapshot.storageQueueDepth = storageStatus.snapshotQueueDepth;
+  snapshot.storageQueuePeak = storageStatus.snapshotQueuePeak;
+  snapshot.storageDroppedSnapshots = storageStatus.droppedSnapshots;
+  snapshot.storageTaskStackHighWater = storageStatus.taskStackHighWater;
   snprintf(snapshot.storageError, sizeof(snapshot.storageError), "%s",
-           sdStorage.lastError());
+           storageStatus.storageError[0] ? storageStatus.storageError
+                                         : storageStatus.loggerError);
 
-  switch (sdStorage.state()) {
+  switch (storageStatus.storageState) {
     case SdStorage::State::Ready:
       snapshot.storageState = AppStorageState::Ready;
       break;
@@ -684,8 +709,9 @@ void updateSystemStateSnapshot() {
 
 void enterConfigMode() {
   // AppController按固定顺序停止日志/RS485并清空残留字节，然后启动ESPCFG1。
-  appController.enterConfigUpload();
-  drawConfigUpdatePage();
+  if (appController.enterConfigUpload()) {
+    drawConfigUpdatePage();
+  }
 }
 
 void drawConfigUpdatePage() {
@@ -726,11 +752,8 @@ void updateConfigUpdateStateSnapshot() {
 
 void enterLogExportMode() {
   // AppController会先flush/close CSV，再让ESPLOG1取得SD与USB使用权。
-#ifdef AUTO_VERSION
-  appController.enterLogExport(AUTO_VERSION);
-#else
-  appController.enterLogExport("development");
-#endif
+  bool entered = appController.enterLogExport(FIRMWARE_VERSION_TEXT);
+  if (!entered) return;
   ui.clearScreen();
   drawLogExportPage();
 }
@@ -758,18 +781,20 @@ LogExportView buildLogExportView() {
 
 void updateLogExportStateSnapshot() {
   LogExportState &snapshot = appState.logExport;
+  StorageService::Status storageStatus;
+  storageService.getStatus(storageStatus);
   snprintf(snapshot.statusText, sizeof(snapshot.statusText), "%s",
-           logExportServer.statusText());
+           storageStatus.exportStatus);
   snprintf(snapshot.currentFile, sizeof(snapshot.currentFile), "%s",
-           logExportServer.currentFile());
-  snapshot.transferOffset = logExportServer.transferOffset();
-  snapshot.transferTotal = logExportServer.transferTotal();
+           storageStatus.exportFile);
+  snapshot.transferOffset = storageStatus.exportOffset;
+  snapshot.transferTotal = storageStatus.exportTotal;
   snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
-           logExportServer.errorText());
+           storageStatus.exportError);
   snapshot.state = AppLogExportState::Active;
-  if (logExportServer.state() == LogExportServer::State::Failed) {
+  if (storageStatus.exportState == LogExportServer::State::Failed) {
     snapshot.state = AppLogExportState::Failed;
-  } else if (logExportServer.state() ==
+  } else if (storageStatus.exportState ==
              LogExportServer::State::WaitingCommand) {
     snapshot.state = AppLogExportState::WaitingCommand;
   }
