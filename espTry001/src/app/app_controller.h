@@ -1,9 +1,8 @@
 #pragma once
 
 #include "app_state.h"
+#include "services/rs485_service.h"
 #include "services/storage_service.h"
-#include "sensor_discovery.h"
-#include "sensor_profile.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
 #include "usb/usb_service.h"
@@ -14,20 +13,14 @@ class AppController {
 public:
   AppController(AppState &state,
                 StorageService &storageService,
-                SensorDiscovery &sensorDiscovery,
-                SensorProfilePoller &profilePoller,
+                Rs485Service &rs485Service,
                 SensorProfileStore &profileStore,
                 SensorProfileUpdater &profileUpdater,
                 UsbService &usbService,
                 Stream &usb,
-                HardwareSerial &rs485,
-                uint8_t &modbusResult,
-                unsigned long &lastModbusTime,
                 const SensorProfile *&activeProfile,
                 bool &profileLookupComplete,
-                uint8_t &parameterPage,
-                bool *profileValueValid,
-                size_t profileValueValidCount);
+                uint8_t &parameterPage);
 
   const AppState &state() const { return state_; }
 
@@ -52,18 +45,12 @@ private:
 
   AppState &state_;
   StorageService &storageService_;
-  SensorDiscovery &sensorDiscovery_;
-  SensorProfilePoller &profilePoller_;
+  Rs485Service &rs485Service_;
   SensorProfileStore &profileStore_;
   SensorProfileUpdater &profileUpdater_;
   UsbService &usbService_;
   Stream &usb_;
-  HardwareSerial &rs485_;
-  uint8_t &modbusResult_;
-  unsigned long &lastModbusTime_;
   const SensorProfile *&activeProfile_;
   bool &profileLookupComplete_;
   uint8_t &parameterPage_;
-  bool *profileValueValid_;
-  size_t profileValueValidCount_;
 };

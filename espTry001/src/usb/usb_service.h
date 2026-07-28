@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "app/app_state.h"
+#include "services/rs485_service.h"
 #include "sensor_profile_update.h"
 #include "usb/storage_usb_bridge.h"
 
@@ -22,7 +23,7 @@ public:
   static constexpr size_t kMaxRtuFrameLength = 256;
   static constexpr uint32_t kRtuFrameGapUs = 5000;
 
-  UsbService(Stream &usb, HardwareSerial &rs485,
+  UsbService(Stream &usb, Rs485Service &rs485Service,
              SensorProfileUpdater &profileUpdater,
              StorageUsbBridge &logExportBridge,
              uint8_t localSlaveId,
@@ -45,7 +46,7 @@ private:
   void forwardRs485ToUsb(bool passThrough);
 
   Stream &usb_;
-  HardwareSerial &rs485_;
+  Rs485Service &rs485Service_;
   SensorProfileUpdater &profileUpdater_;
   StorageUsbBridge &logExportBridge_;
   uint8_t localSlaveId_;
@@ -55,4 +56,7 @@ private:
   size_t rtuFrameLength_ = 0;
   uint32_t lastUsbByteTimeUs_ = 0;
   UsbTransferActivity activity_ = UsbTransferActivity::None;
+  uint8_t passResponse_[64] = {0};
+  size_t passResponseLength_ = 0;
+  size_t passResponseOffset_ = 0;
 };

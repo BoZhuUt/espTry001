@@ -3,36 +3,24 @@
 AppController::AppController(
     AppState &state,
     StorageService &storageService,
-    SensorDiscovery &sensorDiscovery,
-    SensorProfilePoller &profilePoller,
+    Rs485Service &rs485Service,
     SensorProfileStore &profileStore,
     SensorProfileUpdater &profileUpdater,
     UsbService &usbService,
     Stream &usb,
-    HardwareSerial &rs485,
-    uint8_t &modbusResult,
-    unsigned long &lastModbusTime,
     const SensorProfile *&activeProfile,
     bool &profileLookupComplete,
-    uint8_t &parameterPage,
-    bool *profileValueValid,
-    size_t profileValueValidCount)
+    uint8_t &parameterPage)
     : state_(state),
       storageService_(storageService),
-      sensorDiscovery_(sensorDiscovery),
-      profilePoller_(profilePoller),
+      rs485Service_(rs485Service),
       profileStore_(profileStore),
       profileUpdater_(profileUpdater),
       usbService_(usbService),
       usb_(usb),
-      rs485_(rs485),
-      modbusResult_(modbusResult),
-      lastModbusTime_(lastModbusTime),
       activeProfile_(activeProfile),
       profileLookupComplete_(profileLookupComplete),
-      parameterPage_(parameterPage),
-      profileValueValid_(profileValueValid),
-      profileValueValidCount_(profileValueValidCount) {}
+      parameterPage_(parameterPage) {}
 
 bool AppController::togglePassMaster() {
   // A logging session must be closed before its sensor identity is reset.
@@ -41,17 +29,22 @@ bool AppController::togglePassMaster() {
     return false;
   }
 
-  state_.mode = state_.isMaster()
-                    ? AppMode::PassThrough
-                    : AppMode::MasterDiscovery;
+  bool enterMaster = !state_.isMaster();
+  if (!rs485Service_.stopAndWait()) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
+  state_.mode =
+      enterMaster ? AppMode::MasterDiscovery : AppMode::PassThrough;
 
   drainSerialInputs();
   resetMasterSession();
 
-  if (state_.isMaster()) {
-    sensorDiscovery_.start();
-  } else {
-    sensorDiscovery_.cancel();
+  bool commandAccepted = enterMaster ? rs485Service_.startDiscovery()
+                                     : rs485Service_.enterPassThrough();
+  if (!commandAccepted) {
+    state_.mode = AppMode::Fault;
+    return false;
   }
   return state_.isMaster();
 }
@@ -98,6 +91,10 @@ void AppController::exitLogExport() {
 }
 
 void AppController::returnToPassThrough(UiPage page) {
+  if (!rs485Service_.enterPassThrough()) {
+    state_.mode = AppMode::Fault;
+    return;
+  }
   state_.mode = AppMode::PassThrough;
   state_.page = page;
 }
@@ -108,21 +105,13 @@ void AppController::showPage(UiPage page) {
 
 void AppController::resetMasterSession() {
   usbService_.clearRtuFrame();
-  modbusResult_ = 0xFF;
-  lastModbusTime_ = 0;
   activeProfile_ = nullptr;
-  profilePoller_.cancel();
   profileLookupComplete_ = false;
   parameterPage_ = 0;
-  if (profileValueValid_ != nullptr && profileValueValidCount_ > 0) {
-    memset(profileValueValid_, 0,
-           profileValueValidCount_ * sizeof(profileValueValid_[0]));
-  }
 }
 
 void AppController::drainSerialInputs() {
   while (usb_.available()) usb_.read();
-  while (rs485_.available()) rs485_.read();
 }
 
 bool AppController::prepareExclusiveUsbMode(AppMode mode) {
@@ -135,9 +124,11 @@ bool AppController::prepareExclusiveUsbMode(AppMode mode) {
     state_.mode = AppMode::Fault;
     return false;
   }
+  if (!rs485Service_.stopAndWait()) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
   state_.mode = mode;
-  sensorDiscovery_.cancel();
-  profilePoller_.cancel();
   activeProfile_ = nullptr;
   profileLookupComplete_ = false;
   usbService_.clearRtuFrame();

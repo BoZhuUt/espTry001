@@ -1,4 +1,3 @@
-#include <ModbusMaster.h> 
 #include "app/app_controller.h"
 #include "app/app_state.h"
 #include "board/analog_input.h"
@@ -9,6 +8,7 @@
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
+#include "services/rs485_service.h"
 #include "sd_storage.h"
 #include "data_logger.h"
 #include "debug_log.h"
@@ -19,9 +19,6 @@
 #include "usb/usb_service.h"
 #include "usb/storage_usb_bridge.h"
 
-#define SLAVE_ID            15
-#define REG_START_ADDR      46036  // 表中 46037，按 1-based 地址换算为协议地址 46036
-#define REG_COUNT           4      // 连续读取 46037~46040，共两个 float
 #define MODBUS_FLOAT_WORD_SWAP 1   // 0: 高字在前(ABCD)；1: 低字在前(CDAB)
 
 #define LOCAL_SLAVE_ID           247
@@ -54,14 +51,13 @@ void enterLogExportMode();
 void drawLogExportPage();
 LogExportView buildLogExportView();
 void updateLogExportStateSnapshot();
+void processRs485Events();
+void refreshRs485Status();
 void sendLocalModbusResponse(const uint8_t *request, size_t length);
 uint16_t modbusCrc16(const uint8_t *data, size_t length);
 
 AppState appState;
 unsigned long lastSampleTime = 0;
-unsigned long lastModbusTime = 0;
-uint16_t modbusRegValues[REG_COUNT] = {0};
-uint8_t modbusResult = 0xFF;               
 bool touchOnline = false; 
 uint16_t adc1Raw = 0;
 uint16_t adc2Raw = 0;
@@ -69,26 +65,14 @@ float current1Ma = 0.0f;
 float current2Ma = 0.0f;
 const SensorProfile *activeProfile = nullptr;
 bool profileLookupComplete = false;
-float profileValues[kMaxSensorFields] = {0};
-bool profileValueValid[kMaxSensorFields] = {false};
+Rs485Service::Status rs485Status;
+Rs485Service::Event latestScanEvent;
+bool latestScanAvailable = false;
 
 static_assert(kAppMaxSensorFields == kMaxSensorFields,
               "AppState and SensorProfile field limits must match");
 
-float registersToFloat(uint16_t firstWord, uint16_t secondWord) {
-#if MODBUS_FLOAT_WORD_SWAP
-  uint32_t raw = ((uint32_t)secondWord << 16) | firstWord;
-#else
-  uint32_t raw = ((uint32_t)firstWord << 16) | secondWord;
-#endif
-  float value;
-  memcpy(&value, &raw, sizeof(value));
-  return value;
-}
-
-ModbusMaster node; 
-SensorDiscovery sensorDiscovery(Serial1);
-SensorProfilePoller profilePoller(Serial1);
+Rs485Service rs485Service(Serial1);
 SensorProfileStore profileStore;
 SensorProfileUpdater profileUpdater;
 SdStorage sdStorage;
@@ -96,16 +80,14 @@ DataLogger dataLogger(sdStorage);
 LogExportServer logExportServer;
 UiManager ui;
 StorageUsbBridge logExportUsbBridge;
-UsbService usbService(Serial, Serial1, profileUpdater, logExportUsbBridge,
+UsbService usbService(Serial, rs485Service, profileUpdater, logExportUsbBridge,
                       LOCAL_SLAVE_ID, sendLocalModbusResponse);
 StorageService storageService(sdStorage, dataLogger, logExportServer,
                               profileStore, logExportUsbBridge);
 AppController appController(
-    appState, storageService, sensorDiscovery, profilePoller, profileStore,
-    profileUpdater, usbService, Serial, Serial1, modbusResult, lastModbusTime,
-    activeProfile,
-    profileLookupComplete, appState.sensor.parameterPage, profileValueValid,
-    kMaxSensorFields);
+    appState, storageService, rs485Service, profileStore, profileUpdater,
+    usbService, Serial, activeProfile, profileLookupComplete,
+    appState.sensor.parameterPage);
 
 // SD 卡模拟数据测试：无传感器时每秒递增并写入
 #define SD_SIMULATE_LOG 0  // 1: synthetic SD test; 0: log real MASTER scans.
@@ -137,10 +119,11 @@ void setup()
   }
 
   // 2. 初始化串口与 485
-  pinMode(BoardConfig::kRs485Rx, INPUT_PULLUP);
-  Serial1.begin(BoardConfig::kRs485Baudrate, SERIAL_8E1,
-                BoardConfig::kRs485Rx, BoardConfig::kRs485Tx);
-  node.begin(SLAVE_ID, Serial1);
+  // RS485 is initialized and exclusively owned by Rs485Task.
+  if (!rs485Service.begin() || !rs485Service.enterPassThrough()) {
+    DEBUG_LOG_PRINTLN("[RS485] Rs485Task initialization failed");
+    appState.mode = AppMode::Fault;
+  }
 
   // 3. 初始化 ADC
   BoardAnalog::begin();
@@ -185,12 +168,8 @@ void setup()
 
 void loop()
 {
-#if RS485_TX_TEST_MODE
-  // 示波器发送通道测试：9600、8E1 连续发送 0x55。
-  // write() 在发送缓冲区满时会等待，因此输出为连续、稳定的 UART 波形。
-  Serial1.write(0x55);
-  return;
-#endif
+  processRs485Events();
+  refreshRs485Status();
 
   // ----------------------------------------------------------------
   // 核心功能 1：AXS5106L 触摸事件检测
@@ -204,7 +183,7 @@ void loop()
     inputContext.configMode = appState.isConfigUpload();
     inputContext.sensorDetailsAvailable =
         appState.isMaster() &&
-        sensorDiscovery.state() == SensorDiscovery::State::Success;
+        rs485Status.discoveryState == SensorDiscovery::State::Success;
     UiAction action = resolveTouchAction(appState.page, tx, ty, inputContext);
 
     switch (action) {
@@ -358,48 +337,6 @@ void loop()
     }
   }
 
-  if (appState.isMaster()) {
-    sensorDiscovery.update();
-    if (sensorDiscovery.state() == SensorDiscovery::State::Success) {
-      appController.markMasterPolling();
-      if (!profileLookupComplete) {
-        activeProfile = profileStore.find(sensorDiscovery.result().productNum);
-        profileLookupComplete = true;
-        if (activeProfile != nullptr) {
-          profilePoller.begin(sensorDiscovery.result().slaveAddress,
-                              *activeProfile, profileValues,
-                              profileValueValid);
-          // One logging session belongs to one discovered address/PN/Profile.
-          // start() safely does nothing when the SD card is unavailable.
-          storageService.startLogging(
-              sensorDiscovery.result().slaveAddress,
-              sensorDiscovery.result().productNum, activeProfile->name,
-              activeProfile);
-        }
-      }
-
-      if (activeProfile != nullptr && profilePoller.update(modbusResult)) {
-        if (appState.page == UiPage::SensorInfo) {
-          drawSensorParameterArea();
-          ui.flush();
-        }
-      }
-
-      // Real logging is disabled while the dedicated SD simulation is enabled,
-      // so actual sensor rows cannot be mixed into the synthetic test file.
-#if !SD_SIMULATE_LOG
-      if (activeProfile != nullptr && profilePoller.takeScanCompleted()) {
-        storageService.enqueueSnapshot(
-            profilePoller.scanSequence(),
-            profileValues, profileValueValid, activeProfile->fieldCount,
-            current1Ma, current2Ma);
-      }
-#else
-      profilePoller.takeScanCompleted();
-#endif
-    }
-  }
-
   // ----------------------------------------------------------------
   // SD 卡模拟数据测试
   // ----------------------------------------------------------------
@@ -455,6 +392,58 @@ void loop()
   }
 }
 
+void refreshRs485Status() {
+  rs485Service.getStatus(rs485Status);
+}
+
+void processRs485Events() {
+  Rs485Service::Event event;
+  while (rs485Service.takeEvent(event)) {
+    switch (event.type) {
+      case Rs485Service::EventType::SensorFound:
+        if (!appState.isMaster()) break;
+        appController.markMasterPolling();
+        if (profileLookupComplete) break;
+
+        latestScanAvailable = false;
+        activeProfile = profileStore.find(event.identity.productNum);
+        profileLookupComplete = true;
+        if (activeProfile != nullptr) {
+          if (!rs485Service.startPolling(activeProfile)) {
+            DEBUG_LOG_PRINTLN("[RS485] Polling command queue full");
+            appState.mode = AppMode::Fault;
+            break;
+          }
+          // One logging session belongs to one discovered address/PN/Profile.
+          // startLogging safely does nothing when the SD card is unavailable.
+          storageService.startLogging(
+              event.identity.slaveAddress, event.identity.productNum,
+              activeProfile->name, activeProfile);
+        }
+        break;
+
+      case Rs485Service::EventType::ScanCompleted:
+        if (!appState.isMaster() || activeProfile == nullptr) break;
+        latestScanEvent = event;
+#if !SD_SIMULATE_LOG
+        storageService.enqueueSnapshot(
+            event.scanSequence, event.values, event.valid, event.fieldCount,
+            current1Ma, current2Ma);
+#endif
+        latestScanAvailable = true;
+        if (appState.page == UiPage::SensorInfo) {
+          drawSensorParameterArea();
+          ui.flush();
+        }
+        break;
+
+      case Rs485Service::EventType::CommunicationError:
+      case Rs485Service::EventType::Stopped:
+        break;
+    }
+  }
+}
+
 DashboardView buildDashboardView() {
   DashboardView view;
   view.masterMode = appState.isMaster();
@@ -501,13 +490,14 @@ void updateDashboardStateSnapshot() {
   DashboardState &snapshot = appState.dashboard;
   snapshot.channel1Ma = current1Ma;
   snapshot.channel2Ma = current2Ma;
-  snapshot.attempt = sensorDiscovery.attempt();
-  snapshot.maxAttempts = sensorDiscovery.maxAttempts();
-  snapshot.slaveAddress = sensorDiscovery.result().slaveAddress;
-  snapshot.productNum = sensorDiscovery.result().productNum;
+  snapshot.attempt = rs485Status.discoveryAttempt;
+  snapshot.maxAttempts = rs485Status.discoveryMaxAttempts;
+  snapshot.slaveAddress = rs485Status.identity.slaveAddress;
+  snapshot.productNum = rs485Status.identity.productNum;
   snapshot.exceptionResponse =
-      sensorDiscovery.error() == SensorDiscovery::Error::ExceptionResponse;
-  snapshot.exceptionCode = sensorDiscovery.exceptionCode();
+      rs485Status.discoveryError ==
+      SensorDiscovery::Error::ExceptionResponse;
+  snapshot.exceptionCode = rs485Status.discoveryExceptionCode;
 
   // Copy text into AppState-owned buffers. This avoids retaining pointers into
   // the hot-update Profile store or SensorDiscovery's mutable error storage.
@@ -517,9 +507,9 @@ void updateDashboardStateSnapshot() {
           : "Unsupported PN";
   snprintf(snapshot.deviceName, sizeof(snapshot.deviceName), "%s", deviceName);
   snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
-           sensorDiscovery.errorText());
+           rs485Status.discoveryErrorText);
 
-  switch (sensorDiscovery.state()) {
+  switch (rs485Status.discoveryState) {
     case SensorDiscovery::State::DiscoveringAddress:
       snapshot.discoveryPhase = AppDiscoveryPhase::DiscoveringAddress;
       break;
@@ -840,10 +830,11 @@ SensorInfoView buildSensorInfoView() {
 
 void updateSensorStateSnapshot() {
   SensorState &snapshot = appState.sensor;
-  const SensorDiscovery::Result &identity = sensorDiscovery.result();
+  const SensorDiscovery::Result &identity = rs485Status.identity;
   snapshot.slaveAddress = identity.slaveAddress;
   snapshot.productNum = identity.productNum;
-  snapshot.scanSequence = profilePoller.scanSequence();
+  snapshot.scanSequence =
+      latestScanAvailable ? latestScanEvent.scanSequence : 0;
   snapshot.supported = activeProfile != nullptr;
   snapshot.fieldCount = 0;
 
@@ -863,8 +854,10 @@ void updateSensorStateSnapshot() {
     const SensorField &source = activeProfile->fields[index];
     SensorFieldState &target = snapshot.fields[index];
     snprintf(target.label, sizeof(target.label), "%s", source.label);
-    target.value = profileValues[index];
-    target.valid = profileValueValid[index];
+    target.value =
+        latestScanAvailable ? latestScanEvent.values[index] : 0.0f;
+    target.valid =
+        latestScanAvailable && latestScanEvent.valid[index];
     target.decimals = source.decimals;
   }
 }

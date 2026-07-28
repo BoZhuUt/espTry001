@@ -1,12 +1,12 @@
 #include "usb_service.h"
 
-UsbService::UsbService(Stream &usb, HardwareSerial &rs485,
+UsbService::UsbService(Stream &usb, Rs485Service &rs485Service,
                        SensorProfileUpdater &profileUpdater,
                        StorageUsbBridge &logExportBridge,
                        uint8_t localSlaveId,
                        LocalFrameHandler localFrameHandler)
     : usb_(usb),
-      rs485_(rs485),
+      rs485Service_(rs485Service),
       profileUpdater_(profileUpdater),
       logExportBridge_(logExportBridge),
       localSlaveId_(localSlaveId),
@@ -44,6 +44,8 @@ void UsbService::clearRtuFrame() {
   rtuFrameLength_ = 0;
   lastUsbByteTimeUs_ = 0;
   activity_ = UsbTransferActivity::None;
+  passResponseLength_ = 0;
+  passResponseOffset_ = 0;
 }
 
 void UsbService::clearLogExportTransport() {
@@ -76,18 +78,33 @@ void UsbService::dispatchCompletedFrame(bool passThrough) {
       localFrameHandler_(rtuFrame_, rtuFrameLength_);
     }
   } else if (passThrough) {
-    rs485_.write(rtuFrame_, rtuFrameLength_);
-    rs485_.flush();
-    activity_ = UsbTransferActivity::UsbToRs485;
+    if (rs485Service_.enqueuePassFrame(rtuFrame_, rtuFrameLength_)) {
+      activity_ = UsbTransferActivity::UsbToRs485;
+    }
   }
   rtuFrameLength_ = 0;
 }
 
 void UsbService::forwardRs485ToUsb(bool passThrough) {
-  if (!passThrough || !rs485_.available()) return;
-
-  while (rs485_.available()) {
-    usb_.write((uint8_t)rs485_.read());
+  if (!passThrough) {
+    passResponseLength_ = 0;
+    passResponseOffset_ = 0;
+    return;
   }
-  activity_ = UsbTransferActivity::Rs485ToUsb;
+
+  if (passResponseOffset_ >= passResponseLength_) {
+    passResponseLength_ = rs485Service_.readPassResponse(
+        passResponse_, sizeof(passResponse_));
+    passResponseOffset_ = 0;
+  }
+  if (passResponseOffset_ < passResponseLength_) {
+    size_t accepted = usb_.write(
+        passResponse_ + passResponseOffset_,
+        passResponseLength_ - passResponseOffset_);
+    if (accepted > 0) {
+      passResponseOffset_ += accepted;
+      usb_.flush();
+      activity_ = UsbTransferActivity::Rs485ToUsb;
+    }
+  }
 }
