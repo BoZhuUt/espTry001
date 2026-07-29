@@ -1,6 +1,48 @@
 #include "ui_manager.h"
 
+#include "board/board_config.h"
 #include "board/display_driver.h"
+
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+#include "assets/pyxis_logo_rgb565.h"
+#endif
+
+namespace {
+
+constexpr int16_t kContentLeft = 5;
+constexpr int16_t kContentRight = BoardConfig::kDisplayWidth - 7;
+constexpr int16_t kWideAreaWidth = BoardConfig::kDisplayWidth - 7;
+constexpr int16_t kButtonWidth = BoardConfig::kDisplayWidth - 10;
+constexpr int16_t kProgressInnerWidth = BoardConfig::kDisplayWidth - 12;
+
+int16_t centeredTextX(const char *text, uint8_t textSize) {
+  const int16_t textWidth = strlen(text) * 6 * textSize;
+  return max<int16_t>(kContentLeft,
+                      (BoardConfig::kDisplayWidth - textWidth) / 2);
+}
+
+void drawToolsCard(int16_t y, uint16_t accent, const char *title,
+                   const char *subtitle) {
+  constexpr int16_t kCardLeft = 10;
+  constexpr int16_t kCardWidth = 220;
+  constexpr int16_t kCardHeight = 56;
+
+  gfx->fillRect(kCardLeft, y, kCardWidth, kCardHeight, RGB565_BLACK);
+  gfx->drawRect(kCardLeft, y, kCardWidth, kCardHeight, accent);
+  gfx->fillRect(kCardLeft, y, 5, kCardHeight, accent);
+
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->setCursor(centeredTextX(title, 2), y + 8);
+  gfx->print(title);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(accent, RGB565_BLACK);
+  gfx->setCursor(centeredTextX(subtitle, 1), y + 34);
+  gfx->print(subtitle);
+}
+
+}  // namespace
 
 void UiManager::clearScreen() {
   gfx->fillScreen(RGB565_BLACK);
@@ -10,12 +52,40 @@ void UiManager::flush() {
   gfx->flush();
 }
 
+void UiManager::drawStartupPage(const char *firmwareVersion) {
+  // Display-tuned version of the brand blue. The source PNG remains unchanged;
+  // this brighter shade avoids appearing black on the small IPS panel.
+  constexpr uint16_t kPyxisBlue = 0x035A;  // RGB(0, 107, 214)
+  gfx->fillScreen(RGB565_WHITE);
+
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+  constexpr int16_t kLogoX =
+      (BoardConfig::kDisplayWidth - UiAssets::kPyxisLogoWidth) / 2;
+  constexpr int16_t kLogoY = 72;
+  gfx->draw16bitRGBBitmap(kLogoX, kLogoY, UiAssets::kPyxisLogoRgb565,
+                         UiAssets::kPyxisLogoWidth,
+                         UiAssets::kPyxisLogoHeight);
+#endif
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(kPyxisBlue, RGB565_WHITE);
+  gfx->setCursor(centeredTextX("ESP32-S3 485 UTILITY", 1), 158);
+  gfx->print("ESP32-S3 485 UTILITY");
+
+  gfx->setCursor(centeredTextX(firmwareVersion, 1), 181);
+  gfx->print(firmwareVersion);
+
+  gfx->setCursor(centeredTextX("INITIALIZING...", 1), 225);
+  gfx->print("INITIALIZING...");
+  gfx->flush();
+}
+
 void UiManager::drawDashboardStatic(bool masterMode) {
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->setTextSize(2);
   gfx->setCursor(5, 15);
   gfx->println("ESP32-S3 485");
-  gfx->drawLine(5, 38, 165, 38, RGB565_YELLOW);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_YELLOW);
 
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(1);
@@ -26,11 +96,11 @@ void UiManager::drawDashboardStatic(bool masterMode) {
   gfx->setTextSize(1);
   gfx->setCursor(5, 66);
   gfx->printf("485 Config: 9600,8E1\n");
-  gfx->drawLine(5, 78, 165, 78, RGB565_YELLOW);
+  gfx->drawLine(kContentLeft, 78, kContentRight, 78, RGB565_YELLOW);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 88);
   gfx->println("[ 4-20mA Sampling ]");
-  gfx->drawLine(5, 175, 165, 175, RGB565_YELLOW);
+  gfx->drawLine(kContentLeft, 175, kContentRight, 175, RGB565_YELLOW);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 185);
   gfx->println("[ Modbus RTU Data ]");
@@ -39,34 +109,34 @@ void UiManager::drawDashboardStatic(bool masterMode) {
 }
 
 void UiManager::drawModeStatus(bool masterMode) {
-  gfx->fillRect(55, 40, 112, 25, RGB565_BLACK);
+  gfx->fillRect(55, 40, BoardConfig::kDisplayWidth - 60, 25, RGB565_BLACK);
   gfx->setTextSize(2);
   if (masterMode) {
     gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
-    gfx->setCursor(62, 44);
+    gfx->setCursor(centeredTextX("MASTER", 2), 44);
     gfx->print("MASTER");
   } else {
     gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
-    gfx->setCursor(72, 44);
+    gfx->setCursor(centeredTextX("PASS", 2), 44);
     gfx->print("PASS");
   }
 }
 
 void UiManager::drawPassModeHint() {
-  gfx->fillRect(5, 286, 165, 29, RGB565_BLUE);
+  gfx->fillRect(kContentLeft, 286, kWideAreaWidth, 29, RGB565_BLUE);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
   gfx->setTextSize(1);
-  gfx->setCursor(28, 296);
+  gfx->setCursor(centeredTextX("Tap PASS to switch", 1), 296);
   gfx->print("Tap PASS to switch");
 }
 
 void UiManager::clearTransferStatus(bool masterMode) {
-  gfx->fillRect(5, 252, 165, 24, RGB565_BLACK);
+  gfx->fillRect(kContentLeft, 252, kWideAreaWidth, 24, RGB565_BLACK);
   if (!masterMode) drawPassModeHint();
 }
 
 void UiManager::showTransferStatus(const char *text, uint16_t color) {
-  gfx->fillRect(5, 252, 165, 20, color);
+  gfx->fillRect(kContentLeft, 252, kWideAreaWidth, 20, color);
   gfx->setTextColor(RGB565_WHITE, color);
   gfx->setTextSize(1);
   gfx->setCursor(12, 258);
@@ -76,18 +146,52 @@ void UiManager::showTransferStatus(const char *text, uint16_t color) {
 
 void UiManager::drawToolsMenuPage() {
   gfx->fillScreen(RGB565_BLACK);
+
+  if (BoardConfig::kDisplayWidth >= 240) {
+    gfx->setTextSize(2);
+    gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+    gfx->setCursor(10, 12);
+    gfx->print("TOOLS MENU");
+
+    gfx->setTextSize(1);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->setCursor(10, 35);
+    gfx->print("DEVICE UTILITIES");
+    gfx->drawLine(10, 49, BoardConfig::kDisplayWidth - 11, 49,
+                  RGB565_DARKGREY);
+
+    drawToolsCard(60, RGB565_CYAN, "CONFIG UPLOAD",
+                  "Update sensor profiles");
+    drawToolsCard(130, RGB565_GREEN, "LOG EXPORT",
+                  "Download recorded data");
+    drawToolsCard(200, RGB565_ORANGE, "BACK",
+                  "Return to system info");
+
+    gfx->drawLine(10, 268, BoardConfig::kDisplayWidth - 11, 268,
+                  RGB565_DARKGREY);
+    gfx->setTextSize(1);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->setCursor(centeredTextX("Connect PC via USB first", 1), 278);
+    gfx->print("Connect PC via USB first");
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->setCursor(centeredTextX("Tap a card to continue", 1), 296);
+    gfx->print("Tap a card to continue");
+    gfx->flush();
+    return;
+  }
+
   gfx->setTextSize(2);
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
   gfx->setCursor(5, 15);
   gfx->print("TOOLS MENU");
-  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
   gfx->setCursor(5, 50);
   gfx->print("Tap header to go back");
 
-  gfx->fillRect(5, 60, 162, 56, RGB565_BLUE);
+  gfx->fillRect(kContentLeft, 60, kButtonWidth, 56, RGB565_BLUE);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
   gfx->setTextSize(2);
   gfx->setCursor(15, 80);
@@ -95,7 +199,7 @@ void UiManager::drawToolsMenuPage() {
   gfx->setCursor(15, 98);
   gfx->print("  UPLOAD");
 
-  gfx->fillRect(5, 130, 162, 56, RGB565_DARKGREEN);
+  gfx->fillRect(kContentLeft, 130, kButtonWidth, 56, RGB565_DARKGREEN);
   gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREEN);
   gfx->setTextSize(2);
   gfx->setCursor(15, 150);
@@ -103,10 +207,10 @@ void UiManager::drawToolsMenuPage() {
   gfx->setCursor(15, 168);
   gfx->print("  EXPORT");
 
-  gfx->fillRect(5, 200, 162, 56, RGB565_DARKGREY);
+  gfx->fillRect(kContentLeft, 200, kButtonWidth, 56, RGB565_DARKGREY);
   gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
   gfx->setTextSize(2);
-  gfx->setCursor(55, 225);
+  gfx->setCursor(centeredTextX("3.BACK", 2), 225);
   gfx->print("3.BACK");
 
   gfx->setTextSize(1);
@@ -123,7 +227,7 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
   gfx->setTextSize(2);
   gfx->setCursor(5, 15);
   gfx->println("SYSTEM INFO");
-  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
 
   gfx->setTextSize(2);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
@@ -172,14 +276,14 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
     gfx->printf(" %.12s", view.sdError);
   }
 
-  gfx->drawLine(5, 250, 165, 250, RGB565_DARKGREY);
+  gfx->drawLine(kContentLeft, 250, kContentRight, 250, RGB565_DARKGREY);
   gfx->setCursor(5, 255);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
 
-  gfx->fillRect(5, 280, 165, 35, RGB565_BLUE);
+  gfx->fillRect(kContentLeft, 280, kWideAreaWidth, 35, RGB565_BLUE);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
-  gfx->setCursor(35, 293);
+  gfx->setCursor(centeredTextX("TOOLS MENU", 1), 293);
   gfx->print("TOOLS MENU");
 }
 
@@ -189,7 +293,7 @@ void UiManager::drawConfigUpdatePage(const ConfigUpdateView &view) {
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
   gfx->setCursor(5, 15);
   gfx->print("CONFIG UPLOAD");
-  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
@@ -226,8 +330,8 @@ void UiManager::drawConfigUpdatePage(const ConfigUpdateView &view) {
     gfx->print("Run PC upload tool");
   }
 
-  gfx->drawLine(5, 265, 165, 265, RGB565_DARKGREY);
-  gfx->setCursor(18, 285);
+  gfx->drawLine(kContentLeft, 265, kContentRight, 265, RGB565_DARKGREY);
+  gfx->setCursor(centeredTextX("Tap header = cancel", 1), 285);
   gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
   gfx->print("Tap header = cancel");
   gfx->flush();
@@ -239,7 +343,7 @@ void UiManager::drawLogExportPage(const LogExportView &view) {
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
   gfx->setCursor(5, 15);
   gfx->print("LOG EXPORT");
-  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
@@ -284,8 +388,9 @@ void UiManager::drawLogExportPage(const LogExportView &view) {
           (uint8_t)(view.transferOffset * 100 / view.transferTotal);
       gfx->setCursor(5, 160);
       gfx->printf("%u%%", percent);
-      gfx->drawRect(5, 175, 162, 12, RGB565_WHITE);
-      gfx->fillRect(6, 176, (uint16_t)(percent * 160 / 100), 10,
+      gfx->drawRect(kContentLeft, 175, kButtonWidth, 12, RGB565_WHITE);
+      gfx->fillRect(kContentLeft + 1, 176,
+                    (uint16_t)(percent * kProgressInnerWidth / 100), 10,
                     RGB565_GREEN);
     }
   }
@@ -297,7 +402,7 @@ void UiManager::drawLogExportPage(const LogExportView &view) {
     gfx->print(view.errorText);
   }
 
-  gfx->drawLine(5, 250, 165, 250, RGB565_DARKGREY);
+  gfx->drawLine(kContentLeft, 250, kContentRight, 250, RGB565_DARKGREY);
   gfx->setCursor(15, 265);
   gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
   gfx->print("Tap header to exit");
@@ -313,7 +418,7 @@ void UiManager::drawSensorInfoPage(const SensorInfoView &view) {
   gfx->setTextSize(2);
   gfx->setCursor(5, 15);
   gfx->println("SENSOR INFO");
-  gfx->drawLine(5, 38, 165, 38, RGB565_GREEN);
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
@@ -340,8 +445,8 @@ void UiManager::drawSensorInfoPage(const SensorInfoView &view) {
 }
 
 void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
-  gfx->fillRect(0, 148, 172, 172, RGB565_BLACK);
-  gfx->drawLine(5, 148, 165, 148, RGB565_DARKGREY);
+  gfx->fillRect(0, 148, BoardConfig::kDisplayWidth, 172, RGB565_BLACK);
+  gfx->drawLine(kContentLeft, 148, kContentRight, 148, RGB565_DARKGREY);
   gfx->setTextSize(1);
 
   if (!view.supported) {
@@ -371,7 +476,7 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
     }
   }
 
-  gfx->drawLine(5, 270, 165, 270, RGB565_DARKGREY);
+  gfx->drawLine(kContentLeft, 270, kContentRight, 270, RGB565_DARKGREY);
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
   gfx->setCursor(12, 282);
   if (view.pageCount > 1) {
@@ -380,7 +485,7 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
     gfx->print("No more parameters");
   }
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
-  gfx->setCursor(45, 302);
+  gfx->setCursor(centeredTextX("Header = back", 1), 302);
   gfx->print("Header = back");
 }
 
@@ -405,7 +510,7 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
     return;
   }
 
-  gfx->fillRect(5, 200, 165, 115, RGB565_BLACK);
+  gfx->fillRect(kContentLeft, 200, kWideAreaWidth, 115, RGB565_BLACK);
   switch (view.discoveryState) {
     case UiDiscoveryState::Idle:
       gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
@@ -459,9 +564,9 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
       gfx->print(view.deviceName);
       gfx->setCursor(5, 237);
       gfx->printf("PN: %lu", (unsigned long)view.productNum);
-      gfx->fillRect(5, 286, 165, 29, RGB565_BLUE);
+      gfx->fillRect(kContentLeft, 286, kWideAreaWidth, 29, RGB565_BLUE);
       gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
-      gfx->setCursor(28, 296);
+      gfx->setCursor(centeredTextX("Tap for details >", 1), 296);
       gfx->print("Tap for details >");
       break;
 

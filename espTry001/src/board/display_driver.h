@@ -6,6 +6,13 @@
 // execution context may call it. This ownership rule also applies after LVGL.
 extern Arduino_GFX *gfx;
 
-// Initializes the 1.47-inch ST7789, vendor register sequence, rotation and
-// backlight. Returns false when the Arduino_GFX driver cannot start.
+// Drives the backlight off as the first setup action, before the LCD controller
+// and its frame memory are initialized.
+void prepareBoardDisplay();
+
+// Initializes the selected board's ST7789, vendor register sequence, rotation
+// and a black frame. The backlight remains off until explicitly enabled.
+// Returns false when the Arduino_GFX driver cannot start.
 bool beginBoardDisplay();
+
+void setBoardDisplayBacklight(bool enabled);

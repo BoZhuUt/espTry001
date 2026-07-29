@@ -101,11 +101,12 @@ struct DashboardView {
 };
 
 // Owns all low-level drawing calls. Business code supplies state and decides
-// what an action means; UiManager only renders the current 1.47-inch layout.
+// what an action means; horizontal layout follows the selected board width.
 class UiManager {
 public:
   void clearScreen();
   void flush();
+  void drawStartupPage(const char *firmwareVersion);
   void drawDashboardStatic(bool masterMode);
   void drawModeStatus(bool masterMode);
   void drawPassModeHint();

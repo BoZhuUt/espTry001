@@ -7,14 +7,34 @@ constexpr const char *SensorProfileUpdater::kCurrentPath;
 constexpr const char *SensorProfileUpdater::kBackupPath;
 constexpr const char *SensorProfileUpdater::kUploadingPath;
 
+namespace {
+
+void removeIfExists(const char *path) {
+  if (LittleFS.exists(path)) LittleFS.remove(path);
+}
+
+}  // namespace
+
 void SensorProfileUpdater::begin(SensorProfileStore &store) {
   cancel();
   store_ = &store;
-  LittleFS.remove(kUploadingPath);
+  removeIfExists(kUploadingPath);
   state_ = State::ReceivingHeader;
 }
 
 void SensorProfileUpdater::update(Stream &usb) {
+  // Keep CONFIG mode usable after a rejected request. The PC closes and
+  // reopens the port for its next attempt; the first arriving byte starts a
+  // fresh ESPCFG1 header without requiring the operator to leave the page.
+  if (state_ == State::Failed && usb.available()) {
+    headerLength_ = 0;
+    expectedLength_ = 0;
+    expectedCrc32_ = 0;
+    runningCrc32_ = 0xFFFFFFFF;
+    receivedLength_ = 0;
+    errorText_[0] = '\0';
+    state_ = State::ReceivingHeader;
+  }
   if (state_ == State::ReceivingHeader) {
     handleHeader(usb);
   } else if (state_ == State::ReceivingPayload) {
@@ -24,7 +44,7 @@ void SensorProfileUpdater::update(Stream &usb) {
 
 void SensorProfileUpdater::cancel() {
   if (uploadFile_) uploadFile_.close();
-  LittleFS.remove(kUploadingPath);
+  removeIfExists(kUploadingPath);
   state_ = State::Idle;
   store_ = nullptr;
   headerLength_ = 0;
@@ -114,10 +134,22 @@ void SensorProfileUpdater::handlePayload(Stream &usb) {
     return;
   }
   if (store_ == nullptr || !store_->activateFile(kUploadingPath)) {
-    fail(usb, store_ != nullptr ? store_->lastError() : "Store unavailable");
+    char validationError[96] = "Store unavailable";
+    if (store_ != nullptr) {
+      snprintf(validationError, sizeof(validationError), "%s",
+               store_->lastError());
+      // Candidate parsing uses the same fixed runtime buffer as the active
+      // configuration. Reload the untouched current file so a rejected upload
+      // cannot change the running profile set before the next reboot.
+      store_->begin(kCurrentPath);
+    }
+    fail(usb, validationError);
     return;
   }
   if (!installCandidate()) {
+    // installCandidate() restores the old file name when replacement fails;
+    // keep the in-memory store consistent with that restored file as well.
+    store_->begin(kCurrentPath);
     fail(usb, "Atomic replace failed");
     return;
   }
@@ -128,7 +160,7 @@ void SensorProfileUpdater::handlePayload(Stream &usb) {
 }
 
 bool SensorProfileUpdater::installCandidate() {
-  LittleFS.remove(kBackupPath);
+  removeIfExists(kBackupPath);
   bool hadCurrent = LittleFS.exists(kCurrentPath);
   if (hadCurrent && !LittleFS.rename(kCurrentPath, kBackupPath)) return false;
 
@@ -141,7 +173,7 @@ bool SensorProfileUpdater::installCandidate() {
 
 void SensorProfileUpdater::fail(Stream &usb, const char *message) {
   if (uploadFile_) uploadFile_.close();
-  LittleFS.remove(kUploadingPath);
+  removeIfExists(kUploadingPath);
   snprintf(errorText_, sizeof(errorText_), "%s", message != nullptr ? message : "Unknown");
   usb.print("NAK:");
   usb.print(errorText_);

@@ -16,6 +16,8 @@ constexpr int8_t kDisplaySclk = 38;
 constexpr int8_t kDisplayMosi = 39;
 constexpr int8_t kDisplayReset = 40;
 constexpr int8_t kDisplayBacklight = 46;
+constexpr bool kShowStartupScreen = false;
+constexpr uint32_t kMinimumStartupScreenMs = 0;
 
 constexpr int8_t kTouchSda = 42;
 constexpr int8_t kTouchScl = 41;

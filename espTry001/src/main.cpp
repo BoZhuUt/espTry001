@@ -3,6 +3,7 @@
 #include "board/analog_input.h"
 #include "board/board_config.h"
 #include "board/display_driver.h"
+#include "board/power_driver.h"
 #include "board/touch_driver.h"
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
@@ -92,6 +93,10 @@ AppController appController(
 // ==========================================
 void setup()
 {
+  // Blank the panel before any startup delays or LCD initialization can expose
+  // uninitialized frame memory through the backlight.
+  prepareBoardDisplay();
+  beginBoardPower();
   Serial.begin(115200); 
   delay(100);
 
@@ -101,8 +106,16 @@ void setup()
                              FIRMWARE_VERSION_TEXT);
 
   // 1. 屏幕底层硬件初始化
-  if (beginBoardDisplay()) {
-    ui.drawDashboardStatic(appState.isMaster());
+  bool displayOnline = beginBoardDisplay();
+  uint32_t startupPageTimeMs = 0;
+  if (displayOnline) {
+    if (BoardConfig::kShowStartupScreen) {
+      ui.drawStartupPage(FIRMWARE_VERSION_TEXT);
+      startupPageTimeMs = millis();
+    } else {
+      ui.drawDashboardStatic(appState.isMaster());
+    }
+    setBoardDisplayBacklight(true);
   }
 
   // 2. 初始化串口与 485
@@ -134,6 +147,15 @@ void setup()
     }
   } else {
     DEBUG_LOG_PRINTLN("[SD] StorageTask initialization failed");
+  }
+
+  if (displayOnline && BoardConfig::kShowStartupScreen) {
+    uint32_t elapsed = millis() - startupPageTimeMs;
+    if (elapsed < BoardConfig::kMinimumStartupScreenMs) {
+      delay(BoardConfig::kMinimumStartupScreenMs - elapsed);
+    }
+    ui.clearScreen();
+    ui.drawDashboardStatic(appState.isMaster());
   }
 }
 

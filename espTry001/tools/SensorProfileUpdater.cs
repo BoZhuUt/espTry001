@@ -290,8 +290,7 @@ internal sealed class UpdaterForm : Form
                 Application.DoEvents();
             }
 
-            serial.ReadTimeout = 15000;
-            string response = serial.ReadLine().Trim();
+            string response = WaitFinalResponse(15000);
             AddLog("Device response: " + response);
             if (response != "ACK")
                 throw new IOException("Upload failed: " + response);
@@ -345,6 +344,28 @@ internal sealed class UpdaterForm : Form
             }
         }
         throw new TimeoutException("Handshake timeout waiting for '" + (char)expected + "'.");
+    }
+
+    private string WaitFinalResponse(int timeoutMs)
+    {
+        Stopwatch watch = Stopwatch.StartNew();
+        serial.ReadTimeout = 200;
+        while (watch.ElapsedMilliseconds < timeoutMs)
+        {
+            try
+            {
+                string line = serial.ReadLine().Trim();
+                if (line == "ACK" || line.StartsWith("NAK:", StringComparison.Ordinal))
+                    return line;
+                if (line.Length > 0)
+                    AddLog("Device diagnostic: " + line);
+            }
+            catch (TimeoutException)
+            {
+                Application.DoEvents();
+            }
+        }
+        throw new TimeoutException("Timeout waiting for final ACK/NAK response.");
     }
 
     private static uint ComputeCrc32(byte[] data)

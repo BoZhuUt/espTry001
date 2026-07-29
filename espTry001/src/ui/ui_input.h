@@ -7,7 +7,7 @@ struct UiInputContext {
   bool sensorDetailsAvailable = false;
 };
 
-// Converts a raw touch coordinate into a semantic action. It intentionally
-// reproduces the original 1.47-inch hit regions and their evaluation order.
+// Converts a raw touch coordinate into a semantic action. Both supported
+// portrait displays use the same full-width horizontal hit regions.
 UiAction resolveTouchAction(UiPage page, int x, int y,
                             const UiInputContext &context);

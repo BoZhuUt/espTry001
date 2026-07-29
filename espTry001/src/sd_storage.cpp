@@ -14,13 +14,27 @@ const char *SdStorage::stateText() const {
 bool SdStorage::begin() {
   if (state_ == State::Ready) return true;
 
-  // 配置自定义 4-bit 引脚映射：CLK, CMD, D0, D1, D2, D3
-  SD_MMC.setPins(BoardConfig::kSdClk, BoardConfig::kSdCmd,
-                 BoardConfig::kSdD0, BoardConfig::kSdD1,
-                 BoardConfig::kSdD2, BoardConfig::kSdD3);
+  int8_t data1 = BoardConfig::kSdOneBit ? -1 : BoardConfig::kSdD1;
+  int8_t data2 = BoardConfig::kSdOneBit ? -1 : BoardConfig::kSdD2;
+  int8_t data3 = BoardConfig::kSdOneBit ? -1 : BoardConfig::kSdD3;
+  if (!SD_MMC.setPins(BoardConfig::kSdClk, BoardConfig::kSdCmd,
+                      BoardConfig::kSdD0, data1, data2, data3)) {
+    snprintf(lastError_, sizeof(lastError_), "SD_MMC setPins failed");
+    state_ = State::Error;
+    DEBUG_LOG_PRINTLN("[SD] SD_MMC pin mapping failed");
+    return false;
+  }
 
-  // mode1bit=false → 4-bit 模式；format_on_fail=false → 不自动格式化
-  if (!SD_MMC.begin("/sdcard", false, false)) {
+  // On the 2.8 board D3 is not part of the 1-bit bus, but the board circuit
+  // requires it to be held high while the card is initialized.
+  if (BoardConfig::kSdD3MustBeHeldHigh) {
+    pinMode(BoardConfig::kSdD3, OUTPUT);
+    digitalWrite(BoardConfig::kSdD3, HIGH);
+    delay(10);
+  }
+
+  // Never format a user's card automatically when mounting fails.
+  if (!SD_MMC.begin("/sdcard", BoardConfig::kSdOneBit, false)) {
     snprintf(lastError_, sizeof(lastError_), "SD_MMC begin failed");
     state_ = State::NotInitialized;
     DEBUG_LOG_PRINTLN("[SD] SD_MMC begin failed, no card?");

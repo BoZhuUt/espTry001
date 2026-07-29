@@ -9,6 +9,7 @@ Arduino_DataBus *displayBus = new Arduino_ESP32SPI(
     BoardConfig::kDisplaySclk, BoardConfig::kDisplayMosi);
 
 void applyVendorRegisterSequence() {
+#if defined(PYXIS_BOARD_WAVESHARE_147)
   static const uint8_t initOperations[] = {
     BEGIN_WRITE,
     WRITE_COMMAND_8, 0x11,
@@ -103,24 +104,92 @@ void applyVendorRegisterSequence() {
     WRITE_COMMAND_8, 0x29,
     END_WRITE
   };
+#elif defined(PYXIS_BOARD_WAVESHARE_28)
+  // Waveshare's ST7789 sequence for ESP32-S3-Touch-LCD-2.8.
+  static const uint8_t initOperations[] = {
+    BEGIN_WRITE,
+    WRITE_COMMAND_8, 0x11,
+    END_WRITE,
+    DELAY, 120,
+
+    BEGIN_WRITE,
+    WRITE_C8_D8, 0x36, 0x00,
+    WRITE_C8_D8, 0x3A, 0x05,
+
+    WRITE_COMMAND_8, 0xB0,
+    WRITE_BYTES, 2,
+    0x00, 0xE8,
+
+    WRITE_COMMAND_8, 0xB2,
+    WRITE_BYTES, 5,
+    0x0C, 0x0C, 0x00, 0x33, 0x33,
+
+    WRITE_C8_D8, 0xB7, 0x75,
+    WRITE_C8_D8, 0xBB, 0x1A,
+    WRITE_C8_D8, 0xC0, 0x2C,
+
+    WRITE_COMMAND_8, 0xC2,
+    WRITE_BYTES, 2,
+    0x01, 0xFF,
+
+    WRITE_C8_D8, 0xC3, 0x13,
+    WRITE_C8_D8, 0xC4, 0x20,
+    WRITE_C8_D8, 0xC6, 0x0F,
+
+    WRITE_COMMAND_8, 0xD0,
+    WRITE_BYTES, 2,
+    0xA4, 0xA1,
+
+    WRITE_C8_D8, 0xD6, 0xA1,
+
+    WRITE_COMMAND_8, 0xE0,
+    WRITE_BYTES, 14,
+    0xD0, 0x0D, 0x14, 0x0D, 0x0D, 0x09, 0x38,
+    0x44, 0x4E, 0x3A, 0x17, 0x18, 0x2F, 0x30,
+
+    WRITE_COMMAND_8, 0xE1,
+    WRITE_BYTES, 14,
+    0xD0, 0x09, 0x0F, 0x08, 0x07, 0x14, 0x37,
+    0x44, 0x4D, 0x38, 0x15, 0x16, 0x2C, 0x2E,
+
+    WRITE_COMMAND_8, 0x21,
+    WRITE_COMMAND_8, 0x29,
+    END_WRITE
+  };
+#endif
 
   displayBus->batchOperation(initOperations, sizeof(initOperations));
 }
 
 }  // namespace
 
+#if defined(PYXIS_BOARD_WAVESHARE_147)
 Arduino_GFX *gfx = new Arduino_ST7789(
     displayBus, BoardConfig::kDisplayReset, BoardConfig::kDisplayRotation,
     false, BoardConfig::kDisplayWidth, BoardConfig::kDisplayHeight,
     34, 0, 34, 0);
+#elif defined(PYXIS_BOARD_WAVESHARE_28)
+Arduino_GFX *gfx = new Arduino_ST7789(
+    displayBus, BoardConfig::kDisplayReset, BoardConfig::kDisplayRotation,
+    false, BoardConfig::kDisplayWidth, BoardConfig::kDisplayHeight,
+    0, 0, 0, 0);
+#endif
+
+void prepareBoardDisplay() {
+  pinMode(BoardConfig::kDisplayBacklight, OUTPUT);
+  digitalWrite(BoardConfig::kDisplayBacklight, LOW);
+}
 
 bool beginBoardDisplay() {
+  prepareBoardDisplay();
   if (!gfx->begin()) return false;
 
   applyVendorRegisterSequence();
   gfx->setRotation(BoardConfig::kDisplayRotation);
-  pinMode(BoardConfig::kDisplayBacklight, OUTPUT);
-  digitalWrite(BoardConfig::kDisplayBacklight, HIGH);
   gfx->fillScreen(RGB565_BLACK);
   return true;
+}
+
+void setBoardDisplayBacklight(bool enabled) {
+  digitalWrite(BoardConfig::kDisplayBacklight, enabled ? HIGH : LOW);
 }

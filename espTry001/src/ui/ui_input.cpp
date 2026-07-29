@@ -2,7 +2,7 @@
 
 UiAction resolveTouchAction(UiPage page, int x, int y,
                             const UiInputContext &context) {
-  (void)x;  // The current 1.47-inch UI uses full-width horizontal hit regions.
+  (void)x;  // Both portrait layouts use full-width horizontal hit regions.
 
   if (context.configMode) {
     return (y > 0 && y < 45) ? UiAction::CancelConfigAndRestart

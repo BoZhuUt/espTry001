@@ -14,7 +14,8 @@ public:
     Error            // 运行中出现 I/O 错误（如拔卡）
   };
 
-  // 初始化 SD_MMC 4-bit 模式。只应在 setup() 中调用一次。
+  // Initializes SD_MMC using the selected board's 1-bit or 4-bit mapping.
+  // It should only be called once, by StorageTask during startup.
   bool begin();
 
   State state() const { return state_; }

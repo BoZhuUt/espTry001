@@ -86,20 +86,21 @@ def upload(port: str, payload: bytes) -> str:
             wait_control(connection, b"P")
 
         deadline = time.monotonic() + 15
-        response = bytearray()
+        response = ""
         while time.monotonic() < deadline:
-            value = connection.read(1)
-            if not value:
+            line = connection.readline()
+            if not line:
                 continue
-            response.extend(value)
-            if value == b"\n":
+            decoded = line.decode("utf-8", errors="replace").strip()
+            if decoded == "ACK" or decoded.startswith("NAK:"):
+                response = decoded
                 break
     finally:
         connection.close()
 
     if not response:
         raise TimeoutError("设备无响应；请确认屏幕已进入 CONFIG UPLOAD 且 COM 口正确")
-    return response.decode("utf-8", errors="replace").strip()
+    return response
 
 
 def main() -> int:

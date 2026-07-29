@@ -2,14 +2,35 @@
 
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <esp_partition.h>
 
 namespace {
 
 constexpr uint8_t kSupportedSchemaVersion = 1;
+constexpr size_t kPartitionProbeSize = 256;
 
 void copyText(char *destination, size_t capacity, const char *source) {
   if (capacity == 0) return;
   snprintf(destination, capacity, "%s", source != nullptr ? source : "");
+}
+
+bool littleFsPartitionIsBlank() {
+  const esp_partition_t *partition = esp_partition_find_first(
+      ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, nullptr);
+  if (partition == nullptr) return false;
+
+  uint8_t buffer[kPartitionProbeSize];
+  for (size_t offset = 0; offset < partition->size;
+       offset += sizeof(buffer)) {
+    size_t length = min(sizeof(buffer), partition->size - offset);
+    if (esp_partition_read(partition, offset, buffer, length) != ESP_OK) {
+      return false;
+    }
+    for (size_t index = 0; index < length; ++index) {
+      if (buffer[index] != 0xFF) return false;
+    }
+  }
+  return true;
 }
 
 } // namespace
@@ -17,9 +38,12 @@ void copyText(char *destination, size_t capacity, const char *source) {
 bool SensorProfileStore::begin(const char *path) {
   useBuiltIn("LittleFS not loaded");
 
-  // formatOnFail=false：配置分区损坏时不能自动格式化，否则会破坏现场文件。
+  // Never format a partition that contains data. A brand-new board uses an
+  // erased (all 0xFF) partition, which is safe to format exactly once.
   if (!LittleFS.begin(false)) {
-    return fail("LittleFS mount failed");
+    if (!littleFsPartitionIsBlank() || !LittleFS.begin(true)) {
+      return fail("LittleFS mount failed");
+    }
   }
   if (!activateFile(path)) {
     // loadRuntimeFile() 已记录具体原因；保持 Built-in 回退模式。
