@@ -435,10 +435,14 @@ USB CDC当前承载：
 只有1.47版本完成长期验证后才开始：
 
 - [ ] 增加2.8板级实现；
-- [ ] 增加第二个PlatformIO环境；
+  - [x] 完成2.8 V2（CST3530）引脚配置骨架，显示、触摸和SD驱动仍待适配；
+- [x] 增加 `waveshare28` PlatformIO环境，配置16MB Flash、8MB OPI PSRAM，
+  并与1.47环境分别完成release编译（2026-07-29）；
 - [ ] 不修改业务服务层；
 - [ ] 先沿用Arduino_GFX完成2.8功能回归；
 - [ ] 最后建立LVGL UI实现。
+- [x] 增加 `WAVESHARE_2_8_MIGRATION_PLAN.md`，记录V1/V2差异、外围板接线、
+  分阶段提交边界和实机验收顺序。
 
 ## 12. 每阶段最低回归清单
 
