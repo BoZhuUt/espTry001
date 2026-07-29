@@ -64,6 +64,7 @@ void DataLogger::start() {
   ringTail_ = 0;
   ringUsed_ = 0;
   lastFlushMs_ = millis();
+  lastSuccessfulFlushMs_ = 0;
 
   if (!createFile()) return;
 
@@ -279,6 +280,7 @@ bool DataLogger::flushToFile() {
   ringUsed_ = 0;
   ringHead_ = 0;
   ringTail_ = 0;
+  lastSuccessfulFlushMs_ = millis();
 
   // 检查文件大小是否需要分卷
   if (file_.size() >= (ssize_t)kMaxFileSize) {

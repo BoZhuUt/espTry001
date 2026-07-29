@@ -39,6 +39,7 @@ class StorageService {
 
     bool recording = false;
     uint32_t logRecordCount = 0;
+    uint32_t lastSuccessfulFlushMs = 0;
     char currentLogFile[64] = "";
     char loggerError[64] = "";
 

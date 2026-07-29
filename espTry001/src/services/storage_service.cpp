@@ -237,6 +237,7 @@ void StorageService::publishStatus(bool force) {
 
   next.recording = logger_.isRecording();
   next.logRecordCount = logger_.recordCount();
+  next.lastSuccessfulFlushMs = logger_.lastSuccessfulFlushMs();
   snprintf(next.currentLogFile, sizeof(next.currentLogFile), "%s",
            logger_.currentFileName());
   snprintf(next.loggerError, sizeof(next.loggerError), "%s",

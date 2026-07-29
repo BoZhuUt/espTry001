@@ -25,8 +25,6 @@ void UsbService::update(AppMode mode) {
     logExportBridge_.pump(usb_);
     return;
   }
-  if (mode == AppMode::Fault) return;
-
   bool passThrough = mode == AppMode::PassThrough;
   collectUsbBytes();
 

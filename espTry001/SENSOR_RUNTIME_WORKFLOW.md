@@ -6,7 +6,11 @@
 
 | 文件 | 职责 |
 |---|---|
-| `src/main.cpp` | 模式切换、触摸页面、调用发现和轮询状态机 |
+| `src/main.cpp` | 对象装配、触摸/ADC、事件消费和顶层应用编排 |
+| `src/app/app_controller.h/.cpp` | AppMode 切换及 RS485、Storage、USB 的有序交接 |
+| `src/services/rs485_service.h/.cpp` | 唯一管理 Serial1；通过 Rs485Task 执行 PASS、发现和轮询 |
+| `src/services/storage_service.h/.cpp` | 通过 StorageTask 执行 CSV 和 ESPLOG1 文件操作 |
+| `src/usb/usb_service.h/.cpp` | 路由本地 Modbus、PASS、ESPCFG1 和 ESPLOG1 |
 | `src/sensor_discovery.h/.cpp` | 使用地址 0 发现真实地址，并读取 PN 和设备名称 |
 | `src/sensor_profile.h/.cpp` | PN 参数表、非阻塞 Modbus 轮询、数据类型解析 |
 | `config/sensor_profiles.json` | 人工维护的 PN 与显示参数配置（唯一配置入口） |
@@ -14,7 +18,7 @@
 | `src/sensor_profiles_generated.inc` | 自动生成的固件内置表，禁止手工修改 |
 | `src/sensor_profile_store.h/.cpp` | 启动时加载、校验 LittleFS JSON，并管理内置回退 |
 | `data/sensor_profiles.json` | 前置脚本同步生成的 LittleFS 镜像输入文件 |
-| `SENSOR_PROFILE_HOT_UPDATE_PLAN.md` | 将来通过 JSON 热更新参数表的规划 |
+| `SENSOR_PROFILE_HOT_UPDATE_PLAN.md` | JSON 热更新协议、校验与回退设计 |
 
 ## 2. 总体流程
 
@@ -24,6 +28,10 @@
         | 点击 Dashboard 的 Mode 区域
         v
 进入 MASTER 模式
+        |
+        | AppController 停止旧所有者并向 Rs485Task 投递 StartDiscovery
+        v
+Rs485Task 独占 Serial1
         |
         | 地址 0，FC03，读取资料地址 41001
         v
@@ -35,15 +43,20 @@
         |
         | findSensorProfile(PN)
         v
-匹配内置参数配置
+匹配当前 LittleFS 或内置参数配置
         |
-        | SensorProfilePoller::update()
+        | Rs485Task 内部推进 SensorProfilePoller::update()
         v
-分块、非阻塞读取参数并刷新详情页
+分块、非阻塞读取参数
+        |
+        | ScanCompleted 不可变事件快照
+        v
+loopTask 更新 UI 状态并投递给 StorageTask 写入 CSV
 ```
 
-发现和参数轮询都是状态机。`main.cpp` 的 `loop()` 必须持续调用它们的
-`update()`，不能用 `while` 等待响应，否则触摸、ADC 和屏幕会失去响应。
+发现和参数轮询仍是短周期非阻塞状态机，但只由 `Rs485Task` 推进。
+`loopTask` 不访问 `Serial1` 或轮询器中间数组，只消费发现事件、完整扫描快照和
+固定诊断状态，因此串口超时不会阻塞触摸、ADC 或屏幕刷新。
 
 ### 2.1 启动配置选择
 
@@ -138,17 +151,18 @@
 
 ## 5. 非阻塞参数轮询
 
-`SensorProfilePoller` 每次只处理一个读取块：
+`Rs485Task` 中的 `SensorProfilePoller` 每次只处理一个读取块：
 
 1. 将资料的 1-based 地址减 1，组装 FC03 请求并添加 CRC；
-2. 发送后立即返回 `loop()`；
-3. 后续 `update()` 调用逐字节收取响应；
+2. 发送后立即返回任务循环；
+3. 后续短周期 `update()` 调用逐字节收取响应；
 4. 收齐后检查地址、功能码、长度和 CRC；
 5. 按字段类型解析数据，并更新 `values[]` 和 `valid[]`；
 6. 20 ms 后读取下一块；
 7. 一轮全部完成后等待 5000 ms，再开始下一轮；传感器自身约 4 秒更新一次，使用不同周期可避免两个时钟形成慢拍。
 
-单个块 500 ms 没有响应时只把该块参数标为无效，屏幕显示 `--`，不会阻塞触摸和其他功能。
+单个块 500 ms 没有响应时只把该块参数标为无效。整轮结束后生成固定大小的
+`ScanCompleted` 快照，屏幕对无效字段显示 `--`，StorageTask 记录同一份完整快照。
 
 ## 6. 数据解析规则
 
@@ -175,7 +189,8 @@ Modbus 响应中每个寄存器按高字节在前组成一个 16 位无符号整
 - 详情页一次显示 4 个参数，最多显示 4 页、共 16 个参数；
 - 点击详情页底部循环切换下一页；
 - 点击详情页顶部返回 Dashboard；
-- 切回 PASS 时取消发现和参数轮询，并清空参数有效标志。
+- 切回 PASS 时，AppController 等待 Rs485Task 停止确认，再清空会话并投递
+  `EnterPass` 命令；CSV 也会先由 StorageTask flush/close。
 
 ## 8. 增加一个新 PN
 
@@ -263,7 +278,8 @@ ESP32 流式写入 `/sensor_profiles.uploading`，收完后检查 CRC32 和全�
 
 ## 11. 维护时不要踩的坑
 
-- 不要在 `loop()` 中使用同步的 `ModbusMaster::readHoldingRegisters()` 连续轮询；从站不响应时它会阻塞界面。
+- 不要从 `loopTask`、UI 或 USB 服务直接访问 `Serial1`；PASS、发现和轮询必须
+  通过 `Rs485Service` 的固定命令/事件接口。
 - 不要同时修改 JSON 和自动生成的 `.inc`；JSON 是唯一人工维护入口。
 - 配置表写资料地址（1-based），真正发包时统一减 1。
 - PN 55995 的 float 是 CDAB，设备名则是每个寄存器低字节字符在前，这两种字节规则不要混淆。

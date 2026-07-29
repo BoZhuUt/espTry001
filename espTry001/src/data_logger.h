@@ -48,6 +48,9 @@ public:
   bool isRecording() const { return recording_; }
   uint32_t recordCount() const { return recordCount_; }
   uint32_t sessionId() const { return sessionId_; }
+  uint32_t lastSuccessfulFlushMs() const {
+    return lastSuccessfulFlushMs_;
+  }
   const char *currentFileName() const { return fileName_; }
   const char *lastError() const { return lastError_; }
 
@@ -89,6 +92,7 @@ private:
 
   // 定时
   uint32_t lastFlushMs_ = 0;
+  uint32_t lastSuccessfulFlushMs_ = 0;
 
   // 错误
   char lastError_[64] = {0};

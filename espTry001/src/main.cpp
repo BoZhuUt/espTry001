@@ -19,10 +19,8 @@
 #include "usb/usb_service.h"
 #include "usb/storage_usb_bridge.h"
 
-#define MODBUS_FLOAT_WORD_SWAP 1   // 0: 高字在前(ABCD)；1: 低字在前(CDAB)
-
 #define LOCAL_SLAVE_ID           247
-#define LOCAL_REG_COUNT          7
+#define LOCAL_REG_COUNT          43
 
 #ifdef AUTO_VERSION
 #define FIRMWARE_VERSION_TEXT AUTO_VERSION
@@ -89,17 +87,6 @@ AppController appController(
     usbService, Serial, activeProfile, profileLookupComplete,
     appState.sensor.parameterPage);
 
-// SD 卡模拟数据测试：无传感器时每秒递增并写入
-#define SD_SIMULATE_LOG 0  // 1: synthetic SD test; 0: log real MASTER scans.
-#if SD_SIMULATE_LOG
-static constexpr uint32_t kSimulatedProductNum = 53607;
-static uint32_t simScanSeq = 0;
-static uint32_t simLastLogMs = 0;
-static constexpr uint32_t simLogIntervalMs = 1000;  // 模拟每秒一条
-static float simValues[kMaxSensorFields] = {0};
-static bool simValid[kMaxSensorFields] = {false};
-#endif
-
 // ==========================================
 // 5. 核心逻辑主程序
 // ==========================================
@@ -142,22 +129,6 @@ void setup()
     bool sdReady = storageStatus.storageState == SdStorage::State::Ready;
     if (sdReady) {
       DEBUG_LOG_PRINTLN("[SD] SD card initialized OK");
-#if SD_SIMULATE_LOG
-      // 模拟数据测试：使用内置 Profile 第一个 PN 构造模拟日志
-      const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
-      if (simProfile == nullptr) {
-        // 如果配置中没有 53607，取第一个
-        simProfile = findSensorProfile(kSimulatedProductNum);
-      }
-      if (simProfile != nullptr) {
-        for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
-          simValid[i] = true;
-        }
-        storageService.startLogging(15, simProfile->productNum,
-                                    simProfile->name, simProfile);
-        simLastLogMs = millis();
-      }
-#endif
     } else {
       DEBUG_LOG_PRINTLN("[SD] No SD card, logging disabled");
     }
@@ -338,31 +309,6 @@ void loop()
   }
 
   // ----------------------------------------------------------------
-  // SD 卡模拟数据测试
-  // ----------------------------------------------------------------
-#if SD_SIMULATE_LOG
-  if (storageService.isRecording() && !appState.isMaster()) {
-    uint32_t now = millis();
-    if ((uint32_t)(now - simLastLogMs) >= simLogIntervalMs) {
-      simLastLogMs = now;
-      simScanSeq++;
-      // 模拟数据：每个字段递增
-      const SensorProfile *simProfile = profileStore.find(kSimulatedProductNum);
-      if (simProfile == nullptr) simProfile = findSensorProfile(kSimulatedProductNum);
-      if (simProfile != nullptr) {
-        for (uint8_t i = 0; i < simProfile->fieldCount; i++) {
-          simValues[i] = (float)(simScanSeq * simProfile->fieldCount + i) * 0.1f;
-          simValid[i] = true;
-        }
-        storageService.enqueueSnapshot(
-            simScanSeq, simValues, simValid, simProfile->fieldCount,
-            current1Ma, current2Ma);
-      }
-    }
-  }
-#endif
-
-  // ----------------------------------------------------------------
   // 核心功能 3：UI 动态数据刷新
   // ----------------------------------------------------------------
   if (millis() - lastSampleTime > 500) {
@@ -425,11 +371,9 @@ void processRs485Events() {
       case Rs485Service::EventType::ScanCompleted:
         if (!appState.isMaster() || activeProfile == nullptr) break;
         latestScanEvent = event;
-#if !SD_SIMULATE_LOG
         storageService.enqueueSnapshot(
             event.scanSequence, event.values, event.valid, event.fieldCount,
             current1Ma, current2Ma);
-#endif
         latestScanAvailable = true;
         if (appState.page == UiPage::SensorInfo) {
           drawSensorParameterArea();
@@ -549,16 +493,18 @@ uint16_t modbusCrc16(const uint8_t *data, size_t length) {
   return crc;
 }
 
-static void floatToModbusRegisters(float value, uint16_t &firstWord, uint16_t &secondWord) {
+static void floatToCdabRegisters(float value, uint16_t &firstWord,
+                                 uint16_t &secondWord) {
   uint32_t raw;
   memcpy(&raw, &value, sizeof(raw));
-#if MODBUS_FLOAT_WORD_SWAP
   firstWord = raw & 0xFFFF;
   secondWord = raw >> 16;
-#else
-  firstWord = raw >> 16;
-  secondWord = raw & 0xFFFF;
-#endif
+}
+
+static void uint32ToModbusRegisters(uint32_t value, uint16_t &highWord,
+                                    uint16_t &lowWord) {
+  highWord = value >> 16;
+  lowWord = value & 0xFFFF;
 }
 
 static void sendLocalModbusException(uint8_t function, uint8_t exceptionCode) {
@@ -594,11 +540,60 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length) {
   }
 
   uint16_t localRegisters[LOCAL_REG_COUNT] = {0};
-  floatToModbusRegisters(current1Ma, localRegisters[0], localRegisters[1]);
-  floatToModbusRegisters(current2Ma, localRegisters[2], localRegisters[3]);
+  floatToCdabRegisters(current1Ma, localRegisters[0], localRegisters[1]);
+  floatToCdabRegisters(current2Ma, localRegisters[2], localRegisters[3]);
   localRegisters[4] = appState.isMaster() ? 1 : 0;
   localRegisters[5] = adc1Raw;
   localRegisters[6] = adc2Raw;
+
+  // Registers 40008+ are a read-only stability diagnostic extension. The
+  // original 40001~40007 map remains unchanged and backward compatible.
+  Rs485Service::Status rs485Diagnostics;
+  StorageService::Status storageDiagnostics;
+  rs485Service.getStatus(rs485Diagnostics);
+  storageService.getStatus(storageDiagnostics);
+
+  localRegisters[7] = static_cast<uint16_t>(appState.mode);
+  localRegisters[8] = static_cast<uint16_t>(rs485Diagnostics.mode);
+  localRegisters[9] = rs485Diagnostics.lastModbusError;
+  localRegisters[10] = rs485Diagnostics.commandQueueDepth;
+  localRegisters[11] = rs485Diagnostics.commandQueuePeak;
+  localRegisters[12] = rs485Diagnostics.eventQueueDepth;
+  localRegisters[13] = rs485Diagnostics.eventQueuePeak;
+  uint32ToModbusRegisters(rs485Diagnostics.droppedEvents,
+                          localRegisters[14], localRegisters[15]);
+  uint32ToModbusRegisters(rs485Diagnostics.passRequestDrops,
+                          localRegisters[16], localRegisters[17]);
+  uint32ToModbusRegisters(rs485Diagnostics.passResponseDrops,
+                          localRegisters[18], localRegisters[19]);
+  uint32ToModbusRegisters(
+      static_cast<uint32_t>(rs485Diagnostics.taskStackHighWater),
+      localRegisters[20], localRegisters[21]);
+
+  localRegisters[22] =
+      static_cast<uint16_t>(storageDiagnostics.storageState);
+  localRegisters[23] = storageDiagnostics.recording ? 1 : 0;
+  localRegisters[24] = storageDiagnostics.snapshotQueueDepth;
+  localRegisters[25] = storageDiagnostics.snapshotQueuePeak;
+  uint32ToModbusRegisters(storageDiagnostics.droppedSnapshots,
+                          localRegisters[26], localRegisters[27]);
+  uint32ToModbusRegisters(storageDiagnostics.commandFailures,
+                          localRegisters[28], localRegisters[29]);
+  uint32ToModbusRegisters(
+      static_cast<uint32_t>(storageDiagnostics.taskStackHighWater),
+      localRegisters[30], localRegisters[31]);
+  uint32ToModbusRegisters(ESP.getFreeHeap(),
+                          localRegisters[32], localRegisters[33]);
+  uint32ToModbusRegisters(ESP.getMinFreeHeap(),
+                          localRegisters[34], localRegisters[35]);
+  uint32ToModbusRegisters(storageDiagnostics.logRecordCount,
+                          localRegisters[36], localRegisters[37]);
+  uint32ToModbusRegisters(storageDiagnostics.lastSuccessfulFlushMs,
+                          localRegisters[38], localRegisters[39]);
+  uint32ToModbusRegisters(millis(),
+                          localRegisters[40], localRegisters[41]);
+  localRegisters[42] =
+      static_cast<uint16_t>(storageDiagnostics.exportState);
 
   uint8_t response[3 + LOCAL_REG_COUNT * 2 + 2] = {0};
   response[0] = LOCAL_SLAVE_ID;

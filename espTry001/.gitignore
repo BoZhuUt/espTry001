@@ -3,3 +3,9 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+__pycache__/
+*.pyc
+
+# Local stability-test outputs and generated reports
+stability_*.csv
+reports/
