@@ -1,5 +1,27 @@
 #include "app_controller.h"
 
+namespace {
+
+const SensorPollBlock kPrecheckBlocks[] = {
+    {46037, 4},
+};
+
+const SensorField kPrecheckFields[] = {
+    {"s470Raw", 0, 0, SensorValueType::Float32CDAB, 2},
+    {"t365Raw", 0, 2, SensorValueType::Float32CDAB, 2},
+};
+
+const SensorProfile kPrecheckProfile = {
+    0,
+    "PRECHECK",
+    kPrecheckBlocks,
+    1,
+    kPrecheckFields,
+    2,
+};
+
+}  // namespace
+
 AppController::AppController(
     AppState &state,
     StorageService &storageService,
@@ -22,31 +44,44 @@ AppController::AppController(
       profileLookupComplete_(profileLookupComplete),
       parameterPage_(parameterPage) {}
 
-bool AppController::togglePassMaster() {
+bool AppController::cycleOperatingMode() {
   // A logging session must be closed before its sensor identity is reset.
   if (!storageService_.stopLoggingAndWait()) {
     state_.mode = AppMode::Fault;
     return false;
   }
 
-  bool enterMaster = !state_.isMaster();
+  AppMode nextMode = AppMode::PassThrough;
+  if (state_.isPassThrough()) {
+    nextMode = AppMode::MasterDiscovery;
+  } else if (state_.isMaster()) {
+    nextMode = AppMode::Precheck;
+  }
+
   if (!rs485Service_.stopAndWait()) {
     state_.mode = AppMode::Fault;
     return false;
   }
-  state_.mode =
-      enterMaster ? AppMode::MasterDiscovery : AppMode::PassThrough;
+  state_.mode = nextMode;
 
   drainSerialInputs();
   resetMasterSession();
+  state_.precheck = PrecheckState{};
 
-  bool commandAccepted = enterMaster ? rs485Service_.startDiscovery()
-                                     : rs485Service_.enterPassThrough();
+  bool commandAccepted = false;
+  if (nextMode == AppMode::MasterDiscovery) {
+    commandAccepted = rs485Service_.startDiscovery();
+  } else if (nextMode == AppMode::Precheck) {
+    commandAccepted = rs485Service_.startFixedPolling(
+        PrecheckState::kSlaveAddress, &kPrecheckProfile);
+  } else {
+    commandAccepted = rs485Service_.enterPassThrough();
+  }
   if (!commandAccepted) {
     state_.mode = AppMode::Fault;
     return false;
   }
-  return state_.isMaster();
+  return true;
 }
 
 void AppController::markMasterPolling() {

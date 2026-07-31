@@ -11,7 +11,7 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
 
   switch (page) {
     case UiPage::Dashboard:
-      if (y >= 40 && y < 80) return UiAction::TogglePassMaster;
+      if (y >= 40 && y < 80) return UiAction::CycleOperatingMode;
       if (y >= 280 && context.sensorDetailsAvailable) {
         return UiAction::OpenSensorInfo;
       }

@@ -85,8 +85,14 @@ enum class UiDiscoveryState : uint8_t {
   Failed,
 };
 
+enum class UiOperatingMode : uint8_t {
+  Pass,
+  Master,
+  Precheck,
+};
+
 struct DashboardView {
-  bool masterMode = false;
+  UiOperatingMode mode = UiOperatingMode::Pass;
   float channel1Ma = 0.0f;
   float channel2Ma = 0.0f;
   UiDiscoveryState discoveryState = UiDiscoveryState::Idle;
@@ -98,6 +104,12 @@ struct DashboardView {
   const char *errorText = "";
   bool exceptionResponse = false;
   uint8_t exceptionCode = 0;
+  float s470Raw = 0.0f;
+  float t365Raw = 0.0f;
+  bool s470Valid = false;
+  bool t365Valid = false;
+  uint32_t precheckScanSequence = 0;
+  uint8_t precheckError = 0xFF;
 };
 
 // Owns all low-level drawing calls. Business code supplies state and decides
@@ -107,10 +119,10 @@ public:
   void clearScreen();
   void flush();
   void drawStartupPage(const char *firmwareVersion);
-  void drawDashboardStatic(bool masterMode);
-  void drawModeStatus(bool masterMode);
+  void drawDashboardStatic(UiOperatingMode mode);
+  void drawModeStatus(UiOperatingMode mode);
   void drawPassModeHint();
-  void clearTransferStatus(bool masterMode);
+  void clearTransferStatus(UiOperatingMode mode);
   void showTransferStatus(const char *text, uint16_t color);
   void drawToolsMenuPage();
   void drawSystemInfoPage(const SystemInfoView &view);

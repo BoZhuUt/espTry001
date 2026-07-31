@@ -24,7 +24,7 @@ public:
 
   const AppState &state() const { return state_; }
 
-  bool togglePassMaster();
+  bool cycleOperatingMode();
   void markMasterPolling();
 
   // CONFIG and LOG EXPORT take exclusive ownership of USB CDC. These methods

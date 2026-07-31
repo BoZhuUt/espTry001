@@ -13,6 +13,7 @@ enum class AppMode : uint8_t {
   ConfigUpload,
   LogExport,
   Fault,
+  Precheck,
 };
 
 enum class AppDiscoveryPhase : uint8_t {
@@ -64,6 +65,17 @@ struct SensorState {
   uint8_t fieldCount = 0;
   uint8_t parameterPage = 0;
   uint32_t scanSequence = 0;
+};
+
+struct PrecheckState {
+  static constexpr uint8_t kSlaveAddress = 15;
+
+  float s470Raw = 0.0f;
+  float t365Raw = 0.0f;
+  bool s470Valid = false;
+  bool t365Valid = false;
+  uint32_t scanSequence = 0;
+  uint8_t lastModbusError = 0xFF;
 };
 
 enum class AppStorageState : uint8_t {
@@ -126,6 +138,7 @@ struct AppState {
   UiPage page = UiPage::Dashboard;
   DashboardState dashboard;
   SensorState sensor;
+  PrecheckState precheck;
   SystemState system;
   ConfigUpdateState configUpdate;
   LogExportState logExport;
@@ -133,6 +146,14 @@ struct AppState {
   bool isMaster() const {
     return mode == AppMode::MasterDiscovery ||
            mode == AppMode::MasterPolling;
+  }
+
+  bool isPrecheck() const {
+    return mode == AppMode::Precheck;
+  }
+
+  bool isPassThrough() const {
+    return mode == AppMode::PassThrough;
   }
 
   bool isConfigUpload() const {

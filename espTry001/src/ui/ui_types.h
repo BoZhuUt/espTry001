@@ -15,7 +15,7 @@ enum class UiPage : uint8_t {
 enum class UiAction : uint8_t {
   None,
   CancelConfigAndRestart,
-  TogglePassMaster,
+  CycleOperatingMode,
   OpenSensorInfo,
   OpenSystemInfo,
   OpenToolsMenu,

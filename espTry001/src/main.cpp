@@ -38,6 +38,7 @@ void drawSensorInfoPage();
 void drawSensorParameterArea();
 SensorInfoView buildSensorInfoView();
 DashboardView buildDashboardView();
+UiOperatingMode currentUiOperatingMode();
 void updateDashboardStateSnapshot();
 void updateSensorStateSnapshot();
 void updateSystemStateSnapshot();
@@ -113,7 +114,7 @@ void setup()
       ui.drawStartupPage(FIRMWARE_VERSION_TEXT);
       startupPageTimeMs = millis();
     } else {
-      ui.drawDashboardStatic(appState.isMaster());
+      ui.drawDashboardStatic(currentUiOperatingMode());
     }
     setBoardDisplayBacklight(true);
   }
@@ -155,7 +156,7 @@ void setup()
       delay(BoardConfig::kMinimumStartupScreenMs - elapsed);
     }
     ui.clearScreen();
-    ui.drawDashboardStatic(appState.isMaster());
+    ui.drawDashboardStatic(currentUiOperatingMode());
   }
 }
 
@@ -188,10 +189,10 @@ void loop()
         ESP.restart();
         break;
 
-      case UiAction::TogglePassMaster:
-        appController.togglePassMaster();
+      case UiAction::CycleOperatingMode:
+        appController.cycleOperatingMode();
         ui.clearScreen();
-        ui.drawDashboardStatic(appState.isMaster());
+        ui.drawDashboardStatic(currentUiOperatingMode());
         delay(400);
         break;
 
@@ -253,7 +254,7 @@ void loop()
       case UiAction::BackToDashboard:
         ui.clearScreen();
         appController.showPage(UiPage::Dashboard);
-        ui.drawDashboardStatic(appState.isMaster());
+        ui.drawDashboardStatic(currentUiOperatingMode());
         delay(400);
         break;
 
@@ -350,10 +351,10 @@ void loop()
   }
 
   static unsigned long lastClearTime = 0;
-  if (!appState.isMaster() && (millis() - lastClearTime > 150)) {
+  if (appState.isPassThrough() && (millis() - lastClearTime > 150)) {
     if (appState.page == UiPage::Dashboard) {
       // 传输方向只短暂显示；底部模式切换提示始终保留。
-      ui.clearTransferStatus(appState.isMaster());
+      ui.clearTransferStatus(currentUiOperatingMode());
     }
     ui.flush();
     lastClearTime = millis();
@@ -369,7 +370,10 @@ void processRs485Events() {
   while (rs485Service.takeEvent(event)) {
     switch (event.type) {
       case Rs485Service::EventType::SensorFound:
-        if (!appState.isMaster()) break;
+        if (!appState.isMaster() ||
+            event.sourceMode != Rs485Service::Mode::Discovery) {
+          break;
+        }
         appController.markMasterPolling();
         if (profileLookupComplete) break;
 
@@ -391,19 +395,35 @@ void processRs485Events() {
         break;
 
       case Rs485Service::EventType::ScanCompleted:
-        if (!appState.isMaster() || activeProfile == nullptr) break;
-        latestScanEvent = event;
-        storageService.enqueueSnapshot(
-            event.scanSequence, event.values, event.valid, event.fieldCount,
-            current1Ma, current2Ma);
-        latestScanAvailable = true;
-        if (appState.page == UiPage::SensorInfo) {
-          drawSensorParameterArea();
-          ui.flush();
+        if (appState.isPrecheck() &&
+            event.sourceMode == Rs485Service::Mode::FixedPolling) {
+          PrecheckState &precheck = appState.precheck;
+          precheck.s470Raw = event.values[0];
+          precheck.t365Raw = event.values[1];
+          precheck.s470Valid = event.fieldCount > 0 && event.valid[0];
+          precheck.t365Valid = event.fieldCount > 1 && event.valid[1];
+          precheck.scanSequence = event.scanSequence;
+          precheck.lastModbusError = event.error;
+        } else if (appState.isMaster() && activeProfile != nullptr &&
+                   event.sourceMode == Rs485Service::Mode::Polling) {
+          latestScanEvent = event;
+          storageService.enqueueSnapshot(
+              event.scanSequence, event.values, event.valid, event.fieldCount,
+              current1Ma, current2Ma);
+          latestScanAvailable = true;
+          if (appState.page == UiPage::SensorInfo) {
+            drawSensorParameterArea();
+            ui.flush();
+          }
         }
         break;
 
       case Rs485Service::EventType::CommunicationError:
+        if (appState.isPrecheck() &&
+            event.sourceMode == Rs485Service::Mode::FixedPolling) {
+          appState.precheck.lastModbusError = event.error;
+        }
+        break;
       case Rs485Service::EventType::Stopped:
         break;
     }
@@ -412,7 +432,7 @@ void processRs485Events() {
 
 DashboardView buildDashboardView() {
   DashboardView view;
-  view.masterMode = appState.isMaster();
+  view.mode = currentUiOperatingMode();
   const DashboardState &snapshot = appState.dashboard;
   view.channel1Ma = snapshot.channel1Ma;
   view.channel2Ma = snapshot.channel2Ma;
@@ -424,6 +444,13 @@ DashboardView buildDashboardView() {
   view.errorText = snapshot.errorText;
   view.exceptionResponse = snapshot.exceptionResponse;
   view.exceptionCode = snapshot.exceptionCode;
+  const PrecheckState &precheck = appState.precheck;
+  view.s470Raw = precheck.s470Raw;
+  view.t365Raw = precheck.t365Raw;
+  view.s470Valid = precheck.s470Valid;
+  view.t365Valid = precheck.t365Valid;
+  view.precheckScanSequence = precheck.scanSequence;
+  view.precheckError = precheck.lastModbusError;
 
   switch (snapshot.discoveryPhase) {
     case AppDiscoveryPhase::DiscoveringAddress:
@@ -450,6 +477,12 @@ DashboardView buildDashboardView() {
       break;
   }
   return view;
+}
+
+UiOperatingMode currentUiOperatingMode() {
+  if (appState.isMaster()) return UiOperatingMode::Master;
+  if (appState.isPrecheck()) return UiOperatingMode::Precheck;
+  return UiOperatingMode::Pass;
 }
 
 void updateDashboardStateSnapshot() {

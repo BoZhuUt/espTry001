@@ -19,6 +19,7 @@ class Rs485Service {
     Discovery,
     Polling,
     Fault,
+    FixedPolling,
   };
 
   enum class EventType : uint8_t {
@@ -30,6 +31,7 @@ class Rs485Service {
 
   struct Event {
     EventType type = EventType::Stopped;
+    Mode sourceMode = Mode::Idle;
     SensorDiscovery::Result identity{};
     uint32_t scanSequence = 0;
     uint8_t fieldCount = 0;
@@ -78,6 +80,7 @@ class Rs485Service {
   bool enterPassThrough();
   bool startDiscovery();
   bool startPolling(const SensorProfile *profile);
+  bool startFixedPolling(uint8_t slaveAddress, const SensorProfile *profile);
   bool stopAndWait(uint32_t timeoutMs = kStopTimeoutMs);
 
   bool enqueuePassFrame(const uint8_t *frame, size_t length);
@@ -92,12 +95,14 @@ class Rs485Service {
     EnterPass,
     StartDiscovery,
     StartPolling,
+    StartFixedPolling,
     Stop,
   };
 
   struct Command {
     CommandType type = CommandType::Stop;
     const SensorProfile *profile = nullptr;
+    uint8_t slaveAddress = 0;
   };
 
   static constexpr EventBits_t kInitializedBit = BIT0;
@@ -134,6 +139,7 @@ class Rs485Service {
 
   Mode mode_ = Mode::Idle;
   const SensorProfile *activeProfile_ = nullptr;
+  uint8_t pollingSlaveAddress_ = 0;
   float values_[kMaxSensorFields] = {0};
   bool valid_[kMaxSensorFields] = {false};
   uint8_t lastModbusError_ = 0xFF;

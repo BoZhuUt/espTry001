@@ -54,6 +54,18 @@ bool Rs485Service::startPolling(const SensorProfile *profile) {
   return sendCommand(command);
 }
 
+bool Rs485Service::startFixedPolling(uint8_t slaveAddress,
+                                     const SensorProfile *profile) {
+  if (slaveAddress == 0 || slaveAddress > 247 || profile == nullptr) {
+    return false;
+  }
+  Command command;
+  command.type = CommandType::StartFixedPolling;
+  command.profile = profile;
+  command.slaveAddress = slaveAddress;
+  return sendCommand(command);
+}
+
 bool Rs485Service::stopAndWait(uint32_t timeoutMs) {
   if (events_ == nullptr) return false;
   xEventGroupClearBits(events_, kStoppedBit);
@@ -136,6 +148,7 @@ void Rs485Service::taskLoop() {
         updateDiscovery();
         break;
       case Mode::Polling:
+      case Mode::FixedPolling:
         updatePolling();
         break;
       case Mode::Idle:
@@ -153,6 +166,7 @@ void Rs485Service::handleCommand(const Command &command) {
       poller_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
+      pollingSlaveAddress_ = 0;
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       resetPassBuffers();
@@ -164,6 +178,7 @@ void Rs485Service::handleCommand(const Command &command) {
       poller_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
+      pollingSlaveAddress_ = 0;
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       resetPassBuffers();
@@ -180,13 +195,29 @@ void Rs485Service::handleCommand(const Command &command) {
       poller_.cancel();
       drainSerial();
       activeProfile_ = command.profile;
+      pollingSlaveAddress_ = discovery_.result().slaveAddress;
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       lastModbusError_ = 0xFF;
       blockUpdateSequence_ = 0;
-      poller_.begin(discovery_.result().slaveAddress, *activeProfile_,
+      poller_.begin(pollingSlaveAddress_, *activeProfile_,
                     values_, valid_);
       mode_ = Mode::Polling;
+      break;
+
+    case CommandType::StartFixedPolling:
+      discovery_.cancel();
+      poller_.cancel();
+      drainSerial();
+      resetPassBuffers();
+      activeProfile_ = command.profile;
+      pollingSlaveAddress_ = command.slaveAddress;
+      memset(values_, 0, sizeof(values_));
+      memset(valid_, 0, sizeof(valid_));
+      lastModbusError_ = 0xFF;
+      blockUpdateSequence_ = 0;
+      poller_.begin(pollingSlaveAddress_, *activeProfile_, values_, valid_);
+      mode_ = Mode::FixedPolling;
       break;
 
     case CommandType::Stop: {
@@ -194,6 +225,7 @@ void Rs485Service::handleCommand(const Command &command) {
       poller_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
+      pollingSlaveAddress_ = 0;
       resetPassBuffers();
       mode_ = Mode::Idle;
       Event event;
@@ -269,6 +301,7 @@ void Rs485Service::updateDiscovery() {
     sensorFoundEmitted_ = true;
     Event event;
     event.type = EventType::SensorFound;
+    event.sourceMode = Mode::Discovery;
     event.identity = discovery_.result();
     emitEvent(event);
   }
@@ -281,6 +314,7 @@ void Rs485Service::updatePolling() {
     if (lastModbusError_ != ModbusMaster::ku8MBSuccess) {
       Event event;
       event.type = EventType::CommunicationError;
+      event.sourceMode = mode_;
       event.error = lastModbusError_;
       emitEvent(event);
     }
@@ -289,7 +323,13 @@ void Rs485Service::updatePolling() {
   if (poller_.takeScanCompleted()) {
     Event event;
     event.type = EventType::ScanCompleted;
-    event.identity = discovery_.result();
+    event.sourceMode = mode_;
+    if (mode_ == Mode::FixedPolling) {
+      event.identity = SensorDiscovery::Result{};
+      event.identity.slaveAddress = pollingSlaveAddress_;
+    } else {
+      event.identity = discovery_.result();
+    }
     event.scanSequence = poller_.scanSequence();
     event.fieldCount =
         min(activeProfile_->fieldCount, static_cast<uint8_t>(kMaxSensorFields));

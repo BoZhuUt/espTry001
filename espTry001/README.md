@@ -6,6 +6,8 @@
 
 - PASS 模式下提供 USB ↔ RS485 Modbus RTU 双向透传；
 - MASTER 模式支持地址 0 普通发现、厂商 `0x67` 特殊发现及 PN 识别；
+- PRECHECK 模式固定读取从站 15 的 46037–46040，并显示
+  `s470Raw`、`t365Raw` 两个 CDAB 浮点值；
 - 根据 `sensor_profiles.json` 分块轮询最多 16 个参数，支持 UInt16 和 Float32 CDAB；
 - 采集两路 4–20 mA 输入，并通过本地 Modbus 从站地址 247 提供数据；
 - 将每轮完整传感器快照记录为带 CRC 可校验的 CSV；

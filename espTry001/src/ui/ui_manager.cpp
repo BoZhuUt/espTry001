@@ -80,7 +80,7 @@ void UiManager::drawStartupPage(const char *firmwareVersion) {
   gfx->flush();
 }
 
-void UiManager::drawDashboardStatic(bool masterMode) {
+void UiManager::drawDashboardStatic(UiOperatingMode mode) {
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->setTextSize(2);
   gfx->setCursor(5, 15);
@@ -91,7 +91,7 @@ void UiManager::drawDashboardStatic(bool masterMode) {
   gfx->setTextSize(1);
   gfx->setCursor(5, 50);
   gfx->printf("Mode: ");
-  drawModeStatus(masterMode);
+  drawModeStatus(mode);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(1);
   gfx->setCursor(5, 66);
@@ -105,16 +105,20 @@ void UiManager::drawDashboardStatic(bool masterMode) {
   gfx->setCursor(5, 185);
   gfx->println("[ Modbus RTU Data ]");
 
-  if (!masterMode) drawPassModeHint();
+  if (mode == UiOperatingMode::Pass) drawPassModeHint();
 }
 
-void UiManager::drawModeStatus(bool masterMode) {
+void UiManager::drawModeStatus(UiOperatingMode mode) {
   gfx->fillRect(55, 40, BoardConfig::kDisplayWidth - 60, 25, RGB565_BLACK);
   gfx->setTextSize(2);
-  if (masterMode) {
+  if (mode == UiOperatingMode::Master) {
     gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
     gfx->setCursor(centeredTextX("MASTER", 2), 44);
     gfx->print("MASTER");
+  } else if (mode == UiOperatingMode::Precheck) {
+    gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+    gfx->setCursor(centeredTextX("PRECHECK", 2), 44);
+    gfx->print("PRECHECK");
   } else {
     gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
     gfx->setCursor(centeredTextX("PASS", 2), 44);
@@ -130,9 +134,9 @@ void UiManager::drawPassModeHint() {
   gfx->print("Tap PASS to switch");
 }
 
-void UiManager::clearTransferStatus(bool masterMode) {
+void UiManager::clearTransferStatus(UiOperatingMode mode) {
   gfx->fillRect(kContentLeft, 252, kWideAreaWidth, 24, RGB565_BLACK);
-  if (!masterMode) drawPassModeHint();
+  if (mode == UiOperatingMode::Pass) drawPassModeHint();
 }
 
 void UiManager::showTransferStatus(const char *text, uint16_t color) {
@@ -490,7 +494,7 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
 }
 
 void UiManager::drawDashboardDynamic(const DashboardView &view) {
-  drawModeStatus(view.masterMode);
+  drawModeStatus(view.mode);
 
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(2);
@@ -501,7 +505,7 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
 
   gfx->setTextSize(1);
   gfx->setCursor(5, 202);
-  if (!view.masterMode) {
+  if (view.mode == UiOperatingMode::Pass) {
     gfx->setTextColor(DARKGREY, RGB565_BLACK);
     gfx->println("Link: USB PassThrough");
     gfx->setCursor(5, 217);
@@ -511,6 +515,56 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
   }
 
   gfx->fillRect(kContentLeft, 200, kWideAreaWidth, 115, RGB565_BLACK);
+  if (view.mode == UiOperatingMode::Precheck) {
+    gfx->setTextSize(1);
+    gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+    gfx->print("Slave:15  FC03  46037-46040");
+
+    gfx->setCursor(5, 221);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->print("s470Raw:");
+    gfx->setCursor(70, 218);
+    gfx->setTextSize(2);
+    if (view.s470Valid) {
+      gfx->printf("%.2f", view.s470Raw);
+    } else {
+      gfx->print("--");
+    }
+
+    gfx->setCursor(5, 251);
+    gfx->setTextSize(1);
+    gfx->print("t365Raw:");
+    gfx->setCursor(70, 248);
+    gfx->setTextSize(2);
+    if (view.t365Valid) {
+      gfx->printf("%.2f", view.t365Raw);
+    } else {
+      gfx->print("--");
+    }
+
+    gfx->setTextSize(1);
+    gfx->setCursor(5, 279);
+    if (view.precheckError == 0) {
+      gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+      gfx->printf("Scan:%lu  OK",
+                  (unsigned long)view.precheckScanSequence);
+    } else if (view.precheckScanSequence == 0 &&
+               view.precheckError == 0xFF) {
+      gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+      gfx->print("Waiting for first reading...");
+    } else {
+      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+      gfx->printf("Scan:%lu  Modbus:0x%02X",
+                  (unsigned long)view.precheckScanSequence,
+                  view.precheckError);
+    }
+    gfx->setCursor(centeredTextX("Tap PRECHECK to switch", 1), 300);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->print("Tap PRECHECK to switch");
+    gfx->flush();
+    return;
+  }
+
   switch (view.discoveryState) {
     case UiDiscoveryState::Idle:
       gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
