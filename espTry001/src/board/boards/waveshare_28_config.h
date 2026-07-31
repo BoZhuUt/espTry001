@@ -25,9 +25,10 @@ constexpr int8_t kTouchScl = 3;
 constexpr int8_t kTouchReset = 2;
 constexpr int8_t kTouchInterrupt = 4;
 
-// The external THVD1406 board uses the Waveshare UART header.
-constexpr int8_t kRs485Rx = 44;
-constexpr int8_t kRs485Tx = 43;
+// Verified with the production harness and external THVD1406 board. Their
+// signal direction is crossed relative to the Waveshare header labels.
+constexpr int8_t kRs485Rx = 43;
+constexpr int8_t kRs485Tx = 44;
 constexpr uint32_t kRs485Baudrate = 9600;
 
 // INA193: 5-ohm sense resistor * 20 V/V = 100 V/A.
