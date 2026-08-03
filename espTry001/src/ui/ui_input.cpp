@@ -27,10 +27,11 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
       if (y > 0 && y < 40) return UiAction::BackToSystemInfo;
       if (y >= 60 && y < 120) return UiAction::EnterConfigUpload;
       if (y >= 130 && y < 190) return UiAction::EnterLogExport;
-      if (y >= 200 && y < 260) return UiAction::BackToSystemInfo;
+      if (y >= 200 && y < 260) return UiAction::EnterTimeSync;
       break;
 
     case UiPage::LogExport:
+    case UiPage::TimeSync:
       if (y > 0 && y < 40) return UiAction::BackToSystemInfo;
       break;
 

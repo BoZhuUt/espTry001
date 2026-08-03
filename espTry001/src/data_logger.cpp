@@ -127,7 +127,9 @@ bool DataLogger::writeFileHeader() {
   size_t len = 0;
   if (!appendFormat(line, sizeof(line), len,
                     "# config_version=%s\n# session_id=%lu\n"
-                    "# firmware=%s\n# time_source=uptime_ms\n",
+                    "# firmware=%s\n# time_source=rtc+uptime_ms\n"
+                    "# timezone=UTC+08:00\n"
+                    "# timestamp_format=ISO8601\n",
                     configVersion_[0] ? configVersion_ : "unknown",
                     (unsigned long)sessionId_,
                     firmwareVersion_[0] ? firmwareVersion_ : "unknown")) {
@@ -152,7 +154,7 @@ bool DataLogger::writeFileHeader() {
       return false;
     }
   }
-  if (!appendFormat(line, sizeof(line), len, "\n")) return false;
+  if (!appendFormat(line, sizeof(line), len, ",timestamp\n")) return false;
 
   if (file_.write((const uint8_t *)line, len) != len) {
     sd_.setError("Header write failed");
@@ -164,7 +166,8 @@ bool DataLogger::writeFileHeader() {
   return true;
 }
 
-void DataLogger::onScanComplete(uint32_t scanSequence,
+void DataLogger::onScanComplete(uint32_t scanSequence, uint32_t uptimeMs,
+                                const char *timestamp,
                                 const float *values, const bool *valid,
                                 uint8_t fieldCount,
                                 float current1Ma, float current2Ma) {
@@ -172,14 +175,16 @@ void DataLogger::onScanComplete(uint32_t scanSequence,
 
   // 只在扫描序号变化时记录，避免同一轮重复写入
   if (scanSequence == lastLoggedSequence_) return;
-  if (formatCsvLine(values, valid, fieldCount, current1Ma, current2Ma)) {
+  if (formatCsvLine(uptimeMs, timestamp, values, valid, fieldCount,
+                    current1Ma, current2Ma)) {
     lastLoggedSequence_ = scanSequence;
     sampleSeq_++;
     recordCount_++;
   }
 }
 
-bool DataLogger::formatCsvLine(const float *values, const bool *valid,
+bool DataLogger::formatCsvLine(uint32_t uptimeMs, const char *timestamp,
+                                const float *values, const bool *valid,
                                 uint8_t fieldCount,
                                 float current1Ma, float current2Ma) {
   char line[kLineBufferSize];
@@ -189,7 +194,7 @@ bool DataLogger::formatCsvLine(const float *values, const bool *valid,
                     "%lu,%lu,%lu,%u,%lu,%.2f,%.2f",
                     (unsigned long)sessionId_,
                     (unsigned long)(sampleSeq_ + 1),
-                    (unsigned long)millis(), slaveAddress_,
+                    (unsigned long)uptimeMs, slaveAddress_,
                     (unsigned long)productNum_, current1Ma, current2Ma)) {
     snprintf(lastError_, sizeof(lastError_), "CSV row too long");
     recording_ = false;
@@ -217,7 +222,12 @@ bool DataLogger::formatCsvLine(const float *values, const bool *valid,
     }
   }
 
-  if (!appendFormat(line, sizeof(line), len, "\n")) return false;
+  if (!appendFormat(line, sizeof(line), len, ",%s\n",
+                    timestamp != nullptr ? timestamp : "")) {
+    snprintf(lastError_, sizeof(lastError_), "CSV row too long");
+    recording_ = false;
+    return false;
+  }
   return ringWrite(line, len);
 }
 

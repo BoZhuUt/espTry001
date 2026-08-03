@@ -24,6 +24,12 @@ struct SystemInfoView {
   uint32_t storageDroppedSnapshots = 0;
   UBaseType_t storageTaskStackHighWater = 0;
   const char *sdError = "";
+  bool rtcSupported = false;
+  bool rtcValid = false;
+  bool rtcHoldover = false;
+  const char *rtcStatusText = "";
+  const char *rtcDateTimeText = "";
+  const char *ntpStatusText = "";
 };
 
 enum class UiConfigState : uint8_t {
@@ -52,6 +58,16 @@ struct LogExportView {
   const char *currentFile = "";
   uint32_t transferOffset = 0;
   uint32_t transferTotal = 0;
+  const char *errorText = "";
+};
+
+struct TimeSyncView {
+  const char *statusText = "";
+  bool rtcValid = false;
+  const char *rtcDateTimeText = "";
+  const char *timeSourceText = "NONE";
+  const char *ntpStatusText = "";
+  const char *maskedSsid = "";
   const char *errorText = "";
 };
 
@@ -95,6 +111,9 @@ struct DashboardView {
   UiOperatingMode mode = UiOperatingMode::Pass;
   float channel1Ma = 0.0f;
   float channel2Ma = 0.0f;
+  bool rtcSupported = false;
+  bool rtcValid = false;
+  const char *rtcTimeText = "--:--:--";
   UiDiscoveryState discoveryState = UiDiscoveryState::Idle;
   uint8_t attempt = 0;
   uint8_t maxAttempts = 0;
@@ -128,6 +147,7 @@ public:
   void drawSystemInfoPage(const SystemInfoView &view);
   void drawConfigUpdatePage(const ConfigUpdateView &view);
   void drawLogExportPage(const LogExportView &view);
+  void drawTimeSyncPage(const TimeSyncView &view);
   void drawSensorInfoPage(const SensorInfoView &view);
   void drawSensorParameterArea(const SensorInfoView &view);
   void drawDashboardDynamic(const DashboardView &view);

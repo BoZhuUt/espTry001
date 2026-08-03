@@ -50,4 +50,10 @@ constexpr bool kHasPowerHold = true;
 constexpr int8_t kPowerKey = 6;
 constexpr int8_t kPowerHold = 7;
 
+constexpr bool kHasRtc = true;
+constexpr int8_t kRtcSda = 11;
+constexpr int8_t kRtcScl = 10;
+constexpr int8_t kRtcInterrupt = 9;
+constexpr uint8_t kRtcI2cAddress = 0x51;
+
 }  // namespace BoardConfig

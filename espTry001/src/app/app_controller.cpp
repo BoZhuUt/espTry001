@@ -28,6 +28,7 @@ AppController::AppController(
     Rs485Service &rs485Service,
     SensorProfileStore &profileStore,
     SensorProfileUpdater &profileUpdater,
+    TimeSyncServer &timeSyncServer,
     UsbService &usbService,
     Stream &usb,
     const SensorProfile *&activeProfile,
@@ -38,6 +39,7 @@ AppController::AppController(
       rs485Service_(rs485Service),
       profileStore_(profileStore),
       profileUpdater_(profileUpdater),
+      timeSyncServer_(timeSyncServer),
       usbService_(usbService),
       usb_(usb),
       activeProfile_(activeProfile),
@@ -122,6 +124,20 @@ void AppController::exitLogExport() {
     state_.mode = AppMode::Fault;
     return;
   }
+  returnToPassThrough(UiPage::SystemInfo);
+}
+
+bool AppController::enterTimeSync() {
+  if (!prepareExclusiveUsbMode(AppMode::TimeSync)) return false;
+
+  // ESPTIME1 starts only after CSV, RS485 and stale USB data are fully cleared.
+  timeSyncServer_.begin();
+  state_.page = UiPage::TimeSync;
+  return true;
+}
+
+void AppController::exitTimeSync() {
+  timeSyncServer_.cancel();
   returnToPassThrough(UiPage::SystemInfo);
 }
 

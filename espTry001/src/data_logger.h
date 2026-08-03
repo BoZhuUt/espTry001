@@ -11,7 +11,7 @@ public:
   // 环形缓冲区大小：约 8 条 CSV 记录
   static constexpr size_t kRingBufferSize = 4096;
   // 最大单行 CSV 长度
-  static constexpr size_t kLineBufferSize = 512;
+  static constexpr size_t kLineBufferSize = 768;
   // 定期 flush 间隔
   static constexpr uint32_t kFullFlushIntervalMs = 5000;
   // 文件分卷大小
@@ -34,9 +34,14 @@ public:
   // 停止记录。flush 缓冲并关闭文件。切回 PASS 模式前必须调用。
   void stop();
 
-  // 一轮完整扫描完成后调用，记录一条数据。
-  // 只在 scanSequence 变化时写入，避免重复。
-  void onScanComplete(uint32_t scanSequence,
+  /**
+   * 记录一轮已经完成并冻结时间的传感器快照。
+   *
+   * uptimeMs 与 timestamp 来自扫描完成时刻，而不是 StorageTask 实际
+   * 写卡时刻；timestamp 为空时仍写入其余数据，并在 CSV 末列留空。
+   */
+  void onScanComplete(uint32_t scanSequence, uint32_t uptimeMs,
+                      const char *timestamp,
                       const float *values, const bool *valid,
                       uint8_t fieldCount,
                       float current1Ma, float current2Ma);
@@ -102,7 +107,13 @@ private:
   void incrementSessionId();
   bool createFile();
   bool writeFileHeader();
-  bool formatCsvLine(const float *values, const bool *valid,
+  /**
+   * 把固定快照格式化为一行 CSV 并放入环形缓冲区。
+   *
+   * timestamp 始终位于最后一列，避免改变现有传感器字段的位置。
+   */
+  bool formatCsvLine(uint32_t uptimeMs, const char *timestamp,
+                     const float *values, const bool *valid,
                      uint8_t fieldCount,
                      float current1Ma, float current2Ma);
   bool ringWrite(const char *data, size_t length);

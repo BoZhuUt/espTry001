@@ -4,6 +4,7 @@
 #include "board/board_config.h"
 #include "board/display_driver.h"
 #include "board/power_driver.h"
+#include "board/rtc_driver.h"
 #include "board/touch_driver.h"
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
@@ -15,6 +16,9 @@
 #include "debug_log.h"
 #include "log_export_server.h"
 #include "services/storage_service.h"
+#include "services/time_service.h"
+#include "services/time_sync_server.h"
+#include "services/wifi_time_service.h"
 #include "ui/ui_input.h"
 #include "ui/ui_manager.h"
 #include "usb/usb_service.h"
@@ -51,6 +55,10 @@ void enterLogExportMode();
 void drawLogExportPage();
 LogExportView buildLogExportView();
 void updateLogExportStateSnapshot();
+void enterTimeSyncMode();
+void drawTimeSyncPage();
+TimeSyncView buildTimeSyncView();
+void updateTimeSyncStateSnapshot();
 void processRs485Events();
 void refreshRs485Status();
 void sendLocalModbusResponse(const uint8_t *request, size_t length);
@@ -80,13 +88,17 @@ DataLogger dataLogger(sdStorage);
 LogExportServer logExportServer;
 UiManager ui;
 StorageUsbBridge logExportUsbBridge;
-UsbService usbService(Serial, rs485Service, profileUpdater, logExportUsbBridge,
-                      LOCAL_SLAVE_ID, sendLocalModbusResponse);
 StorageService storageService(sdStorage, dataLogger, logExportServer,
                               profileStore, logExportUsbBridge);
+BoardRtc::Driver rtcDriver;
+TimeService timeService(rtcDriver);
+WifiTimeService wifiTimeService(timeService);
+TimeSyncServer timeSyncServer(timeService, wifiTimeService);
+UsbService usbService(Serial, rs485Service, profileUpdater, logExportUsbBridge,
+                      timeSyncServer, LOCAL_SLAVE_ID, sendLocalModbusResponse);
 AppController appController(
     appState, storageService, rs485Service, profileStore, profileUpdater,
-    usbService, Serial, activeProfile, profileLookupComplete,
+    timeSyncServer, usbService, Serial, activeProfile, profileLookupComplete,
     appState.sensor.parameterPage);
 
 // ==========================================
@@ -133,7 +145,16 @@ void setup()
   touchOnline = BoardTouch::begin(
       gfx->getRotation(), gfx->width(), gfx->height());
 
-  // 5. 初始化 SD 卡
+  // 5. Initialize RTC on its dedicated I2C controller. An invalid or missing
+  // RTC is diagnostic only and must never block the rest of the application.
+  timeService.begin();
+  DEBUG_LOG_PRINTF("[RTC] %s\n", timeService.statusText());
+
+  // Wi-Fi/NTP starts as a non-blocking boot attempt. It never delays the
+  // remaining SD/USB initialization and turns its radio off after completion.
+  wifiTimeService.begin();
+
+  // 6. 初始化 SD 卡
   if (!logExportUsbBridge.begin()) {
     DEBUG_LOG_PRINTLN("[USB] ESPLOG1 bridge initialization failed");
   }
@@ -162,6 +183,12 @@ void setup()
 
 void loop()
 {
+  timeService.update();
+  bool rtcWriteAllowed = true;
+  if (wifiTimeService.state() == WifiTimeService::State::PendingRtcWrite) {
+    rtcWriteAllowed = !storageService.isRecording();
+  }
+  wifiTimeService.update(rtcWriteAllowed);
   processRs485Events();
   refreshRs485Status();
 
@@ -227,9 +254,16 @@ void loop()
         delay(400);
         break;
 
+      case UiAction::EnterTimeSync:
+        enterTimeSyncMode();
+        delay(400);
+        break;
+
       case UiAction::BackToSystemInfo:
         if (appState.page == UiPage::LogExport) {
           appController.exitLogExport();
+        } else if (appState.page == UiPage::TimeSync) {
+          appController.exitTimeSync();
         } else {
           appController.showPage(UiPage::SystemInfo);
         }
@@ -264,7 +298,7 @@ void loop()
   }
 
   // UsbService is the single USB protocol router. It advances exactly one of
-  // Modbus RTU, ESPCFG1 or ESPLOG1 according to the current AppMode.
+  // Modbus RTU, ESPCFG1, ESPLOG1 or ESPTIME1 according to AppMode.
   usbService.update(appState.mode);
 
   // CONFIG 模式独占 USB CDC，禁止 JSON 被本地 Modbus 解析或转发到 RS485。
@@ -310,6 +344,28 @@ void loop()
     }
     if (storageStatus.exportShouldExit) {
       appController.exitLogExport();
+      ui.clearScreen();
+      drawAuthorPage();
+    }
+    delay(1);
+    return;
+  }
+
+  // TIME SYNC 独占 USB CDC，但解析保持非阻塞，触摸和 UI 仍能正常响应。
+  if (appState.isTimeSync()) {
+    static TimeSyncServer::State lastTimeSyncState =
+        TimeSyncServer::State::Idle;
+    static uint32_t lastTimeSyncDrawMs = 0;
+    TimeSyncServer::State state = timeSyncServer.state();
+    bool stateChanged = state != lastTimeSyncState;
+    bool refreshDue = (uint32_t)(millis() - lastTimeSyncDrawMs) >= 500;
+    if (stateChanged || refreshDue) {
+      drawTimeSyncPage();
+      lastTimeSyncState = state;
+      lastTimeSyncDrawMs = millis();
+    }
+    if (timeSyncServer.closeRequested()) {
+      appController.exitTimeSync();
       ui.clearScreen();
       drawAuthorPage();
     }
@@ -407,8 +463,15 @@ void processRs485Events() {
         } else if (appState.isMaster() && activeProfile != nullptr &&
                    event.sourceMode == Rs485Service::Mode::Polling) {
           latestScanEvent = event;
+          // Freeze both clocks at scan completion. StorageTask may write later,
+          // but its queue delay must never change the sample's timestamp.
+          const uint32_t snapshotUptimeMs = millis();
+          char snapshotTimestamp[SensorSnapshot::kTimestampCapacity] = "";
+          timeService.formatIso8601(snapshotTimestamp,
+                                    sizeof(snapshotTimestamp));
           storageService.enqueueSnapshot(
-              event.scanSequence, event.values, event.valid, event.fieldCount,
+              event.scanSequence, snapshotUptimeMs, snapshotTimestamp,
+              event.values, event.valid, event.fieldCount,
               current1Ma, current2Ma);
           latestScanAvailable = true;
           if (appState.page == UiPage::SensorInfo) {
@@ -436,6 +499,9 @@ DashboardView buildDashboardView() {
   const DashboardState &snapshot = appState.dashboard;
   view.channel1Ma = snapshot.channel1Ma;
   view.channel2Ma = snapshot.channel2Ma;
+  view.rtcSupported = snapshot.rtcSupported;
+  view.rtcValid = snapshot.rtcValid;
+  view.rtcTimeText = snapshot.rtcTimeText;
   view.attempt = snapshot.attempt;
   view.maxAttempts = snapshot.maxAttempts;
   view.slaveAddress = snapshot.slaveAddress;
@@ -489,6 +555,10 @@ void updateDashboardStateSnapshot() {
   DashboardState &snapshot = appState.dashboard;
   snapshot.channel1Ma = current1Ma;
   snapshot.channel2Ma = current2Ma;
+  snapshot.rtcSupported = timeService.supported();
+  snapshot.rtcValid = timeService.valid();
+  timeService.formatLocalTime(snapshot.rtcTimeText,
+                              sizeof(snapshot.rtcTimeText));
   snapshot.attempt = rs485Status.discoveryAttempt;
   snapshot.maxAttempts = rs485Status.discoveryMaxAttempts;
   snapshot.slaveAddress = rs485Status.identity.slaveAddress;
@@ -688,6 +758,12 @@ SystemInfoView buildSystemInfoView() {
   view.storageDroppedSnapshots = snapshot.storageDroppedSnapshots;
   view.storageTaskStackHighWater = snapshot.storageTaskStackHighWater;
   view.sdError = snapshot.storageError;
+  view.rtcSupported = snapshot.rtcSupported;
+  view.rtcValid = snapshot.rtcValid;
+  view.rtcHoldover = snapshot.rtcHoldover;
+  view.rtcStatusText = snapshot.rtcStatusText;
+  view.rtcDateTimeText = snapshot.rtcDateTimeText;
+  view.ntpStatusText = snapshot.ntpStatusText;
   switch (snapshot.storageState) {
     case AppStorageState::Ready:
       view.sdState = UiSdState::Ready;
@@ -732,6 +808,15 @@ void updateSystemStateSnapshot() {
   snprintf(snapshot.storageError, sizeof(snapshot.storageError), "%s",
            storageStatus.storageError[0] ? storageStatus.storageError
                                          : storageStatus.loggerError);
+  snapshot.rtcSupported = timeService.supported();
+  snapshot.rtcValid = timeService.valid();
+  snapshot.rtcHoldover = timeService.holdover();
+  snprintf(snapshot.rtcStatusText, sizeof(snapshot.rtcStatusText), "%s",
+           timeService.statusText());
+  timeService.formatLocalDateTime(snapshot.rtcDateTimeText,
+                                  sizeof(snapshot.rtcDateTimeText));
+  snprintf(snapshot.ntpStatusText, sizeof(snapshot.ntpStatusText), "%s",
+           wifiTimeService.statusText());
 
   switch (storageStatus.storageState) {
     case SdStorage::State::Ready:
@@ -838,6 +923,61 @@ void updateLogExportStateSnapshot() {
              LogExportServer::State::WaitingCommand) {
     snapshot.state = AppLogExportState::WaitingCommand;
   }
+}
+
+/**
+ * 切换到 TIME SYNC 独占模式并绘制初始页面。
+ *
+ * AppController 负责先关闭日志、停止 RS485 和清空 USB 残留；失败时保留
+ * Fault 状态，不让 ESPTIME1 与其他协议同时读取串口。
+ */
+void enterTimeSyncMode() {
+  if (!appController.enterTimeSync()) return;
+  ui.clearScreen();
+  drawTimeSyncPage();
+}
+
+// 从协议服务与 TimeService 生成固定快照，再交给 UI 绘制。
+void drawTimeSyncPage() {
+  updateTimeSyncStateSnapshot();
+  ui.drawTimeSyncPage(buildTimeSyncView());
+}
+
+// 将 AppState 中自有存储的文本转换成无所有权问题的只读 UI View。
+TimeSyncView buildTimeSyncView() {
+  const TimeSyncState &snapshot = appState.timeSync;
+  TimeSyncView view;
+  view.statusText = snapshot.statusText;
+  view.rtcValid = snapshot.rtcValid;
+  view.rtcDateTimeText = snapshot.rtcDateTimeText;
+  view.timeSourceText = snapshot.timeSourceText;
+  view.ntpStatusText = snapshot.ntpStatusText;
+  view.maskedSsid = snapshot.maskedSsid;
+  view.errorText = snapshot.errorText;
+  return view;
+}
+
+/**
+ * 原子化整理校时页面需要的数据。
+ *
+ * RTC 时间来自 TimeService 的单调锚点；协议错误复制到 AppState，
+ * 避免 UI 持有 TimeSyncServer 内部缓冲区的可变指针。
+ */
+void updateTimeSyncStateSnapshot() {
+  TimeSyncState &snapshot = appState.timeSync;
+  snprintf(snapshot.statusText, sizeof(snapshot.statusText), "%s",
+           timeSyncServer.statusText());
+  snapshot.rtcValid = timeService.valid();
+  timeService.formatLocalDateTime(snapshot.rtcDateTimeText,
+                                  sizeof(snapshot.rtcDateTimeText));
+  snprintf(snapshot.timeSourceText, sizeof(snapshot.timeSourceText), "%s",
+           timeService.sourceText());
+  snprintf(snapshot.ntpStatusText, sizeof(snapshot.ntpStatusText), "%s",
+           wifiTimeService.statusText());
+  wifiTimeService.maskedSsid(snapshot.maskedSsid,
+                             sizeof(snapshot.maskedSsid));
+  snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
+           timeSyncServer.errorText());
 }
 
 void drawSensorInfoPage() {

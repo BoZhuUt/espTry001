@@ -5,6 +5,7 @@
 #include "services/storage_service.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
+#include "services/time_sync_server.h"
 #include "usb/usb_service.h"
 
 // Owns application mode transitions and the ordered stop/reset/start sequence
@@ -16,6 +17,7 @@ public:
                 Rs485Service &rs485Service,
                 SensorProfileStore &profileStore,
                 SensorProfileUpdater &profileUpdater,
+                TimeSyncServer &timeSyncServer,
                 UsbService &usbService,
                 Stream &usb,
                 const SensorProfile *&activeProfile,
@@ -35,6 +37,16 @@ public:
   bool enterLogExport(const char *firmwareVersion);
   void exitLogExport();
 
+  /**
+   * 停止日志与 RS485 后让 ESPTIME1 独占 USB，并开始新的校时会话。
+   *
+   * 返回 false 表示资源停止失败，调用者不应绘制 TIME SYNC 页面。
+   */
+  bool enterTimeSync();
+
+  // 取消未完成的 ESPTIME1 命令，并恢复 PASS 与 System Info 页面。
+  void exitTimeSync();
+
   void returnToPassThrough(UiPage page);
   void showPage(UiPage page);
 
@@ -48,6 +60,7 @@ private:
   Rs485Service &rs485Service_;
   SensorProfileStore &profileStore_;
   SensorProfileUpdater &profileUpdater_;
+  TimeSyncServer &timeSyncServer_;
   UsbService &usbService_;
   Stream &usb_;
   const SensorProfile *&activeProfile_;

@@ -14,12 +14,17 @@
 // Fixed snapshot copied at the boundary between the application loop and the
 // storage task. The queue never contains pointers to poller-owned value arrays.
 struct SensorSnapshot {
+  static constexpr size_t kTimestampCapacity = 32;
+
   uint32_t scanSequence = 0;
+  uint32_t uptimeMs = 0;
   float current1Ma = 0.0f;
   float current2Ma = 0.0f;
   uint8_t fieldCount = 0;
   float values[kMaxSensorFields] = {0};
   bool valid[kMaxSensorFields] = {false};
+  // ISO 8601 UTC+08:00 text captured with the scan; empty when RTC is invalid.
+  char timestamp[kTimestampCapacity] = "";
 };
 
 // Sole execution owner of SdStorage, DataLogger and LogExportServer.
@@ -69,7 +74,14 @@ class StorageService {
 
   bool startLogging(uint8_t slaveAddress, uint32_t productNum,
                     const char *profileName, const SensorProfile *profile);
-  bool enqueueSnapshot(uint32_t scanSequence, const float *values,
+  /**
+   * 复制一轮完整扫描结果到 StorageTask 队列。
+   *
+   * uptimeMs 和 timestamp 必须由扫描完成的调用方当场生成，确保 SD 队列
+   * 延迟不会改变记录时间；timestamp 为空表示 RTC 当时无效。
+   */
+  bool enqueueSnapshot(uint32_t scanSequence, uint32_t uptimeMs,
+                       const char *timestamp, const float *values,
                        const bool *valid, uint8_t fieldCount,
                        float current1Ma, float current2Ma);
 

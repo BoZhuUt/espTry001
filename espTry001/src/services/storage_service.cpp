@@ -63,6 +63,8 @@ bool StorageService::startLogging(uint8_t slaveAddress, uint32_t productNum,
 }
 
 bool StorageService::enqueueSnapshot(uint32_t scanSequence,
+                                     uint32_t uptimeMs,
+                                     const char *timestamp,
                                      const float *values, const bool *valid,
                                      uint8_t fieldCount, float current1Ma,
                                      float current2Ma) {
@@ -72,6 +74,7 @@ bool StorageService::enqueueSnapshot(uint32_t scanSequence,
 
   SensorSnapshot snapshot;
   snapshot.scanSequence = scanSequence;
+  snapshot.uptimeMs = uptimeMs;
   snapshot.current1Ma = current1Ma;
   snapshot.current2Ma = current2Ma;
   snapshot.fieldCount =
@@ -80,6 +83,8 @@ bool StorageService::enqueueSnapshot(uint32_t scanSequence,
          snapshot.fieldCount * sizeof(snapshot.values[0]));
   memcpy(snapshot.valid, valid,
          snapshot.fieldCount * sizeof(snapshot.valid[0]));
+  snprintf(snapshot.timestamp, sizeof(snapshot.timestamp), "%s",
+           timestamp != nullptr ? timestamp : "");
 
   if (xQueueSend(snapshotQueue_, &snapshot, 0) != pdPASS) {
     portENTER_CRITICAL(&statusMux_);
@@ -169,8 +174,9 @@ void StorageService::taskLoop() {
       SensorSnapshot snapshot;
       if (xQueueReceive(snapshotQueue_, &snapshot, 0) == pdPASS) {
         logger_.onScanComplete(
-            snapshot.scanSequence, snapshot.values, snapshot.valid,
-            snapshot.fieldCount, snapshot.current1Ma, snapshot.current2Ma);
+            snapshot.scanSequence, snapshot.uptimeMs, snapshot.timestamp,
+            snapshot.values, snapshot.valid, snapshot.fieldCount,
+            snapshot.current1Ma, snapshot.current2Ma);
       }
       logger_.update();
     }

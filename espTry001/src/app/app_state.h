@@ -12,6 +12,7 @@ enum class AppMode : uint8_t {
   MasterPolling,
   ConfigUpload,
   LogExport,
+  TimeSync,
   Fault,
   Precheck,
 };
@@ -32,6 +33,9 @@ enum class AppDiscoveryPhase : uint8_t {
 struct DashboardState {
   float channel1Ma = 0.0f;
   float channel2Ma = 0.0f;
+  bool rtcSupported = false;
+  bool rtcValid = false;
+  char rtcTimeText[9] = "--:--:--";
   AppDiscoveryPhase discoveryPhase = AppDiscoveryPhase::Idle;
   uint8_t attempt = 0;
   uint8_t maxAttempts = 0;
@@ -102,6 +106,12 @@ struct SystemState {
   uint32_t storageDroppedSnapshots = 0;
   UBaseType_t storageTaskStackHighWater = 0;
   char storageError[64] = "";
+  bool rtcSupported = false;
+  bool rtcValid = false;
+  bool rtcHoldover = false;
+  char rtcStatusText[20] = "";
+  char rtcDateTimeText[20] = "";
+  char ntpStatusText[20] = "";
 };
 
 enum class AppConfigUpdateState : uint8_t {
@@ -133,6 +143,16 @@ struct LogExportState {
   char errorText[96] = "";
 };
 
+struct TimeSyncState {
+  char statusText[32] = "READY";
+  bool rtcValid = false;
+  char rtcDateTimeText[32] = "";
+  char timeSourceText[8] = "NONE";
+  char ntpStatusText[20] = "";
+  char maskedSsid[16] = "";
+  char errorText[64] = "";
+};
+
 struct AppState {
   AppMode mode = AppMode::PassThrough;
   UiPage page = UiPage::Dashboard;
@@ -142,6 +162,7 @@ struct AppState {
   SystemState system;
   ConfigUpdateState configUpdate;
   LogExportState logExport;
+  TimeSyncState timeSync;
 
   bool isMaster() const {
     return mode == AppMode::MasterDiscovery ||
@@ -162,5 +183,9 @@ struct AppState {
 
   bool isLogExport() const {
     return mode == AppMode::LogExport;
+  }
+
+  bool isTimeSync() const {
+    return mode == AppMode::TimeSync;
   }
 };

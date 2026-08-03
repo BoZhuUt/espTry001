@@ -7,7 +7,8 @@ enum class UiPage : uint8_t {
   SystemInfo,
   SensorInfo,
   ToolsMenu,
-  LogExport
+  LogExport,
+  TimeSync,
 };
 
 // Semantic actions emitted by the UI input layer. Coordinates and screen
@@ -21,6 +22,7 @@ enum class UiAction : uint8_t {
   OpenToolsMenu,
   EnterConfigUpload,
   EnterLogExport,
+  EnterTimeSync,
   BackToSystemInfo,
   NextSensorParameterPage,
   BackToDashboard

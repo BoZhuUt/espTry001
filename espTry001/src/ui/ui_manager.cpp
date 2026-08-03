@@ -168,8 +168,8 @@ void UiManager::drawToolsMenuPage() {
                   "Update sensor profiles");
     drawToolsCard(130, RGB565_GREEN, "LOG EXPORT",
                   "Download recorded data");
-    drawToolsCard(200, RGB565_ORANGE, "BACK",
-                  "Return to system info");
+    drawToolsCard(200, RGB565_ORANGE, "TIME SYNC",
+                  "Set RTC from computer");
 
     gfx->drawLine(10, 268, BoardConfig::kDisplayWidth - 11, 268,
                   RGB565_DARKGREY);
@@ -211,11 +211,13 @@ void UiManager::drawToolsMenuPage() {
   gfx->setCursor(15, 168);
   gfx->print("  EXPORT");
 
-  gfx->fillRect(kContentLeft, 200, kButtonWidth, 56, RGB565_DARKGREY);
-  gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+  gfx->fillRect(kContentLeft, 200, kButtonWidth, 56, RGB565_ORANGE);
+  gfx->setTextColor(RGB565_BLACK, RGB565_ORANGE);
   gfx->setTextSize(2);
-  gfx->setCursor(centeredTextX("3.BACK", 2), 225);
-  gfx->print("3.BACK");
+  gfx->setCursor(15, 220);
+  gfx->print("3.TIME");
+  gfx->setCursor(15, 238);
+  gfx->print("  SYNC");
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
@@ -249,17 +251,33 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
   gfx->setCursor(5, 182);
   gfx->printf("Config: %s\n", view.configVersion);
   if (view.profileFallback) {
-    gfx->setCursor(5, 199);
+    gfx->setCursor(5, 192);
     gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
     gfx->printf("Fallback: %.18s", view.profileError);
   }
 
-  gfx->setCursor(5, 216);
+  if (view.rtcSupported) {
+    gfx->setCursor(5, 202);
+    if (view.rtcValid) {
+      gfx->setTextColor(view.rtcHoldover ? RGB565_ORANGE : RGB565_GREEN,
+                        RGB565_BLACK);
+      gfx->printf("RTC: %s", view.rtcDateTimeText);
+    } else {
+      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+      gfx->printf("RTC: %s", view.rtcStatusText);
+    }
+  }
+
+  gfx->setCursor(5, 217);
+  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+  gfx->printf("NTP: %s", view.ntpStatusText);
+
+  gfx->setCursor(5, 232);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->printf("SD: %s", view.sdStateText);
   if (view.sdState == UiSdState::Ready) {
     gfx->printf(" %.0fMB free", (double)(view.sdFreeBytes / 1048576));
-    gfx->setCursor(5, 232);
+    gfx->setCursor(5, 247);
     if (view.storageDroppedSnapshots > 0) {
       gfx->setTextColor(RGB565_RED, RGB565_BLACK);
       gfx->printf("Q:%u/%u Lost:%lu", view.storageQueueDepth,
@@ -280,8 +298,8 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
     gfx->printf(" %.12s", view.sdError);
   }
 
-  gfx->drawLine(kContentLeft, 250, kContentRight, 250, RGB565_DARKGREY);
-  gfx->setCursor(5, 255);
+  gfx->drawLine(kContentLeft, 263, kContentRight, 263, RGB565_DARKGREY);
+  gfx->setCursor(5, 267);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->println("Click Header To Return");
 
@@ -416,6 +434,70 @@ void UiManager::drawLogExportPage(const LogExportView &view) {
   gfx->flush();
 }
 
+void UiManager::drawTimeSyncPage(const TimeSyncView &view) {
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(5, 15);
+  gfx->print("TIME SYNC");
+  gfx->drawLine(kContentLeft, 38, kContentRight, 38, RGB565_GREEN);
+
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setCursor(5, 55);
+  gfx->print("USB protocol: ESPTIME1");
+
+  gfx->setCursor(5, 82);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->print("Status:");
+  gfx->setCursor(55, 82);
+  gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+  gfx->print(view.statusText);
+
+  gfx->setCursor(5, 115);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->print("RTC:");
+  gfx->setCursor(5, 135);
+  gfx->setTextColor(view.rtcValid ? RGB565_WHITE : RGB565_ORANGE,
+                    RGB565_BLACK);
+  if (view.rtcValid) {
+    gfx->print(view.rtcDateTimeText);
+    gfx->setCursor(5, 153);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->printf("UTC+08:00 Source:%s", view.timeSourceText);
+  } else {
+    gfx->print("Waiting for PC time");
+  }
+
+  gfx->setCursor(5, 174);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->printf("NTP: %s", view.ntpStatusText);
+  if (view.maskedSsid != nullptr && view.maskedSsid[0] != '\0') {
+    gfx->setCursor(5, 190);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->printf("WiFi: %s", view.maskedSsid);
+  }
+
+  if (view.errorText != nullptr && view.errorText[0] != '\0') {
+    gfx->setCursor(5, 207);
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->print("Err: ");
+    gfx->print(view.errorText);
+    gfx->setCursor(5, 224);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->print("Fix PC request and retry");
+  }
+
+  gfx->drawLine(kContentLeft, 250, kContentRight, 250, RGB565_DARKGREY);
+  gfx->setCursor(centeredTextX("Tap header to exit", 1), 268);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->print("Tap header to exit");
+  gfx->setCursor(centeredTextX("Run tools/sync_rtc.py", 1), 290);
+  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+  gfx->print("Run tools/sync_rtc.py");
+  gfx->flush();
+}
+
 void UiManager::drawSensorInfoPage(const SensorInfoView &view) {
   gfx->fillScreen(RGB565_BLACK);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
@@ -495,6 +577,17 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
 
 void UiManager::drawDashboardDynamic(const DashboardView &view) {
   drawModeStatus(view.mode);
+
+  if (view.rtcSupported) {
+    constexpr int16_t kClockWidth = 52;
+    int16_t clockX = BoardConfig::kDisplayWidth - kClockWidth - 3;
+    gfx->fillRect(clockX, 12, kClockWidth, 12, RGB565_BLACK);
+    gfx->setTextSize(1);
+    gfx->setTextColor(view.rtcValid ? RGB565_CYAN : RGB565_DARKGREY,
+                      RGB565_BLACK);
+    gfx->setCursor(clockX + 2, 15);
+    gfx->print(view.rtcTimeText);
+  }
 
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(2);
