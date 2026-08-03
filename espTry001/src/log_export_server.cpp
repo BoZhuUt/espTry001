@@ -7,8 +7,18 @@
 
 namespace {
 
-// 解析 "PN53607_S000012.csv" 或 "PN53607_S000012_v2.csv" 中的 PN 与 session。
-// 返回 true 表示成功解析；失败时 pn/session 不修改。
+/**
+ * 从新旧日志文件名中解析 PN 与 session。
+ *
+ * 兼容：
+ *   PN53607_S000012.csv
+ *   PN53607_S000012_v2.csv
+ *   PN53607_260110_104610_S000012.csv
+ *   PN53607_260110_104610_S000012_v2.csv
+ *
+ * 日期和时间只用于方便人工识别，不参与 PN/session 的数值计算；解析
+ * 失败时保持调用方原值不变，使历史卡片和新固件可以互相兼容。
+ */
 bool parseBaseName(const char *name, uint32_t *pn, uint32_t *session) {
   // 跳过 /logs/ 前缀
   const char *base = name;
@@ -26,6 +36,19 @@ bool parseBaseName(const char *name, uint32_t *pn, uint32_t *session) {
   }
   if (*p != '_') return false;
   p++;
+
+  // 新格式在 session 前增加固定长度的 YYMMDD_HHMMSS；旧格式直接是 S。
+  if (*p != 'S') {
+    for (uint8_t i = 0; i < 6; ++i, ++p) {
+      if (*p < '0' || *p > '9') return false;
+    }
+    if (*p++ != '_') return false;
+    for (uint8_t i = 0; i < 6; ++i, ++p) {
+      if (*p < '0' || *p > '9') return false;
+    }
+    if (*p++ != '_') return false;
+  }
+
   if (*p != 'S') return false;
   p++;
   if (*p < '0' || *p > '9') return false;
@@ -35,7 +58,14 @@ bool parseBaseName(const char *name, uint32_t *pn, uint32_t *session) {
     sid = sid * 10 + (*p - '0');
     p++;
   }
-  // 后面必须是 .csv（分卷是 _vN.csv，结尾仍是 .csv）
+
+  // 分卷后缀不改变会话编号，但必须是 `_v` 后跟至少一个数字。
+  if (p[0] == '_' && p[1] == 'v') {
+    p += 2;
+    if (*p < '0' || *p > '9') return false;
+    while (*p >= '0' && *p <= '9') p++;
+  }
+
   if (strcasecmp(p, ".csv") != 0) return false;
 
   *pn = productNum;

@@ -444,9 +444,17 @@ void processRs485Events() {
           }
           // One logging session belongs to one discovered address/PN/Profile.
           // startLogging safely does nothing when the SD card is unavailable.
+          char logFileTimestamp[DataLogger::kLogFileTimestampLen + 1] = "";
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+          // Freeze the local start time into the filename once. Later RTC/NTP
+          // adjustments cannot rename an open file or split one session across
+          // multiple timestamps. An invalid RTC deliberately leaves it empty.
+          timeService.formatLogFileTimestamp(logFileTimestamp,
+                                             sizeof(logFileTimestamp));
+#endif
           storageService.startLogging(
               event.identity.slaveAddress, event.identity.productNum,
-              activeProfile->name, activeProfile);
+              activeProfile->name, activeProfile, logFileTimestamp);
         }
         break;
 

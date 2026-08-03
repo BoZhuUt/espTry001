@@ -73,7 +73,8 @@ class StorageService {
   bool begin(uint32_t timeoutMs = 5000);
 
   bool startLogging(uint8_t slaveAddress, uint32_t productNum,
-                    const char *profileName, const SensorProfile *profile);
+                    const char *profileName, const SensorProfile *profile,
+                    const char *logFileTimestamp);
   /**
    * 复制一轮完整扫描结果到 StorageTask 队列。
    *
@@ -109,6 +110,7 @@ class StorageService {
     uint8_t slaveAddress = 0;
     uint32_t productNum = 0;
     char profileName[DataLogger::kMaxProfileNameLen + 1] = {0};
+    char logFileTimestamp[DataLogger::kLogFileTimestampLen + 1] = {0};
     const SensorProfile *profile = nullptr;
     char firmwareVersion[32] = {0};
   };

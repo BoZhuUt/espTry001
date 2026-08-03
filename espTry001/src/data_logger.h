@@ -18,15 +18,23 @@ public:
   static constexpr uint64_t kMaxFileSize = 32 * 1024 * 1024;  // 32 MB
   // 最大 Profile 名称长度
   static constexpr size_t kMaxProfileNameLen = 24;
+  // `YYMMDD_HHMMSS` 共 13 个字符，不含结尾 NUL。
+  static constexpr size_t kLogFileTimestampLen = 13;
 
   explicit DataLogger(SdStorage &sd);
 
   // Values written into the CSV comment header for traceability.
   void setMetadata(const char *configVersion, const char *firmwareVersion);
 
-  // 设置当前传感器身份。MASTER 发现成功后调用。
+  /**
+   * 设置当前传感器身份与本次记录的文件名时间。
+   *
+   * logFileTimestamp 应为本地时间 `YYMMDD_HHMMSS`；传入空字符串时
+   * createFile() 使用旧文件名，确保 RTC 无效也不妨碍日志记录。
+   */
   void setIdentity(uint8_t slaveAddress, uint32_t productNum,
-                   const char *profileName, const SensorProfile *profile);
+                   const char *profileName, const SensorProfile *profile,
+                   const char *logFileTimestamp);
 
   // 开始记录。创建 CSV 文件并写入文件头。
   void start();
@@ -79,6 +87,7 @@ private:
   char profileName_[kMaxProfileNameLen + 1] = {0};
   char configVersion_[32] = {0};
   char firmwareVersion_[32] = {0};
+  char logFileTimestamp_[kLogFileTimestampLen + 1] = {0};
   const SensorProfile *profile_ = nullptr;
 
   // 文件

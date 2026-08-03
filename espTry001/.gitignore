@@ -9,3 +9,7 @@ __pycache__/
 # Local stability-test outputs and generated reports
 stability_*.csv
 reports/
+
+# Local distribution ZIPs are regenerated with Git version and package time.
+tools/release/Pyxis_SensorLink_Tools_*.zip
+tools/release/Pyxis_SensorLink_Tools_V*_*/

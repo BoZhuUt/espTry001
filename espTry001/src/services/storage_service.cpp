@@ -50,7 +50,8 @@ bool StorageService::begin(uint32_t timeoutMs) {
 
 bool StorageService::startLogging(uint8_t slaveAddress, uint32_t productNum,
                                   const char *profileName,
-                                  const SensorProfile *profile) {
+                                  const SensorProfile *profile,
+                                  const char *logFileTimestamp) {
   if (profile == nullptr) return false;
   Command command;
   command.type = CommandType::StartLogging;
@@ -59,6 +60,8 @@ bool StorageService::startLogging(uint8_t slaveAddress, uint32_t productNum,
   command.profile = profile;
   snprintf(command.profileName, sizeof(command.profileName), "%s",
            profileName != nullptr ? profileName : "?");
+  snprintf(command.logFileTimestamp, sizeof(command.logFileTimestamp), "%s",
+           logFileTimestamp != nullptr ? logFileTimestamp : "");
   return sendCommand(command);
 }
 
@@ -193,7 +196,8 @@ void StorageService::handleCommand(const Command &command) {
       }
       xQueueReset(snapshotQueue_);
       logger_.setIdentity(command.slaveAddress, command.productNum,
-                          command.profileName, command.profile);
+                          command.profileName, command.profile,
+                          command.logFileTimestamp);
       logger_.start();
       break;
 

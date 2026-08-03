@@ -74,6 +74,14 @@ class TimeService {
   void formatLocalDateTime(char *buffer, size_t capacity) const;
   void formatIso8601(char *buffer, size_t capacity) const;
 
+  /**
+   * 生成适合 FAT/ESPLOG1 文件名的本地时间片段 `YYMMDD_HHMMSS`。
+   *
+   * 文件名使用与屏幕、CSV 相同的 UTC+08:00；RTC 无效时返回空字符串，
+   * 让存储层安全退回不含日期的旧文件名，而不是写入虚假的时间。
+   */
+  void formatLogFileTimestamp(char *buffer, size_t capacity) const;
+
  private:
   /**
    * 从 RTC 刷新 UTC 锚点。

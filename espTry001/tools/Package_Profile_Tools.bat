@@ -30,6 +30,7 @@ set "UPDATER_EXE=%~dp0SensorProfileUpdater.exe"
 set "MANAGER_EXE=%~dp0SensorProfileManager.exe"
 set "EXPORTER_EXE=%~dp0SensorDataExporter.exe"
 set "RELEASE_DIR=%~dp0release"
+set "PROJECT_DIR=%~dp0.."
 
 if not exist "%PROFILE_JSON%" (
   echo ERROR: JSON not found: %PROFILE_JSON%
@@ -37,20 +38,29 @@ if not exist "%PROFILE_JSON%" (
   exit /b 1
 )
 
-rem PowerShell reads config_version, sanitizes the ZIP name and places the four
-rem distribution files at the root of the archive.
+rem Keep the package version consistent with get_git_version.py: V1.0 plus the
+rem current HEAD commit count. Add local package time so repeated builds never
+rem overwrite or masquerade as an older artifact. config_version remains
+rem visible in the output and inside sensor_profiles.json, but no longer names
+rem the ZIP file.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
   "$ErrorActionPreference = 'Stop';" ^
   "$config = Get-Content -LiteralPath $env:PROFILE_JSON -Raw -Encoding UTF8 | ConvertFrom-Json;" ^
-  "$version = [string]$config.config_version;" ^
-  "if ([string]::IsNullOrWhiteSpace($version)) { throw 'config_version is missing' };" ^
-  "$safeVersion = $version -replace '[^0-9A-Za-z._-]', '_';" ^
+  "$configVersion = [string]$config.config_version;" ^
+  "if ([string]::IsNullOrWhiteSpace($configVersion)) { throw 'config_version is missing' };" ^
+  "$commitCount = (& git -C $env:PROJECT_DIR rev-list --count HEAD);" ^
+  "if ($LASTEXITCODE -ne 0) { throw ('Cannot read Git version: ' + ($commitCount -join ' ')) };" ^
+  "$gitVersion = 'V1.0.' + ([string]$commitCount).Trim();" ^
+  "$packageTime = Get-Date -Format 'yyyyMMdd_HHmmss';" ^
   "New-Item -ItemType Directory -Path $env:RELEASE_DIR -Force | Out-Null;" ^
-  "$zip = Join-Path $env:RELEASE_DIR ('Pyxis_SensorLink_Tools_' + $safeVersion + '.zip');" ^
+  "$zip = Join-Path $env:RELEASE_DIR ('Pyxis_SensorLink_Tools_' + $gitVersion + '_' + $packageTime + '.zip');" ^
   "$files = @($env:PROFILE_JSON, $env:UPDATER_EXE, $env:MANAGER_EXE, $env:EXPORTER_EXE);" ^
   "Compress-Archive -LiteralPath $files -DestinationPath $zip -CompressionLevel Optimal -Force;" ^
   "$hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash;" ^
-  "Write-Host ''; Write-Host ('Package: ' + $zip);" ^
+  "Write-Host ''; Write-Host ('Git     : ' + $gitVersion);" ^
+  "Write-Host ('Config  : ' + $configVersion);" ^
+  "Write-Host ('Built at: ' + $packageTime);" ^
+  "Write-Host ('Package : ' + $zip);" ^
   "Write-Host ('SHA256 : ' + $hash);"
 
 if errorlevel 1 (

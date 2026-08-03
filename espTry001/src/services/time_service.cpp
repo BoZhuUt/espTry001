@@ -118,6 +118,21 @@ void TimeService::formatIso8601(char *buffer, size_t capacity) const {
            local.hour, local.minute, local.second);
 }
 
+void TimeService::formatLogFileTimestamp(char *buffer,
+                                         size_t capacity) const {
+  if (buffer == nullptr || capacity == 0) return;
+  if (!valid_) {
+    buffer[0] = '\0';
+    return;
+  }
+
+  BoardRtc::DateTime local =
+      dateTimeFromEpoch(utcNow() + kDisplayUtcOffsetSeconds);
+  snprintf(buffer, capacity, "%02u%02u%02u_%02u%02u%02u",
+           local.year % 100, local.month, local.day,
+           local.hour, local.minute, local.second);
+}
+
 bool TimeService::refreshFromRtc() {
   BoardRtc::DateTime value;
   if (!driver_.readUtc(value)) {

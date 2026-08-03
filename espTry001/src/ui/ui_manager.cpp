@@ -542,6 +542,38 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
     gfx->setCursor(5, 185);
     gfx->print("No parameter profile");
   } else {
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+    // Keep the original left-to-right "label: value" reading order on the
+    // wider 2.8-inch panel. Labels remain compact so long JSON field names fit,
+    // while the live value uses double-size white text for better visibility.
+    constexpr int16_t kFirstRowY = 157;
+    constexpr int16_t kRowHeight = 27;
+    constexpr int16_t kValueX = 126;
+    for (uint8_t row = 0; row < view.rowCount; ++row) {
+      const SensorParameterView &parameter = view.rows[row];
+      const int16_t rowY = kFirstRowY + row * kRowHeight;
+
+      gfx->setTextSize(1);
+      gfx->setCursor(5, rowY + 4);
+      gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+      gfx->printf("%s:", parameter.label);
+
+      gfx->setTextSize(2);
+      gfx->setCursor(kValueX, rowY);
+      if (!parameter.valid) {
+        gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+        gfx->print("--");
+      } else {
+        gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+        switch (parameter.decimals) {
+          case 0: gfx->printf("%.0f", parameter.value); break;
+          case 1: gfx->printf("%.1f", parameter.value); break;
+          case 2: gfx->printf("%.2f", parameter.value); break;
+          default: gfx->printf("%.3f", parameter.value); break;
+        }
+      }
+    }
+#else
     for (uint8_t row = 0; row < view.rowCount; ++row) {
       const SensorParameterView &parameter = view.rows[row];
       gfx->setCursor(5, 162 + row * 25);
@@ -560,8 +592,10 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
         }
       }
     }
+#endif
   }
 
+  gfx->setTextSize(1);
   gfx->drawLine(kContentLeft, 270, kContentRight, 270, RGB565_DARKGREY);
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
   gfx->setCursor(12, 282);

@@ -35,11 +35,14 @@ void DataLogger::incrementSessionId() {
 
 void DataLogger::setIdentity(uint8_t slaveAddress, uint32_t productNum,
                               const char *profileName,
-                              const SensorProfile *profile) {
+                              const SensorProfile *profile,
+                              const char *logFileTimestamp) {
   slaveAddress_ = slaveAddress;
   productNum_ = productNum;
   snprintf(profileName_, sizeof(profileName_), "%s",
            profileName != nullptr ? profileName : "?");
+  snprintf(logFileTimestamp_, sizeof(logFileTimestamp_), "%s",
+           logFileTimestamp != nullptr ? logFileTimestamp : "");
   profile_ = profile;
 }
 
@@ -92,8 +95,19 @@ bool DataLogger::createFile() {
 
   if (!sd_.ensureDir("/logs")) return false;
 
-  // 文件名：PN53607_S000012.csv
-  if (fileVolume_ == 0) {
+  // RTC 有效时使用易于人工识别的本地日期时间；无效时保持旧格式。
+  // 同一次会话的所有分卷复用开始记录时冻结的时间片段。
+  if (logFileTimestamp_[0] != '\0' && fileVolume_ == 0) {
+    snprintf(fileName_, sizeof(fileName_),
+             "/logs/PN%lu_%s_S%06lu.csv",
+             (unsigned long)productNum_, logFileTimestamp_,
+             (unsigned long)sessionId_);
+  } else if (logFileTimestamp_[0] != '\0') {
+    snprintf(fileName_, sizeof(fileName_),
+             "/logs/PN%lu_%s_S%06lu_v%lu.csv",
+             (unsigned long)productNum_, logFileTimestamp_,
+             (unsigned long)sessionId_, (unsigned long)fileVolume_ + 1);
+  } else if (fileVolume_ == 0) {
     snprintf(fileName_, sizeof(fileName_), "/logs/PN%lu_S%06lu.csv",
              (unsigned long)productNum_, (unsigned long)sessionId_);
   } else {
