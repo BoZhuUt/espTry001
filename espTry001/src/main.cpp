@@ -110,6 +110,11 @@ void setup()
   // uninitialized frame memory through the backlight.
   prepareBoardDisplay();
   beginBoardPower();
+  // Native USB CDC defaults to a 256-byte RX queue. A complete YMODEM-1K
+  // packet is 1029 bytes and can arrive in one host write, so enlarge the
+  // queue before begin(); otherwise bytes are lost before UsbService can move
+  // them into its 4096-byte raw bridge stream.
+  Serial.setRxBufferSize(Rs485Service::kRawRequestCapacity);
   Serial.begin(115200); 
   delay(100);
 
@@ -525,6 +530,12 @@ DashboardView buildDashboardView() {
   view.t365Valid = precheck.t365Valid;
   view.precheckScanSequence = precheck.scanSequence;
   view.precheckError = precheck.lastModbusError;
+  view.rawUsbToUartBytes = rs485Status.rawUsbToUartBytes;
+  view.rawUartToUsbBytes = rs485Status.rawUartToUsbBytes;
+  view.rawUsbToUartDrops = rs485Status.rawUsbToUartDrops;
+  view.rawUartToUsbDrops = rs485Status.rawUartToUsbDrops;
+  view.rawRequestPeak = rs485Status.rawRequestPeak;
+  view.rawResponsePeak = rs485Status.rawResponsePeak;
 
   switch (snapshot.discoveryPhase) {
     case AppDiscoveryPhase::DiscoveringAddress:
@@ -556,6 +567,7 @@ DashboardView buildDashboardView() {
 UiOperatingMode currentUiOperatingMode() {
   if (appState.isMaster()) return UiOperatingMode::Master;
   if (appState.isPrecheck()) return UiOperatingMode::Precheck;
+  if (appState.isUpgradePass()) return UiOperatingMode::UpgradePass;
   return UiOperatingMode::Pass;
 }
 

@@ -31,6 +31,10 @@ void UsbService::update(AppMode mode) {
     timeSyncServer_.update(usb_);
     return;
   }
+  if (mode == AppMode::UpgradePass) {
+    pumpRawPassThrough();
+    return;
+  }
   bool passThrough = mode == AppMode::PassThrough;
   collectUsbBytes();
 
@@ -50,6 +54,8 @@ void UsbService::clearRtuFrame() {
   activity_ = UsbTransferActivity::None;
   passResponseLength_ = 0;
   passResponseOffset_ = 0;
+  rawResponseLength_ = 0;
+  rawResponseOffset_ = 0;
 }
 
 void UsbService::clearLogExportTransport() {
@@ -107,6 +113,44 @@ void UsbService::forwardRs485ToUsb(bool passThrough) {
         passResponseLength_ - passResponseOffset_);
     if (accepted > 0) {
       passResponseOffset_ += accepted;
+      usb_.flush();
+      activity_ = UsbTransferActivity::Rs485ToUsb;
+    }
+  }
+}
+
+void UsbService::pumpRawPassThrough() {
+  // Apply backpressure before reading CDC so no byte is removed from USB
+  // unless the USB->UART stream has room for it.
+  uint8_t request[kRawUsbChunkSize];
+  size_t usbAvailable = usb_.available();
+  size_t streamSpace = rs485Service_.rawRequestSpace();
+  size_t requested = min(sizeof(request), min(usbAvailable, streamSpace));
+  size_t requestLength = 0;
+  while (requestLength < requested && usb_.available()) {
+    int value = usb_.read();
+    if (value < 0) break;
+    request[requestLength++] = static_cast<uint8_t>(value);
+  }
+  if (requestLength > 0) {
+    size_t accepted = rs485Service_.enqueueRawBytes(request, requestLength);
+    if (accepted > 0) activity_ = UsbTransferActivity::UsbToRs485;
+    // Only this task produces rawRequestBuffer_, and requested never exceeds
+    // its reported space, so a partial enqueue would indicate an invariant
+    // violation. The service still records it as dropped diagnostics.
+  }
+
+  if (rawResponseOffset_ >= rawResponseLength_) {
+    rawResponseLength_ = rs485Service_.readRawResponse(
+        rawResponse_, sizeof(rawResponse_));
+    rawResponseOffset_ = 0;
+  }
+  if (rawResponseOffset_ < rawResponseLength_) {
+    size_t accepted = usb_.write(
+        rawResponse_ + rawResponseOffset_,
+        rawResponseLength_ - rawResponseOffset_);
+    if (accepted > 0) {
+      rawResponseOffset_ += accepted;
       usb_.flush();
       activity_ = UsbTransferActivity::Rs485ToUsb;
     }

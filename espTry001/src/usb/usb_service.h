@@ -46,6 +46,13 @@ private:
   void collectUsbBytes();
   void dispatchCompletedFrame(bool passThrough);
   void forwardRs485ToUsb(bool passThrough);
+  /**
+   * 完全绕开 Modbus 帧解析，推进升级模式的双向原始字节流。
+   *
+   * USB 输入只读取 Rs485Service 当前能接收的数量；USB 输出发生短写时
+   * 保存 rawResponseOffset_，下次 update() 从同一位置继续。
+   */
+  void pumpRawPassThrough();
 
   Stream &usb_;
   Rs485Service &rs485Service_;
@@ -62,4 +69,8 @@ private:
   uint8_t passResponse_[64] = {0};
   size_t passResponseLength_ = 0;
   size_t passResponseOffset_ = 0;
+  static constexpr size_t kRawUsbChunkSize = 256;
+  uint8_t rawResponse_[kRawUsbChunkSize] = {0};
+  size_t rawResponseLength_ = 0;
+  size_t rawResponseOffset_ = 0;
 };

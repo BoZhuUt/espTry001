@@ -17,8 +17,13 @@ bool Rs485Service::begin(uint32_t timeoutMs) {
       kPassRequestCapacity, passRequestStorage_, &passRequestControl_);
   passResponseBuffer_ = xStreamBufferCreateStatic(
       kPassResponseCapacity, 1, passResponseStorage_, &passResponseControl_);
+  rawRequestBuffer_ = xStreamBufferCreateStatic(
+      kRawRequestCapacity, 1, rawRequestStorage_, &rawRequestControl_);
+  rawResponseBuffer_ = xStreamBufferCreateStatic(
+      kRawResponseCapacity, 1, rawResponseStorage_, &rawResponseControl_);
   if (commandQueue_ == nullptr || eventQueue_ == nullptr || events_ == nullptr ||
-      passRequestBuffer_ == nullptr || passResponseBuffer_ == nullptr) {
+      passRequestBuffer_ == nullptr || passResponseBuffer_ == nullptr ||
+      rawRequestBuffer_ == nullptr || rawResponseBuffer_ == nullptr) {
     return false;
   }
 
@@ -38,6 +43,18 @@ bool Rs485Service::enterPassThrough() {
   Command command;
   command.type = CommandType::EnterPass;
   return sendCommand(command);
+}
+
+bool Rs485Service::enterUpgradePassAndWait(uint32_t timeoutMs) {
+  if (events_ == nullptr) return false;
+  xEventGroupClearBits(events_, kUpgradePassReadyBit);
+  Command command;
+  command.type = CommandType::EnterUpgradePass;
+  if (!sendCommand(command)) return false;
+  EventBits_t bits = xEventGroupWaitBits(
+      events_, kUpgradePassReadyBit, pdTRUE, pdTRUE,
+      pdMS_TO_TICKS(timeoutMs));
+  return (bits & kUpgradePassReadyBit) != 0;
 }
 
 bool Rs485Service::startDiscovery() {
@@ -105,6 +122,48 @@ size_t Rs485Service::passResponseAvailable() const {
              : xStreamBufferBytesAvailable(passResponseBuffer_);
 }
 
+size_t Rs485Service::enqueueRawBytes(const uint8_t *data, size_t length) {
+  if (rawRequestBuffer_ == nullptr || data == nullptr || length == 0) return 0;
+
+  size_t accepted = xStreamBufferSend(rawRequestBuffer_, data, length, 0);
+  size_t depth = xStreamBufferBytesAvailable(rawRequestBuffer_);
+  portENTER_CRITICAL(&statusMux_);
+  status_.rawUsbToUartBytes += accepted;
+  status_.rawUsbToUartDrops += length - accepted;
+  if (depth > status_.rawRequestPeak) {
+    status_.rawRequestPeak = static_cast<uint16_t>(
+        min(depth, static_cast<size_t>(UINT16_MAX)));
+  }
+  portEXIT_CRITICAL(&statusMux_);
+  return accepted;
+}
+
+size_t Rs485Service::rawRequestSpace() const {
+  return rawRequestBuffer_ == nullptr
+             ? 0
+             : xStreamBufferSpacesAvailable(rawRequestBuffer_);
+}
+
+size_t Rs485Service::readRawResponse(uint8_t *buffer, size_t capacity) {
+  if (rawResponseBuffer_ == nullptr || buffer == nullptr || capacity == 0) {
+    return 0;
+  }
+  size_t received =
+      xStreamBufferReceive(rawResponseBuffer_, buffer, capacity, 0);
+  if (received > 0) {
+    portENTER_CRITICAL(&statusMux_);
+    status_.rawUartToUsbBytes += received;
+    portEXIT_CRITICAL(&statusMux_);
+  }
+  return received;
+}
+
+size_t Rs485Service::rawResponseAvailable() const {
+  return rawResponseBuffer_ == nullptr
+             ? 0
+             : xStreamBufferBytesAvailable(rawResponseBuffer_);
+}
+
 bool Rs485Service::takeEvent(Event &event) {
   return eventQueue_ != nullptr &&
          xQueueReceive(eventQueue_, &event, 0) == pdPASS;
@@ -122,8 +181,7 @@ void Rs485Service::taskEntry(void *context) {
 
 void Rs485Service::taskLoop() {
   pinMode(BoardConfig::kRs485Rx, INPUT_PULLUP);
-  serial_.begin(BoardConfig::kRs485Baudrate, SERIAL_8E1,
-                BoardConfig::kRs485Rx, BoardConfig::kRs485Tx);
+  configureUart(UartFormat::Modbus8E1);
   xEventGroupSetBits(events_, kInitializedBit | kStoppedBit);
   publishStatus(true);
 
@@ -143,6 +201,9 @@ void Rs485Service::taskLoop() {
     switch (mode_) {
       case Mode::PassThrough:
         updatePassThrough();
+        break;
+      case Mode::RawPassThrough:
+        updateRawPassThrough();
         break;
       case Mode::Discovery:
         updateDiscovery();
@@ -170,7 +231,28 @@ void Rs485Service::handleCommand(const Command &command) {
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       resetPassBuffers();
-      mode_ = Mode::PassThrough;
+      resetRawBuffers();
+      mode_ = configureUart(UartFormat::Modbus8E1)
+                  ? Mode::PassThrough
+                  : Mode::Fault;
+      break;
+
+    case CommandType::EnterUpgradePass:
+      discovery_.cancel();
+      poller_.cancel();
+      drainSerial();
+      activeProfile_ = nullptr;
+      pollingSlaveAddress_ = 0;
+      memset(values_, 0, sizeof(values_));
+      memset(valid_, 0, sizeof(valid_));
+      resetPassBuffers();
+      resetRawBuffers();
+      mode_ = configureUart(UartFormat::Boot8N1)
+                  ? Mode::RawPassThrough
+                  : Mode::Fault;
+      if (mode_ == Mode::RawPassThrough) {
+        xEventGroupSetBits(events_, kUpgradePassReadyBit);
+      }
       break;
 
     case CommandType::StartDiscovery:
@@ -182,11 +264,16 @@ void Rs485Service::handleCommand(const Command &command) {
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       resetPassBuffers();
+      resetRawBuffers();
       lastModbusError_ = 0xFF;
       blockUpdateSequence_ = 0;
       sensorFoundEmitted_ = false;
-      discovery_.start();
-      mode_ = Mode::Discovery;
+      if (configureUart(UartFormat::Modbus8E1)) {
+        discovery_.start();
+        mode_ = Mode::Discovery;
+      } else {
+        mode_ = Mode::Fault;
+      }
       break;
 
     case CommandType::StartPolling:
@@ -210,14 +297,19 @@ void Rs485Service::handleCommand(const Command &command) {
       poller_.cancel();
       drainSerial();
       resetPassBuffers();
+      resetRawBuffers();
       activeProfile_ = command.profile;
       pollingSlaveAddress_ = command.slaveAddress;
       memset(values_, 0, sizeof(values_));
       memset(valid_, 0, sizeof(valid_));
       lastModbusError_ = 0xFF;
       blockUpdateSequence_ = 0;
-      poller_.begin(pollingSlaveAddress_, *activeProfile_, values_, valid_);
-      mode_ = Mode::FixedPolling;
+      if (configureUart(UartFormat::Modbus8E1)) {
+        poller_.begin(pollingSlaveAddress_, *activeProfile_, values_, valid_);
+        mode_ = Mode::FixedPolling;
+      } else {
+        mode_ = Mode::Fault;
+      }
       break;
 
     case CommandType::Stop: {
@@ -227,7 +319,10 @@ void Rs485Service::handleCommand(const Command &command) {
       activeProfile_ = nullptr;
       pollingSlaveAddress_ = 0;
       resetPassBuffers();
-      mode_ = Mode::Idle;
+      resetRawBuffers();
+      mode_ = configureUart(UartFormat::Modbus8E1)
+                  ? Mode::Idle
+                  : Mode::Fault;
       Event event;
       event.type = EventType::Stopped;
       emitEvent(event);
@@ -235,6 +330,31 @@ void Rs485Service::handleCommand(const Command &command) {
       break;
     }
   }
+}
+
+bool Rs485Service::configureUart(UartFormat format) {
+  if (uartStarted_ && uartFormat_ == format) return true;
+
+  if (uartStarted_) {
+    serial_.flush();
+    drainSerial();
+    serial_.end();
+    delay(2);
+  }
+
+  const uint32_t serialConfig =
+      format == UartFormat::Boot8N1 ? SERIAL_8N1 : SERIAL_8E1;
+  // HardwareSerial also defaults to a small RX ring. The RS485 peer can send
+  // a complete 1029-byte YMODEM packet continuously, so reserve enough space
+  // before begin(); setRxBufferSize() is rejected while UART is running.
+  serial_.setRxBufferSize(kRawResponseCapacity);
+  serial_.begin(BoardConfig::kRs485Baudrate, serialConfig,
+                BoardConfig::kRs485Rx, BoardConfig::kRs485Tx);
+  uartStarted_ = true;
+  uartFormat_ = format;
+  uartReconfigureCount_++;
+  drainSerial();
+  return true;
 }
 
 bool Rs485Service::sendCommand(const Command &command) {
@@ -290,6 +410,48 @@ void Rs485Service::updatePassThrough() {
            responseLength)) {
     portENTER_CRITICAL(&statusMux_);
     status_.passResponseDrops++;
+    portEXIT_CRITICAL(&statusMux_);
+  }
+}
+
+void Rs485Service::updateRawPassThrough() {
+  // Keep a chunk until HardwareSerial accepts every byte. This matters when a
+  // 1029-byte YMODEM packet arrives from USB much faster than UART can send it.
+  if (rawUartTxOffset_ >= rawUartTxLength_) {
+    rawUartTxLength_ = xStreamBufferReceive(
+        rawRequestBuffer_, rawUartTx_, sizeof(rawUartTx_), 0);
+    rawUartTxOffset_ = 0;
+  }
+  if (rawUartTxOffset_ < rawUartTxLength_) {
+    int writable = serial_.availableForWrite();
+    if (writable > 0) {
+      size_t remaining = rawUartTxLength_ - rawUartTxOffset_;
+      size_t requested = min(remaining, static_cast<size_t>(writable));
+      size_t written = serial_.write(rawUartTx_ + rawUartTxOffset_, requested);
+      rawUartTxOffset_ += written;
+    }
+  }
+
+  // Read only what the response stream can accept. The USB task drains this
+  // independently and preserves its own short-write offset.
+  uint8_t response[kRawUartChunkSize];
+  size_t space = xStreamBufferSpacesAvailable(rawResponseBuffer_);
+  size_t available = serial_.available();
+  size_t requested = min(sizeof(response), min(space, available));
+  size_t responseLength = 0;
+  while (responseLength < requested && serial_.available()) {
+    response[responseLength++] = static_cast<uint8_t>(serial_.read());
+  }
+  if (responseLength > 0) {
+    size_t accepted =
+        xStreamBufferSend(rawResponseBuffer_, response, responseLength, 0);
+    size_t depth = xStreamBufferBytesAvailable(rawResponseBuffer_);
+    portENTER_CRITICAL(&statusMux_);
+    status_.rawUartToUsbDrops += responseLength - accepted;
+    if (depth > status_.rawResponsePeak) {
+      status_.rawResponsePeak = static_cast<uint16_t>(
+          min(depth, static_cast<size_t>(UINT16_MAX)));
+    }
     portEXIT_CRITICAL(&statusMux_);
   }
 }
@@ -351,6 +513,13 @@ void Rs485Service::resetPassBuffers() {
   if (passResponseBuffer_ != nullptr) xStreamBufferReset(passResponseBuffer_);
 }
 
+void Rs485Service::resetRawBuffers() {
+  if (rawRequestBuffer_ != nullptr) xStreamBufferReset(rawRequestBuffer_);
+  if (rawResponseBuffer_ != nullptr) xStreamBufferReset(rawResponseBuffer_);
+  rawUartTxLength_ = 0;
+  rawUartTxOffset_ = 0;
+}
+
 void Rs485Service::publishStatus(bool force) {
   uint32_t now = millis();
   if (!force && (uint32_t)(now - lastStatusPublishMs_) < 50) return;
@@ -385,6 +554,14 @@ void Rs485Service::publishStatus(bool force) {
   next.droppedEvents = status_.droppedEvents;
   next.passRequestDrops = status_.passRequestDrops;
   next.passResponseDrops = status_.passResponseDrops;
+  next.rawUsbToUartBytes = status_.rawUsbToUartBytes;
+  next.rawUartToUsbBytes = status_.rawUartToUsbBytes;
+  next.rawUsbToUartDrops = status_.rawUsbToUartDrops;
+  next.rawUartToUsbDrops = status_.rawUartToUsbDrops;
+  next.rawRequestPeak = status_.rawRequestPeak;
+  next.rawResponsePeak = status_.rawResponsePeak;
+  next.uartFormat = uartFormat_;
+  next.uartReconfigureCount = uartReconfigureCount_;
   status_ = next;
   portEXIT_CRITICAL(&statusMux_);
 }

@@ -15,6 +15,8 @@ enum class AppMode : uint8_t {
   TimeSync,
   Fault,
   Precheck,
+  // Append new modes to preserve the numeric values exposed by diagnostics.
+  UpgradePass,
 };
 
 enum class AppDiscoveryPhase : uint8_t {
@@ -175,6 +177,10 @@ struct AppState {
 
   bool isPassThrough() const {
     return mode == AppMode::PassThrough;
+  }
+
+  bool isUpgradePass() const {
+    return mode == AppMode::UpgradePass;
   }
 
   bool isConfigUpload() const {

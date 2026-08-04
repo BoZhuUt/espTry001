@@ -105,6 +105,7 @@ enum class UiOperatingMode : uint8_t {
   Pass,
   Master,
   Precheck,
+  UpgradePass,
 };
 
 struct DashboardView {
@@ -129,6 +130,12 @@ struct DashboardView {
   bool t365Valid = false;
   uint32_t precheckScanSequence = 0;
   uint8_t precheckError = 0xFF;
+  uint32_t rawUsbToUartBytes = 0;
+  uint32_t rawUartToUsbBytes = 0;
+  uint32_t rawUsbToUartDrops = 0;
+  uint32_t rawUartToUsbDrops = 0;
+  uint16_t rawRequestPeak = 0;
+  uint16_t rawResponsePeak = 0;
 };
 
 // Owns all low-level drawing calls. Business code supplies state and decides

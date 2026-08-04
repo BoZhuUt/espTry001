@@ -95,7 +95,10 @@ void UiManager::drawDashboardStatic(UiOperatingMode mode) {
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
   gfx->setTextSize(1);
   gfx->setCursor(5, 66);
-  gfx->printf("485 Config: 9600,8E1\n");
+  gfx->printf("485 Config: %s\n",
+              mode == UiOperatingMode::UpgradePass
+                  ? "9600,8N1"
+                  : "9600,8E1");
   gfx->drawLine(kContentLeft, 78, kContentRight, 78, RGB565_YELLOW);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 88);
@@ -119,6 +122,10 @@ void UiManager::drawModeStatus(UiOperatingMode mode) {
     gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
     gfx->setCursor(centeredTextX("PRECHECK", 2), 44);
     gfx->print("PRECHECK");
+  } else if (mode == UiOperatingMode::UpgradePass) {
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->setCursor(centeredTextX("BOOT PASS", 2), 44);
+    gfx->print("BOOT PASS");
   } else {
     gfx->setTextColor(RGB565_MAGENTA, RGB565_BLACK);
     gfx->setCursor(centeredTextX("PASS", 2), 44);
@@ -642,6 +649,35 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
   }
 
   gfx->fillRect(kContentLeft, 200, kWideAreaWidth, 115, RGB565_BLACK);
+  if (view.mode == UiOperatingMode::UpgradePass) {
+    gfx->setTextSize(1);
+    gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+    gfx->setCursor(5, 202);
+    gfx->print("UART:9600,8N1 RAW READY");
+    gfx->setCursor(5, 222);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->printf("TX:%lu RX:%lu",
+                static_cast<unsigned long>(view.rawUsbToUartBytes),
+                static_cast<unsigned long>(view.rawUartToUsbBytes));
+    gfx->setCursor(5, 242);
+    gfx->setTextColor(
+        (view.rawUsbToUartDrops == 0 && view.rawUartToUsbDrops == 0)
+            ? RGB565_GREEN
+            : RGB565_RED,
+        RGB565_BLACK);
+    gfx->printf("DROP:%lu/%lu",
+                static_cast<unsigned long>(view.rawUsbToUartDrops),
+                static_cast<unsigned long>(view.rawUartToUsbDrops));
+    gfx->setCursor(5, 262);
+    gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+    gfx->printf("BUF PEAK:%u/%u", view.rawRequestPeak, view.rawResponsePeak);
+    gfx->setCursor(centeredTextX("Tap BOOT PASS to exit", 1), 300);
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
+    gfx->print("Tap BOOT PASS to exit");
+    gfx->flush();
+    return;
+  }
+
   if (view.mode == UiOperatingMode::Precheck) {
     gfx->setTextSize(1);
     gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);

@@ -58,6 +58,8 @@ bool AppController::cycleOperatingMode() {
     nextMode = AppMode::MasterDiscovery;
   } else if (state_.isMaster()) {
     nextMode = AppMode::Precheck;
+  } else if (state_.isPrecheck()) {
+    nextMode = AppMode::UpgradePass;
   }
 
   if (!rs485Service_.stopAndWait()) {
@@ -76,6 +78,8 @@ bool AppController::cycleOperatingMode() {
   } else if (nextMode == AppMode::Precheck) {
     commandAccepted = rs485Service_.startFixedPolling(
         PrecheckState::kSlaveAddress, &kPrecheckProfile);
+  } else if (nextMode == AppMode::UpgradePass) {
+    commandAccepted = rs485Service_.enterUpgradePassAndWait();
   } else {
     commandAccepted = rs485Service_.enterPassThrough();
   }
