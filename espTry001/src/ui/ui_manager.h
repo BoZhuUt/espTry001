@@ -10,6 +10,11 @@ enum class UiSdState : uint8_t {
 
 struct SystemInfoView {
   const char *firmwareVersion = "";
+  const char *resetReasonText = "UNKNOWN";
+  uint8_t resetReasonCode = 0;
+  uint8_t rawResetReasonCpu0 = 0;
+  uint8_t rawResetReasonCpu1 = 0;
+  bool resetReasonFault = false;
   const char *profileSource = "";
   const char *configVersion = "";
   bool profileFallback = false;

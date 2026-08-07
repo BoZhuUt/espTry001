@@ -24,6 +24,9 @@
 #include "usb/usb_service.h"
 #include "usb/storage_usb_bridge.h"
 
+#include <esp_system.h>
+#include <esp32s3/rom/rtc.h>
+
 #define LOCAL_SLAVE_ID           247
 #define LOCAL_REG_COUNT          43
 
@@ -37,6 +40,20 @@
 // 2. 前置函数声明与全局变量
 // ==========================================
 void drawAuthorPage();
+/**
+ * 把 ESP-IDF 的启动复位枚举转换成适合小屏显示的稳定短文本。
+ *
+ * 该文本会一直保留到下一次复位，用来区分正常上电、软件重启、看门狗
+ * 和电源 Brownout，不依赖复位发生时 USB 串口是否已经连接。
+ */
+const char *resetReasonText(esp_reset_reason_t reason);
+/**
+ * 补充解码 ESP32-S3 ROM 原始复位码。
+ *
+ * esp_reset_reason() 会把 USB-UART/JTAG 芯片复位折叠成 UNKNOWN；ROM 码
+ * 21/22 能保留这个关键信息，因此仅在高层原因未知时采用原始短文本。
+ */
+const char *rawResetReasonText(RESET_REASON reason);
 SystemInfoView buildSystemInfoView();
 void drawSensorInfoPage();
 void drawSensorParameterArea();
@@ -76,6 +93,9 @@ bool profileLookupComplete = false;
 Rs485Service::Status rs485Status;
 Rs485Service::Event latestScanEvent;
 bool latestScanAvailable = false;
+esp_reset_reason_t startupResetReason = ESP_RST_UNKNOWN;
+RESET_REASON startupRawResetReasonCpu0 = NO_MEAN;
+RESET_REASON startupRawResetReasonCpu1 = NO_MEAN;
 
 static_assert(kAppMaxSensorFields == kMaxSensorFields,
               "AppState and SensorProfile field limits must match");
@@ -106,6 +126,11 @@ AppController appController(
 // ==========================================
 void setup()
 {
+  // Capture this before peripheral initialization. esp_reset_reason() remains
+  // readable later, but storing it here makes the diagnostic's boot scope clear.
+  startupResetReason = esp_reset_reason();
+  startupRawResetReasonCpu0 = rtc_get_reset_reason(0);
+  startupRawResetReasonCpu1 = rtc_get_reset_reason(1);
   // Blank the panel before any startup delays or LCD initialization can expose
   // uninitialized frame memory through the backlight.
   prepareBoardDisplay();
@@ -761,10 +786,62 @@ void drawAuthorPage() {
   ui.drawSystemInfoPage(buildSystemInfoView());
 }
 
+const char *resetReasonText(esp_reset_reason_t reason) {
+  switch (reason) {
+    case ESP_RST_POWERON:
+      return "POWER_ON";
+    case ESP_RST_EXT:
+      return "EXTERNAL";
+    case ESP_RST_SW:
+      return "SOFTWARE";
+    case ESP_RST_PANIC:
+      return "PANIC";
+    case ESP_RST_INT_WDT:
+      return "INT_WDT";
+    case ESP_RST_TASK_WDT:
+      return "TASK_WDT";
+    case ESP_RST_WDT:
+      return "OTHER_WDT";
+    case ESP_RST_DEEPSLEEP:
+      return "DEEP_SLEEP";
+    case ESP_RST_BROWNOUT:
+      return "BROWNOUT";
+    case ESP_RST_SDIO:
+      return "SDIO";
+    case ESP_RST_UNKNOWN:
+    default:
+      return "UNKNOWN";
+  }
+}
+
+const char *rawResetReasonText(RESET_REASON reason) {
+  switch (reason) {
+    case USB_UART_CHIP_RESET:
+      return "USB_UART";
+    case USB_JTAG_CHIP_RESET:
+      return "USB_JTAG";
+    case POWER_GLITCH_RESET:
+      return "POWER_GLITCH";
+    case GLITCH_RTC_RESET:
+      return "CLOCK_GLITCH";
+    case EFUSE_RESET:
+      return "EFUSE";
+    case NO_MEAN:
+      return "UNKNOWN";
+    default:
+      return resetReasonText(startupResetReason);
+  }
+}
+
 SystemInfoView buildSystemInfoView() {
   const SystemState &snapshot = appState.system;
   SystemInfoView view;
   view.firmwareVersion = snapshot.firmwareVersion;
+  view.resetReasonText = snapshot.resetReasonText;
+  view.resetReasonCode = snapshot.resetReasonCode;
+  view.rawResetReasonCpu0 = snapshot.rawResetReasonCpu0;
+  view.rawResetReasonCpu1 = snapshot.rawResetReasonCpu1;
+  view.resetReasonFault = snapshot.resetReasonFault;
   view.profileSource = snapshot.profileSource;
   view.configVersion = snapshot.configVersion;
   view.profileFallback = snapshot.profileFallback;
@@ -809,6 +886,26 @@ void updateSystemStateSnapshot() {
   // may reuse their internal buffers after this snapshot has been published.
   snprintf(snapshot.firmwareVersion, sizeof(snapshot.firmwareVersion), "%s",
            firmwareVersion);
+  const char *startupResetText =
+      startupResetReason == ESP_RST_UNKNOWN
+          ? rawResetReasonText(startupRawResetReasonCpu0)
+          : resetReasonText(startupResetReason);
+  snprintf(snapshot.resetReasonText, sizeof(snapshot.resetReasonText), "%s",
+           startupResetText);
+  snapshot.resetReasonCode = static_cast<uint8_t>(startupResetReason);
+  snapshot.rawResetReasonCpu0 =
+      static_cast<uint8_t>(startupRawResetReasonCpu0);
+  snapshot.rawResetReasonCpu1 =
+      static_cast<uint8_t>(startupRawResetReasonCpu1);
+  snapshot.resetReasonFault =
+      startupResetReason == ESP_RST_PANIC ||
+      startupResetReason == ESP_RST_INT_WDT ||
+      startupResetReason == ESP_RST_TASK_WDT ||
+      startupResetReason == ESP_RST_WDT ||
+      startupResetReason == ESP_RST_BROWNOUT ||
+      startupRawResetReasonCpu0 == USB_UART_CHIP_RESET ||
+      startupRawResetReasonCpu0 == USB_JTAG_CHIP_RESET ||
+      startupRawResetReasonCpu0 == POWER_GLITCH_RESET;
   snprintf(snapshot.profileSource, sizeof(snapshot.profileSource), "%s",
            profileStore.sourceText());
   snprintf(snapshot.configVersion, sizeof(snapshot.configVersion), "%s",

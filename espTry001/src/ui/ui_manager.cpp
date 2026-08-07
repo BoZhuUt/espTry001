@@ -252,6 +252,11 @@ void UiManager::drawSystemInfoPage(const SystemInfoView &view) {
   gfx->println("esp32-utility");
 
   gfx->setTextSize(1);
+  gfx->setCursor(5, 150);
+  gfx->setTextColor(view.resetReasonFault ? RGB565_RED : RGB565_GREEN,
+                    RGB565_BLACK);
+  gfx->printf("Reset:%s R%u/%u", view.resetReasonText,
+              view.rawResetReasonCpu0, view.rawResetReasonCpu1);
   gfx->setCursor(5, 165);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->printf("Profile: %s\n", view.profileSource);

@@ -94,6 +94,11 @@ enum class AppStorageState : uint8_t {
 // and build metadata so the UI never observes half-updated module buffers.
 struct SystemState {
   char firmwareVersion[24] = "";
+  char resetReasonText[20] = "UNKNOWN";
+  uint8_t resetReasonCode = 0;
+  uint8_t rawResetReasonCpu0 = 0;
+  uint8_t rawResetReasonCpu1 = 0;
+  bool resetReasonFault = false;
   char profileSource[16] = "";
   char configVersion[32] = "";
   bool profileFallback = false;
