@@ -399,7 +399,7 @@ void Rs485Service::updatePassThrough() {
     serial_.flush();
   }
 
-  uint8_t response[64];
+  uint8_t response[256];  // 增大: 64->256, 高流量时减少读取循环次数
   size_t responseLength = 0;
   while (serial_.available() && responseLength < sizeof(response)) {
     response[responseLength++] = static_cast<uint8_t>(serial_.read());

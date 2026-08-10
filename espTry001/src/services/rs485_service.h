@@ -84,9 +84,9 @@ class Rs485Service {
 
   static constexpr UBaseType_t kCommandQueueLength = 8;
   static constexpr UBaseType_t kEventQueueLength = 8;
-  static constexpr size_t kMaxPassFrameLength = 256;
-  static constexpr size_t kPassRequestCapacity = 1024;
-  static constexpr size_t kPassResponseCapacity = 1024;
+  static constexpr size_t kMaxPassFrameLength = 2048;     // 增大: 256->2048, 支持大JSON升级包
+  static constexpr size_t kPassRequestCapacity = 16384;   // 增大: 4096->16KB, 升级大数据量缓冲
+  static constexpr size_t kPassResponseCapacity = 8192;   // 增大: 4096->8KB, 升级响应缓冲
   // A YMODEM-1K packet occupies 1029 bytes on the wire. These independent
   // byte streams provide enough headroom for multiple USB scheduling bursts.
   static constexpr size_t kRawRequestCapacity = 4096;

@@ -645,7 +645,7 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
   gfx->setTextSize(1);
   gfx->setCursor(5, 202);
   if (view.mode == UiOperatingMode::Pass) {
-    gfx->setTextColor(DARKGREY, RGB565_BLACK);
+    gfx->setTextColor(0x7BEF, RGB565_BLACK);  // DARKGREY: GFX 1.6.x 兼容
     gfx->println("Link: USB PassThrough");
     gfx->setCursor(5, 217);
     gfx->println("Master is computer.   ");

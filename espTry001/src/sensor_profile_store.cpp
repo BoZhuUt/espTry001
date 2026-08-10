@@ -22,7 +22,7 @@ bool littleFsPartitionIsBlank() {
   uint8_t buffer[kPartitionProbeSize];
   for (size_t offset = 0; offset < partition->size;
        offset += sizeof(buffer)) {
-    size_t length = min(sizeof(buffer), partition->size - offset);
+    size_t length = std::min<size_t>(sizeof(buffer), partition->size - offset);
     if (esp_partition_read(partition, offset, buffer, length) != ESP_OK) {
       return false;
     }

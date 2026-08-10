@@ -208,7 +208,7 @@ bool WifiTimeService::startConnection() {
 }
 
 void WifiTimeService::stopNetwork() {
-  if (sntp_enabled()) sntp_stop();
+  if (esp_sntp_enabled()) esp_sntp_stop();
   sntp_set_time_sync_notification_cb(nullptr);
   WiFi.disconnect(true, false);
   WiFi.mode(WIFI_OFF);
