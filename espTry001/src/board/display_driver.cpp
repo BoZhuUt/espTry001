@@ -4,9 +4,17 @@
 
 namespace {
 
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+// Use the public SPIClass backend with Arduino Core 3.3.x. RGB565 word order
+// is normalized by display_driver.h for all UI callers.
+Arduino_DataBus *displayBus = new Arduino_HWSPI(
+    BoardConfig::kDisplayDc, BoardConfig::kDisplayCs,
+    BoardConfig::kDisplaySclk, BoardConfig::kDisplayMosi);
+#else
 Arduino_DataBus *displayBus = new Arduino_ESP32SPI(
     BoardConfig::kDisplayDc, BoardConfig::kDisplayCs,
     BoardConfig::kDisplaySclk, BoardConfig::kDisplayMosi);
+#endif
 
 void applyVendorRegisterSequence() {
 #if defined(PYXIS_BOARD_WAVESHARE_147)

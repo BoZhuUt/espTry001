@@ -55,16 +55,26 @@ void UiManager::flush() {
 void UiManager::drawStartupPage(const char *firmwareVersion) {
   // Display-tuned version of the brand blue. The source PNG remains unchanged;
   // this brighter shade avoids appearing black on the small IPS panel.
-  constexpr uint16_t kPyxisBlue = 0x035A;  // RGB(0, 107, 214)
+  constexpr uint16_t kPyxisBlue = toDisplayRgb565(0x035A);  // RGB(0, 107, 214)
   gfx->fillScreen(RGB565_WHITE);
 
 #if defined(PYXIS_BOARD_WAVESHARE_28)
   constexpr int16_t kLogoX =
       (BoardConfig::kDisplayWidth - UiAssets::kPyxisLogoWidth) / 2;
   constexpr int16_t kLogoY = 72;
-  gfx->draw16bitRGBBitmap(kLogoX, kLogoY, UiAssets::kPyxisLogoRgb565,
-                         UiAssets::kPyxisLogoWidth,
-                         UiAssets::kPyxisLogoHeight);
+  // The logo is stored in normal host-order RGB565. Convert one scan line at
+  // a time so bitmap pixels use the same display-boundary correction as UI
+  // primitives without duplicating the full image in RAM.
+  uint16_t logoRow[UiAssets::kPyxisLogoWidth];
+  for (int16_t y = 0; y < UiAssets::kPyxisLogoHeight; ++y) {
+    const size_t rowOffset = static_cast<size_t>(y) * UiAssets::kPyxisLogoWidth;
+    for (int16_t x = 0; x < UiAssets::kPyxisLogoWidth; ++x) {
+      logoRow[x] = toDisplayRgb565(
+          pgm_read_word(&UiAssets::kPyxisLogoRgb565[rowOffset + x]));
+    }
+    gfx->draw16bitRGBBitmap(kLogoX, kLogoY + y, logoRow,
+                           UiAssets::kPyxisLogoWidth, 1);
+  }
 #endif
 
   gfx->setTextSize(1);
@@ -81,7 +91,8 @@ void UiManager::drawStartupPage(const char *firmwareVersion) {
 }
 
 void UiManager::drawDashboardStatic(UiOperatingMode mode) {
-  gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+  // Keep the dashboard title consistent with the original 2.8-inch UI.
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
   gfx->setTextSize(2);
   gfx->setCursor(5, 15);
   gfx->println("ESP32-S3 485");
@@ -645,7 +656,7 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
   gfx->setTextSize(1);
   gfx->setCursor(5, 202);
   if (view.mode == UiOperatingMode::Pass) {
-    gfx->setTextColor(0x7BEF, RGB565_BLACK);  // DARKGREY: GFX 1.6.x 兼容
+    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
     gfx->println("Link: USB PassThrough");
     gfx->setCursor(5, 217);
     gfx->println("Master is computer.   ");
