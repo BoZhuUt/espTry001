@@ -509,11 +509,95 @@ def normalize_profile(
             procedures.append(
                 {
                     "id": f"reading_{reading_index + 1}.calibration_{calibration_index + 1}",
+                    "category": "sensor_calibration",
                     "reading_name": reading_name,
                     "name": calibration_name,
                     "message": str(calibration.get("Message") or ""),
                     "unit": str(calibration.get("Unit") or reading.get("Unit") or ""),
                     "when": procedure_condition,
+                    "inputs": inputs,
+                    "steps": steps,
+                }
+            )
+
+    raw_spans = source.get("Span4_20mA") or []
+    if isinstance(raw_spans, dict):
+        raw_spans = [raw_spans]
+    if not isinstance(raw_spans, list):
+        raise ValueError("Span4_20mA must be an object or array")
+    for span_index, span in enumerate(raw_spans):
+        if not isinstance(span, dict):
+            raise ValueError(f"Span4_20mA[{span_index}] must be an object")
+        span_name = str(span.get("Name") or f"4-20mA Output {span_index + 1}")
+        for endpoint_key in ("4mA", "20mA"):
+            endpoint = span.get(endpoint_key)
+            if endpoint is None:
+                continue
+            if not isinstance(endpoint, dict):
+                raise ValueError(
+                    f"Span4_20mA[{span_index}].{endpoint_key} must be an object"
+                )
+            commands = endpoint.get("Cmds") or []
+            if not commands:
+                continue
+            base_path = f"Span4_20mA[{span_index}].{endpoint_key}"
+            if not isinstance(commands, list):
+                raise ValueError(f"{base_path}.Cmds must be an array")
+            if len(commands) > MAX_STEPS_PER_PROCEDURE:
+                raise ValueError(f"{base_path} exceeds {MAX_STEPS_PER_PROCEDURE} steps")
+
+            editable_indexes = [
+                index
+                for index, command in enumerate(commands)
+                if isinstance(command, dict)
+                and command.get("SetValueMin") is not None
+                and command.get("SetValueMax") is not None
+            ]
+            if endpoint.get("Editable") is True and len(editable_indexes) != 1:
+                raise ValueError(
+                    f"{base_path} must identify exactly one bounded output-span value"
+                )
+
+            inputs: list[dict[str, Any]] = []
+            steps: list[dict[str, Any]] = []
+            for command_index, raw_command in enumerate(commands):
+                if not isinstance(raw_command, dict):
+                    raise ValueError(f"{base_path}.Cmds[{command_index}] must be an object")
+                command = copy.deepcopy(raw_command)
+                if endpoint.get("Editable") is True and command_index == editable_indexes[0]:
+                    # Span JSON places editability on the 4mA/20mA endpoint,
+                    # while the bounded command itself is often marked false.
+                    command["Editable"] = True
+                    command.setdefault("Name", endpoint.get("Name"))
+                path = f"{base_path}.Cmds[{command_index}]"
+                step, normalized_input, command_has_condition = normalize_command(
+                    span,
+                    endpoint,
+                    command,
+                    len(inputs),
+                    ctx,
+                    file_name,
+                    product_num,
+                    path,
+                )
+                requires_version_read |= command_has_condition
+                steps.append(step)
+                if normalized_input is not None:
+                    inputs.append(normalized_input)
+            if len(inputs) > MAX_INPUTS_PER_PROCEDURE:
+                raise ValueError(
+                    f"{base_path} has {len(inputs)} inputs; max is {MAX_INPUTS_PER_PROCEDURE}"
+                )
+            command_count += len(steps)
+            procedures.append(
+                {
+                    "id": f"output_span_{span_index + 1}.{endpoint_key.lower()}",
+                    "category": "output_span",
+                    "reading_name": span_name,
+                    "name": str(endpoint.get("Name") or endpoint_key),
+                    "message": str(endpoint.get("Message") or "Set analog output range"),
+                    "unit": str(span.get("Unit") or ""),
+                    "when": parse_condition(endpoint.get("VersionJudgment")),
                     "inputs": inputs,
                     "steps": steps,
                 }
@@ -671,7 +755,7 @@ def main(argv: Iterable[str] = ()) -> int:
     profiles: list[dict[str, Any]] = []
     calibration_profile_count = 0
     for path, source, product_num in parsed:
-        has_calibration = any(
+        has_calibration = bool(source.get("Span4_20mA")) or any(
             (reading.get("Calibrations") or [])
             for reading in (source.get("Readings") or [])
             if isinstance(reading, dict)

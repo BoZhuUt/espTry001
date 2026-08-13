@@ -81,3 +81,6 @@ pio run -e waveshare28 -t buildfs
 - [x] 校准结束后自动返回 MASTER，并重新发现探头。
 - [ ] PN 50661 零点校准。
 - [ ] 断线、超时、异常响应及输入边界场景。
+- [x] PN 50661 在 `CAL & OUTPUT` 中显示 `[OUTPUT] PTSA 4-20mA` / `20mA RANGE`。
+- [x] 输入合法 ppb 值后完成 4–20 mA 输出量程设置，完成页显示 `Output range saved`。
+- [ ] 0、301 和非整数输入被 UI 拒绝，不发送 Modbus 写命令。

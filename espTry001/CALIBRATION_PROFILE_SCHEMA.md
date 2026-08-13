@@ -93,6 +93,7 @@ src/calibration_index_generated.inc         # 首批回退索引
   "procedures": [
     {
       "id": "sugar.zero",
+      "category": "sensor_calibration",
       "reading_name": "Sugar",
       "name": "zero_title",
       "message": "zero_message",
@@ -119,6 +120,7 @@ src/calibration_index_generated.inc         # 首批回退索引
     },
     {
       "id": "sugar.slope",
+      "category": "sensor_calibration",
       "reading_name": "Sugar",
       "name": "slope_title",
       "message": "slope_message",
@@ -192,9 +194,10 @@ src/calibration_index_generated.inc         # 首批回退索引
 
 ### 6.1 Procedure
 
-每个 `procedure` 表示用户可以选择的一项完整校准：
+每个 `procedure` 表示用户可以选择的一项完整校准或输出设置：
 
 - `id`：Profile 内唯一的稳定 ID；
+- `category`：`sensor_calibration` 表示探头校准，`output_span` 表示 4–20 mA 输出量程设置；
 - `reading_name`：来源 Reading 名称；
 - `name`：APP 校准标题；
 - `message`：操作提示；

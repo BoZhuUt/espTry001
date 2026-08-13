@@ -75,6 +75,19 @@ bool parseOutcome(const char *text, CalibrationOutcome &outcome) {
   return true;
 }
 
+bool parseProcedureCategory(const char *text,
+                            CalibrationProcedureCategory &category) {
+  if (text != nullptr && strcmp(text, "sensor_calibration") == 0) {
+    category = CalibrationProcedureCategory::SensorCalibration;
+    return true;
+  }
+  if (text != nullptr && strcmp(text, "output_span") == 0) {
+    category = CalibrationProcedureCategory::OutputSpan;
+    return true;
+  }
+  return false;
+}
+
 bool validAddress(uint32_t address, uint8_t registerCount) {
   return address >= 1 && address <= 65536 &&
          address + registerCount - 1 <= 65536;
@@ -199,6 +212,16 @@ bool CalibrationProfileStore::loadProfileFile(const char *path,
     }
     CalibrationProcedure &procedure =
         parsed.procedures[parsed.procedureCount];
+    const char *categoryText = procedureJson["category"].as<const char *>();
+    // Profiles published before category support contain only sensor
+    // calibration procedures. Keep those profiles usable after an
+    // application-only firmware update; output_span still requires a new
+    // LittleFS bundle.
+    if (categoryText == nullptr) {
+      procedure.category = CalibrationProcedureCategory::SensorCalibration;
+    } else if (!parseProcedureCategory(categoryText, procedure.category)) {
+      return fail("Calibration procedure category invalid");
+    }
     if (!readRequiredText(procedureJson["id"], procedure.id,
                           sizeof(procedure.id)) ||
         !readRequiredText(procedureJson["reading_name"], procedure.readingName,

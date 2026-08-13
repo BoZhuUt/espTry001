@@ -10,6 +10,7 @@
   "procedures": [
     {
       "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
       "reading_name": "PTSA",
       "name": "zero_title",
       "message": "zero_message",
@@ -63,6 +64,7 @@
     },
     {
       "id": "reading_1.calibration_2",
+      "category": "sensor_calibration",
       "reading_name": "PTSA",
       "name": "slope_title",
       "message": "slope_message",
@@ -145,6 +147,73 @@
                   }
                 ]
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_1.20ma",
+      "category": "output_span",
+      "reading_name": "PTSA 4-20mA",
+      "name": "20mA_Title",
+      "message": "20mA_Message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_Title",
+          "type": "uint16",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 300,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 0,
+          "unit": "ppb",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 1016,
+                "type": "uint16",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 1044,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 2
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
             }
           ]
         }

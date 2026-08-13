@@ -71,6 +71,7 @@ class CalibrationImportTests(unittest.TestCase):
         profile = normalize_profile(source, "57769.json", ctx)
         self.assertIsNotNone(profile)
         procedure = profile["procedures"][0]
+        self.assertEqual(procedure["category"], "sensor_calibration")
         self.assertEqual(procedure["inputs"][0]["id"], "input_1")
         value = procedure["steps"][0]["alternatives"][0]["write"]["value"]
         self.assertEqual(value, {"kind": "input", "input_id": "input_1"})
@@ -247,6 +248,61 @@ class CalibrationImportTests(unittest.TestCase):
         }
         profile = normalize_profile(source, "57769.json", ImportContext())
         self.assertEqual(validate_profile(profile, "57769.default.json"), [])
+
+    def test_4_20ma_span_becomes_output_procedure(self):
+        source = {
+            "PN": 50661,
+            "ModelName": "ST-500",
+            "Readings": [],
+            "Span4_20mA": [
+                {
+                    "Name": "PTSA 4-20mA",
+                    "Unit": "ppb",
+                    "4mA": {"Name": "4mA_Title", "Editable": False, "Cmds": []},
+                    "20mA": {
+                        "Name": "20mA_Title",
+                        "Message": "20mA_Message",
+                        "Editable": True,
+                        "Cmds": [
+                            {
+                                "RegAddress": 1016,
+                                "RegType": "ushort",
+                                "SetValue": 200,
+                                "SetValueMin": 1,
+                                "SetValueMax": 300,
+                                "Editable": False,
+                                "Waiting_mS": 1000,
+                            },
+                            {
+                                "RegAddress": 1044,
+                                "RegType": "ushort",
+                                "SetValue": 2,
+                                "Editable": False,
+                                "Waiting_mS": 1000,
+                            },
+                        ],
+                    },
+                }
+            ],
+        }
+        profile = normalize_profile(source, "50661.json", ImportContext())
+        self.assertIsNotNone(profile)
+        procedure = profile["procedures"][0]
+        self.assertEqual(procedure["category"], "output_span")
+        self.assertEqual(procedure["id"], "output_span_1.20ma")
+        self.assertEqual(procedure["reading_name"], "PTSA 4-20mA")
+        self.assertEqual(procedure["inputs"][0]["default"], 200)
+        self.assertEqual(procedure["inputs"][0]["minimum"], 1)
+        self.assertEqual(procedure["inputs"][0]["maximum"], 300)
+        self.assertEqual(
+            procedure["steps"][0]["alternatives"][0]["write"]["value"],
+            {"kind": "input", "input_id": "input_1"},
+        )
+        self.assertEqual(
+            procedure["steps"][1]["alternatives"][0]["write"]["value"],
+            {"kind": "fixed", "number": 2},
+        )
+        self.assertEqual(validate_profile(profile, "50661.default.json"), [])
 
 
 if __name__ == "__main__":

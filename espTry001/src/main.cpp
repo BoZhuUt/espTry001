@@ -588,9 +588,22 @@ void processRs485Events() {
           appState.calibration.executorState = event.calibrationState;
           appState.calibration.commandIndex = event.calibrationCommandIndex;
           appState.calibration.commandCount = event.calibrationCommandCount;
-          snprintf(appState.calibration.statusText,
-                   sizeof(appState.calibration.statusText), "%s",
-                   event.calibrationMessage);
+          const CalibrationProfile *profile = calibrationProfileStore.profile();
+          const bool outputSpan =
+              profile != nullptr &&
+              appState.calibration.selectedProcedure < profile->procedureCount &&
+              profile->procedures[appState.calibration.selectedProcedure].category ==
+                  CalibrationProcedureCategory::OutputSpan;
+          if (outputSpan &&
+              event.calibrationState == CalibrationExecutor::State::Completed) {
+            snprintf(appState.calibration.statusText,
+                     sizeof(appState.calibration.statusText),
+                     "Output range saved");
+          } else {
+            snprintf(appState.calibration.statusText,
+                     sizeof(appState.calibration.statusText), "%s",
+                     event.calibrationMessage);
+          }
           appState.calibration.phase = CalibrationUiPhase::Finished;
           if (appState.page == UiPage::Calibration) drawCalibrationPage();
         }
@@ -1265,13 +1278,16 @@ bool startSelectedCalibration() {
   }
   const CalibrationProcedure &procedure =
       profile->procedures[appState.calibration.selectedProcedure];
+  const bool outputSpan =
+      procedure.category == CalibrationProcedureCategory::OutputSpan;
   uint8_t slaveAddress = rs485Status.identity.slaveAddress;
   if (!appController.beginCalibration(
           slaveAddress, profile, appState.calibration.selectedProcedure,
           appState.calibration.inputValues, procedure.inputCount)) {
     snprintf(appState.calibration.statusText,
              sizeof(appState.calibration.statusText),
-             "Unable to start calibration");
+             "%s", outputSpan ? "Unable to save output range"
+                               : "Unable to start calibration");
     appState.calibration.phase = CalibrationUiPhase::Finished;
     return false;
   }
@@ -1279,7 +1295,8 @@ bool startSelectedCalibration() {
   appState.calibration.commandIndex = 0;
   appState.calibration.commandCount = procedure.commandCount;
   snprintf(appState.calibration.statusText,
-           sizeof(appState.calibration.statusText), "Starting calibration...");
+           sizeof(appState.calibration.statusText), "%s",
+           outputSpan ? "Saving output range..." : "Starting calibration...");
   return true;
 }
 

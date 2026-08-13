@@ -17,6 +17,7 @@ WRITE_TYPES = {"uint16", "float32_cdab"}
 INPUT_TYPES = {"uint16", "float32"}
 OPERATORS = {"eq", "lt", "lte", "gt", "gte"}
 CONDITION_FIELDS = {"hardware_version", "software_version", "parameter_version"}
+PROCEDURE_CATEGORIES = {"sensor_calibration", "output_span"}
 
 
 def load_json(path: Path) -> Any:
@@ -165,6 +166,12 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
         if isinstance(procedure_id, str):
             check(procedure_id not in procedure_ids, path, "duplicate id", errors)
             procedure_ids.add(procedure_id)
+        check(
+            procedure.get("category") in PROCEDURE_CATEGORIES,
+            path,
+            "invalid category",
+            errors,
+        )
         validate_condition(procedure.get("when"), f"{path}.when", errors)
 
         inputs = procedure.get("inputs")

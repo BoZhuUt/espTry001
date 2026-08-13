@@ -654,7 +654,7 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
   gfx->setTextSize(2);
   gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
   gfx->setCursor(5, 10);
-  gfx->print("CALIBRATION");
+  gfx->print("CAL & OUTPUT");
   gfx->drawLine(5, 34, BoardConfig::kDisplayWidth - 6, 34, RGB565_ORANGE);
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
@@ -667,11 +667,11 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
   if (view.profile == nullptr) {
     gfx->setTextColor(RGB565_RED, RGB565_BLACK);
     gfx->setCursor(5, 75);
-    gfx->print("No approved calibration profile");
+    gfx->print("No approved calibration/output profile");
   } else if (view.phase == CalibrationUiPhase::ProcedureList) {
     gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
     gfx->setCursor(5, 62);
-    gfx->print("Select procedure:");
+    gfx->print("Select operation:");
     for (uint8_t index = 0; index < view.profile->procedureCount && index < 4;
          ++index) {
       const CalibrationProcedure &procedure = view.profile->procedures[index];
@@ -679,9 +679,13 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
       gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 40, RGB565_DARKGREY);
       gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
       gfx->setCursor(12, y + 8);
-      gfx->printf("%u. %s", index + 1, procedure.name);
+      const bool outputSpan =
+          procedure.category == CalibrationProcedureCategory::OutputSpan;
+      gfx->printf("%u. %s", index + 1,
+                  outputSpan ? "20mA RANGE" : procedure.name);
       gfx->setCursor(12, y + 23);
-      gfx->printf("%s", procedure.readingName);
+      gfx->printf("[%s] %s", outputSpan ? "OUTPUT" : "SENSOR",
+                  procedure.readingName);
     }
   } else if (view.phase == CalibrationUiPhase::NumericInput) {
     const CalibrationProcedure &procedure =
@@ -734,7 +738,9 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
         view.profile->procedures[view.selectedProcedure];
     gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
     gfx->setCursor(5, 65);
-    gfx->print(procedure.name);
+    const bool outputSpan =
+        procedure.category == CalibrationProcedureCategory::OutputSpan;
+    gfx->print(outputSpan ? "20mA OUTPUT RANGE" : procedure.name);
     gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
     gfx->setCursor(5, 84);
     gfx->print(procedure.message);
@@ -762,7 +768,8 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
     } else {
       gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
       gfx->setCursor(5, 205);
-      gfx->print("Please wait - do not remove probe");
+      gfx->print(outputSpan ? "Saving output range..."
+                            : "Please wait - do not remove probe");
     }
   }
   gfx->flush();

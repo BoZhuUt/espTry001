@@ -10,6 +10,7 @@
   "procedures": [
     {
       "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
       "reading_name": "Sugar",
       "name": "zero_title",
       "message": "zero_message",
@@ -40,6 +41,7 @@
     },
     {
       "id": "reading_1.calibration_2",
+      "category": "sensor_calibration",
       "reading_name": "Sugar",
       "name": "slope_title",
       "message": "slope_message",

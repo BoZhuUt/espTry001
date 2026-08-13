@@ -10,6 +10,7 @@
   "procedures": [
     {
       "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
       "reading_name": "Cl-F",
       "name": "zero_title",
       "message": "zero_message",
@@ -78,6 +79,7 @@
     },
     {
       "id": "reading_1.calibration_2",
+      "category": "sensor_calibration",
       "reading_name": "Cl-F",
       "name": "slope_title",
       "message": "st765_slope_message",
@@ -182,6 +184,7 @@
     },
     {
       "id": "reading_2.calibration_1",
+      "category": "sensor_calibration",
       "reading_name": "pH",
       "name": "pH 7 Calibration",
       "message": "Place the probe into pH 7 buffer, wait for readings to be stabilized, click Confirm to proceed.",
@@ -269,6 +272,7 @@
     },
     {
       "id": "reading_2.calibration_2",
+      "category": "sensor_calibration",
       "reading_name": "pH",
       "name": "pH 6.86 Calibration",
       "message": "Place the probe into pH 6.86 buffer, wait for readings to be stabilized, click Confirm to proceed.",
@@ -356,6 +360,7 @@
     },
     {
       "id": "reading_2.calibration_3",
+      "category": "sensor_calibration",
       "reading_name": "pH",
       "name": "Acid Calibration",
       "message": "Place the probe into Acid buffer, wait for readings to be stabilized, click Confirm to proceed.",
@@ -460,6 +465,7 @@
     },
     {
       "id": "reading_2.calibration_4",
+      "category": "sensor_calibration",
       "reading_name": "pH",
       "name": "Base Calibration",
       "message": "Place the probe into Base buffer, wait for readings to be stabilized, click Confirm to proceed.",
@@ -564,6 +570,7 @@
     },
     {
       "id": "reading_2.calibration_5",
+      "category": "sensor_calibration",
       "reading_name": "pH",
       "name": "Process Calibration",
       "message": "Please input actual pH readings of the process water, click Confirm to proceed.",
@@ -676,6 +683,7 @@
     },
     {
       "id": "reading_3.calibration_1",
+      "category": "sensor_calibration",
       "reading_name": "ORP",
       "name": "ORP Calibration",
       "message": "slope_message",
@@ -773,6 +781,341 @@
                   }
                 ]
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_1.20ma",
+      "category": "output_span",
+      "reading_name": "Cl-F 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 5,
+          "minimum": 0.1,
+          "maximum": 5,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43034,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 500,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43036,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_2.4ma",
+      "category": "output_span",
+      "reading_name": "pH 4-20mA",
+      "name": "4mA_title",
+      "message": "4mA_message",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "4mA_title",
+          "type": "float32",
+          "default": 4,
+          "minimum": 0,
+          "maximum": 14,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44046,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43036,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_2.20ma",
+      "category": "output_span",
+      "reading_name": "pH 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 14,
+          "minimum": 0,
+          "maximum": 14,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44048,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43036,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_3.4ma",
+      "category": "output_span",
+      "reading_name": "ORP 4-20mA",
+      "name": "4mA_title",
+      "message": "4mA_message",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "4mA_title",
+          "type": "float32",
+          "default": -1500,
+          "minimum": -1500,
+          "maximum": 1500,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 45040,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43036,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_3.20ma",
+      "category": "output_span",
+      "reading_name": "ORP 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 1500,
+          "minimum": -1500,
+          "maximum": 1500,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 45042,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43036,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
             }
           ]
         }

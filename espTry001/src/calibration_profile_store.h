@@ -19,6 +19,11 @@ enum class CalibrationOutcome : uint8_t {
   Info,
 };
 
+enum class CalibrationProcedureCategory : uint8_t {
+  SensorCalibration,
+  OutputSpan,
+};
+
 struct CalibrationInput {
   char id[24] = "";
   char label[40] = "";
@@ -66,6 +71,8 @@ struct CalibrationProcedure {
   char name[48] = "";
   char message[128] = "";
   char unit[16] = "";
+  CalibrationProcedureCategory category =
+      CalibrationProcedureCategory::SensorCalibration;
   uint8_t firstInput = 0;
   uint8_t inputCount = 0;
   uint8_t firstCommand = 0;
