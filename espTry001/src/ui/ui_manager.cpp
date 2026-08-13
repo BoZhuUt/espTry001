@@ -670,20 +670,26 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
     gfx->print("No approved calibration/output profile");
   } else if (view.phase == CalibrationUiPhase::ProcedureList) {
     gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-    gfx->setCursor(5, 62);
+    gfx->setCursor(5, 57);
     gfx->print("Select operation:");
-    for (uint8_t index = 0; index < view.profile->procedureCount && index < 4;
+    uint8_t calibrationNumber = 0;
+    for (uint8_t index = 0; index < view.profile->procedureCount && index < 5;
          ++index) {
       const CalibrationProcedure &procedure = view.profile->procedures[index];
-      int16_t y = 82 + index * 48;
-      gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 40, RGB565_DARKGREY);
+      int16_t y = 70 + index * 41;
+      gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 36,
+                    RGB565_DARKGREY);
       gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
-      gfx->setCursor(12, y + 8);
       const bool outputSpan =
           procedure.category == CalibrationProcedureCategory::OutputSpan;
-      gfx->printf("%u. %s", index + 1,
-                  outputSpan ? "20mA RANGE" : procedure.name);
-      gfx->setCursor(12, y + 23);
+      if (!outputSpan) calibrationNumber++;
+      gfx->setCursor(12, y + 5);
+      if (outputSpan) {
+        gfx->print("4-20mA SET");
+      } else {
+        gfx->printf("CALIB %u", calibrationNumber);
+      }
+      gfx->setCursor(12, y + 20);
       gfx->printf("[%s] %s", outputSpan ? "OUTPUT" : "SENSOR",
                   procedure.readingName);
     }

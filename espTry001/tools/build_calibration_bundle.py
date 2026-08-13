@@ -153,6 +153,35 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
     check(isinstance(procedures, list) and 1 <= len(procedures) <= 16, root, "invalid procedures", errors)
     if not isinstance(procedures, list):
         return errors
+    if profile.get("release_status") == "approved":
+        sensor_count = sum(
+            procedure.get("category") == "sensor_calibration"
+            for procedure in procedures
+            if isinstance(procedure, dict)
+        )
+        output_count = sum(
+            procedure.get("category") == "output_span"
+            for procedure in procedures
+            if isinstance(procedure, dict)
+        )
+        check(
+            len(procedures) <= 5,
+            root,
+            "approved profile exceeds five UI operations",
+            errors,
+        )
+        check(
+            sensor_count <= 4,
+            root,
+            "approved profile exceeds four sensor calibrations",
+            errors,
+        )
+        check(
+            output_count <= 1,
+            root,
+            "approved profile exceeds one output-span operation",
+            errors,
+        )
 
     procedure_ids: set[str] = set()
     total_steps = 0

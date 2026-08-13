@@ -83,4 +83,5 @@ pio run -e waveshare28 -t buildfs
 - [ ] 断线、超时、异常响应及输入边界场景。
 - [x] PN 50661 在 `CAL & OUTPUT` 中显示 `[OUTPUT] PTSA 4-20mA` / `20mA RANGE`。
 - [x] 输入合法 ppb 值后完成 4–20 mA 输出量程设置，完成页显示 `Output range saved`。
-- [ ] 0、301 和非整数输入被 UI 拒绝，不发送 Modbus 写命令。
+- [x] PN 50661 斜率校准与 4–20 mA 输出设置均拒绝小数输入，符合 `ushort/UInt16` 定义。
+- [x] 4–20 mA 输出设置的 0、301 越界输入被 UI 拒绝，并显示合法范围提示。

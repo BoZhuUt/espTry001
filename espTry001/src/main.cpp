@@ -1315,9 +1315,9 @@ void handleCalibrationTouch(int x, int y) {
       drawSensorInfoPage();
       return;
     }
-    if (y >= 82 && y < 274) {
-      uint8_t selected = static_cast<uint8_t>((y - 82) / 48);
-      if (selected >= profile->procedureCount || selected >= 4) return;
+    if (y >= 70 && y < 275) {
+      uint8_t selected = static_cast<uint8_t>((y - 70) / 41);
+      if (selected >= profile->procedureCount || selected >= 5) return;
       state.selectedProcedure = selected;
       state.currentInput = 0;
       const CalibrationProcedure &procedure = profile->procedures[selected];
