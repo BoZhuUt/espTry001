@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
+#include "app/app_state.h"
+#include "calibration_profile_store.h"
 
 enum class UiSdState : uint8_t {
   Missing,
@@ -94,6 +96,18 @@ struct SensorInfoView {
   uint8_t rowCount = 0;
   uint8_t pageNumber = 1;
   uint8_t pageCount = 0;
+  bool calibrationAvailable = false;
+};
+
+struct CalibrationView {
+  CalibrationUiPhase phase = CalibrationUiPhase::ProcedureList;
+  const CalibrationProfile *profile = nullptr;
+  uint8_t selectedProcedure = 0;
+  uint8_t currentInput = 0;
+  const char *numericText = "";
+  const char *statusText = "";
+  uint8_t commandIndex = 0;
+  uint8_t commandCount = 0;
 };
 
 enum class UiDiscoveryState : uint8_t {
@@ -162,5 +176,6 @@ public:
   void drawTimeSyncPage(const TimeSyncView &view);
   void drawSensorInfoPage(const SensorInfoView &view);
   void drawSensorParameterArea(const SensorInfoView &view);
+  void drawCalibrationPage(const CalibrationView &view);
   void drawDashboardDynamic(const DashboardView &view);
 };

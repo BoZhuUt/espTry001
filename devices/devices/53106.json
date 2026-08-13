@@ -1,0 +1,253 @@
+{
+    "PN": 53106,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-723",
+    "ModelImage": "ST-723",
+    "ModelDescription": "Inline HT Conductivity Probe",
+    "ModbusAddr": 14,
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Decimal": 0,
+                "SetValueMax": 247,
+                "SetValueMin": 1,
+                "Editable": true,
+                "SetValue": 0
+            }]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 41007,
+                "RegType": "ushort",
+                "RegLen": 8
+            }]
+        }
+    ],
+	"slope":[
+	     {
+           "Name": "slope",
+		   "Unit": "",
+		   "RegAddress": 44005,
+		   "RegType": "float",
+		   "RegLen": 2,
+		   "Decimal":4
+		  }
+	],
+    "Readings": [{
+            "Name": "Conductivity",
+            "Unit": "µS/cm",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": [{
+                "Name": "Conductivity Setting Calibration",
+                "Message": "slope_message",
+                "Cmds": [{
+                        "RegAddress": 44002,
+                        "RegType": "ushort",
+                        "Editable": true,
+                        "SetValue": 1000,
+                        "SetValueMax": 15000,
+                        "SetValueMin": 1,
+                        "Unit": "µS/cm",
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 44004,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 1,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 41003,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 1,
+                                "ResultMessage": "Conductivity calibration succeed."
+                            },
+                            {
+                                "RegValue": 3,
+                                "ResultMessage": "Slope out of range"
+                            },
+                            {
+                                "RegValue": 4,
+                                "ResultMessage": "Solution value invalid."
+                            }
+                        ]
+                    }
+                ]
+            }]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [{
+        "Name": "Conductivity 4-20mA",
+        "Unit": "",
+        "RegAddress": 46003,
+        "RegType": "float",
+        "RegLen": 2,
+        "Decimal": 2,
+        "4mA": {
+            "Name": "4mA_Title",
+            "Editable": false,
+            "Placeholder": 0,
+            "Cmds": []
+        },
+        "20mA": {
+            "Message": "20mA_Message",
+            "Name": "20mA_title",
+            "Editable": true,
+            "Placeholder": 15000,
+            "Cmds": [{
+                "RegAddress": 43002,
+                "RegLen": 2,
+                "RegType": "float",
+                "SetValue": 15000,
+                "SetValueMax": 15000,
+                "SetValueMin": 1,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "ResultRegLen": 0,
+                "Results": []
+            }]
+        }
+    }],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "rtemp",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "TDS Factor",
+            "RegAddress": 43013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "Conductivity 4-20mA",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "Temp PCB",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "Intercept rr",
+            "RegAddress": 46013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "Temp K",
+            "RegAddress": 43009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "k",
+            "RegAddress": 44005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "Scale_20mA",
+            "RegAddress": 43002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {}
+}

@@ -10,6 +10,7 @@
 
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
+#include "calibration_executor.h"
 
 class Rs485Service {
  public:
@@ -22,6 +23,7 @@ class Rs485Service {
     FixedPolling,
     // Append new modes to preserve the numeric values exposed by diagnostics.
     RawPassThrough,
+    Calibration,
   };
 
   enum class UartFormat : uint8_t {
@@ -33,6 +35,8 @@ class Rs485Service {
     SensorFound,
     ScanCompleted,
     CommunicationError,
+    CalibrationProgress,
+    CalibrationFinished,
     Stopped,
   };
 
@@ -45,6 +49,11 @@ class Rs485Service {
     float values[kMaxSensorFields] = {0};
     bool valid[kMaxSensorFields] = {false};
     uint8_t error = 0xFF;
+    CalibrationExecutor::State calibrationState = CalibrationExecutor::State::Idle;
+    uint8_t calibrationCommandIndex = 0;
+    uint8_t calibrationCommandCount = 0;
+    uint16_t calibrationResultValue = 0;
+    char calibrationMessage[96] = "";
   };
 
   struct Status {
@@ -80,6 +89,10 @@ class Rs485Service {
     UartFormat uartFormat = UartFormat::Modbus8E1;
     uint32_t uartReconfigureCount = 0;
     UBaseType_t taskStackHighWater = 0;
+    CalibrationExecutor::State calibrationState = CalibrationExecutor::State::Idle;
+    uint8_t calibrationCommandIndex = 0;
+    uint8_t calibrationCommandCount = 0;
+    char calibrationMessage[96] = "";
   };
 
   static constexpr UBaseType_t kCommandQueueLength = 8;
@@ -101,6 +114,10 @@ class Rs485Service {
   bool startDiscovery();
   bool startPolling(const SensorProfile *profile);
   bool startFixedPolling(uint8_t slaveAddress, const SensorProfile *profile);
+  bool startCalibration(uint8_t slaveAddress,
+                        const CalibrationProfile *profile,
+                        uint8_t procedureIndex, const float *inputValues,
+                        uint8_t inputCount);
   bool stopAndWait(uint32_t timeoutMs = kStopTimeoutMs);
 
   bool enqueuePassFrame(const uint8_t *frame, size_t length);
@@ -135,13 +152,18 @@ class Rs485Service {
     StartDiscovery,
     StartPolling,
     StartFixedPolling,
+    StartCalibration,
     Stop,
   };
 
   struct Command {
     CommandType type = CommandType::Stop;
     const SensorProfile *profile = nullptr;
+    const CalibrationProfile *calibrationProfile = nullptr;
     uint8_t slaveAddress = 0;
+    uint8_t procedureIndex = 0;
+    uint8_t inputCount = 0;
+    float inputValues[CalibrationExecutor::kMaxProcedureInputs] = {0};
   };
 
   static constexpr EventBits_t kInitializedBit = BIT0;
@@ -163,6 +185,7 @@ class Rs485Service {
   void updateRawPassThrough();
   void updateDiscovery();
   void updatePolling();
+  void updateCalibration();
   /**
    * 在 Rs485Task 内重新初始化唯一的 HardwareSerial。
    *
@@ -178,6 +201,7 @@ class Rs485Service {
   HardwareSerial &serial_;
   SensorDiscovery discovery_;
   SensorProfilePoller poller_;
+  CalibrationExecutor calibration_;
 
   QueueHandle_t commandQueue_ = nullptr;
   QueueHandle_t eventQueue_ = nullptr;

@@ -1,0 +1,127 @@
+{
+    "PN": 41000,
+    "ModelType": "Dual Cond",
+    "ModelName": "",
+    "ModelImage": "",
+    "ModelDescription": "Inline Conductivity Probe",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        },
+        {
+            "name": "Quick Start Guide",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": "0x2A24",
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": "0x2A25",
+            "RegType": "char",
+            "RegLen": 16
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": "0x2A27",
+            "RegType": "char",
+            "RegLen": 16
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": "0x2A26",
+            "RegType": "char",
+            "RegLen": 16
+        },
+        {
+            "Name": "Battery Soc",
+            "RegAddress": "0x180F",
+            "RegType": "uint",
+            "RegLen": 16
+        }
+    ],
+    "Config": [
+        {
+            "Name": "wifi ssid",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set the Wi-Fi SSID used to connect the device to the wireless network (2.4 GHz only).",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 1037,
+                    "RegType": "0x2AF7",
+                    "RegLen": 32
+                }
+            ]
+        },
+        {
+            "Name": "wifi password",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set the Wi-Fi password used to connect the device to the wireless network.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": "0x2BDE",
+                    "RegType": "char",
+                    "RegLen": 64
+                }
+            ]
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "Inlet Conductivity",
+            "Unit": "us/cm",
+            "RegAddress": "0x0001",
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2
+        },
+        {
+            "Name": "Outlet Conductivity",
+            "Unit": "us/cm",
+            "RegAddress": "0x0002",
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2
+        },
+        {
+            "Name": "Outlet Temperature",
+            "Unit": "°C",
+            "RegAddress": "0x2A6E",
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2
+        },
+        {
+            "Name": "Outlet Temperature",
+            "Unit": "°C",
+            "RegAddress": "0x2A6E",
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2
+        }
+    ]
+}

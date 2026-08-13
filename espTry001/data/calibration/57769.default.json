@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "profile_id": "57769.default",
+  "product_num": 57769,
+  "variant": "default",
+  "model_name": "HW-201T",
+  "source_file": "57769.json",
+  "requires_version_read": false,
+  "release_status": "approved",
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "reading_name": "Sugar",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 21
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_2",
+      "reading_name": "Sugar",
+      "name": "slope_title",
+      "message": "slope_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "slope_title",
+          "type": "float32",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 1000,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44002,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 22
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

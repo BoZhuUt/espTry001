@@ -1,0 +1,505 @@
+{
+    "PN": 53029,
+    "ModelType": "InlineSensor",
+    "ModelName": "EC-312D",
+    "ModelImage": "ST-712",
+    "ModelDescription": "Inline pH/ORP Probe",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-710-Series-Inline-pH-ORP-Sensors-Datasheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        },
+        {
+            "name": "Quick Start Guide",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/05/ST710-711-712-720-726-Updated-Quick-Startup-Guide-New.pdf"
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValueMax": 247,
+                "SetValueMin": 1
+            }]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 41007,
+                "RegType": "ushort",
+                "RegLen": 8
+            }]
+        }
+    ],
+    "slope": [{
+            "Name": "pH_SlopeAcid",
+            "Unit": "",
+            "RegAddress": 48001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "Name": "pH_SlopeBase",
+            "Unit": "",
+            "RegAddress": 48035,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "Name": "intercept_ORP",
+            "Unit": "",
+            "RegAddress": 48039,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        }
+    ],
+    "Readings": [{
+            "Name": "pH",
+            "Unit": "",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [{
+                    "Name": "pH 7 Calibration",
+                    "Message": "Place the probe into pH 7 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [{
+                        "RegAddress": 43010,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 0,
+                        "Waiting_mS": 100
+                    }, {
+                        "RegAddress": 48011,
+                        "RegType": "float",
+                        "Editable": false,
+                        "SetValue": 7,
+                        "Waiting_mS": 100
+                    }, {
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 8,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 41003,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 6,
+                                "ResultMessage": "pH 7 calibration succeed."
+                            },
+                            {
+                                "RegValue": 4,
+                                "ResultMessage": "pH 7 voltage over range."
+                            }
+                        ]
+                    }]
+                },
+                {
+                    "Name": "pH 6.86 Calibration",
+                    "Message": "Place the probe into pH 6.86 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [{
+                        "RegAddress": 43010,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 1,
+                        "Waiting_mS": 100
+                    }, {
+                        "RegAddress": 48011,
+                        "RegType": "float",
+                        "Editable": false,
+                        "SetValue": 6.86,
+                        "Waiting_mS": 100
+                    }, {
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 8,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 41003,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 6,
+                                "ResultMessage": "pH 6.86 calibration succeed."
+                            },
+                            {
+                                "RegValue": 4,
+                                "ResultMessage": "pH 6.86 voltage over range."
+                            }
+                        ]
+                    }]
+                },
+                {
+                    "Name": "Acid Calibration",
+                    "Message": "Place the probe into Acid buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [{
+                            "RegAddress": 48011,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 4.0,
+                            "SetValueMax": 6.0,
+                            "SetValueMin": 1.0,
+                            "Unit": "",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 4,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [{
+                                    "RegValue": 1,
+                                    "ResultMessage": "Acid calibration succeed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Buffer value over range."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Buffer value invalid."
+                                },
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "Slope over range."
+                                },
+                                {
+                                    "RegValue": 8,
+                                    "ResultMessage": "Intercept over range."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Base Calibration",
+                    "Message": "Place the probe into Base buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [{
+                            "RegAddress": 48017,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 10.0,
+                            "SetValueMax": 14.0,
+                            "SetValueMin": 8.0,
+                            "Unit": "",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 5,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [{
+                                    "RegValue": 2,
+                                    "ResultMessage": "Base calibration succeed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Buffer value over range."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Buffer value invalid."
+                                },
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "Slope over range."
+                                },
+                                {
+                                    "RegValue": 8,
+                                    "ResultMessage": "Intercept over range."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "VersionJudgment": "softVersion>=108 && hardVersion==2 ",
+                    "Name": "Process Calibration",
+                    "Message": "Please input actual pH readings of the process water, click Confirm to proceed.",
+                    "Cmds": [{
+                            "RegAddress": 48043,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 13,
+                            "SetValueMax": 13,
+                            "SetValueMin": 1,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 10,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 2000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [{
+                                    "RegValue": 0,
+                                    "ResultMessage": "idle"
+                                }, {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "Correction amount out of range."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "ORP",
+            "Unit": "mV",
+            "RegAddress": 46013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [{
+                "Name": "ORP Calibration",
+                "Message": "slope_message",
+                "Cmds": [{
+                        "RegAddress": 44002,
+                        "RegType": "float",
+                        "Editable": true,
+                        "SetValue": 229,
+                        "SetValueMax": 1500,
+                        "SetValueMin": -1500,
+                        "Unit": "mV",
+                        "Conversion": "value/1000",
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 6,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 41003,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 2,
+                                "ResultMessage": "ORP calibration succeed."
+                            },
+                            {
+                                "RegValue": 3,
+                                "ResultMessage": "Solution value over range."
+                            },
+                            {
+                                "RegValue": 5,
+                                "ResultMessage": "Solution value invalid."
+                            }
+                        ]
+                    }
+                ]
+            }]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "pH_SlopeAcid",
+            "RegAddress": 48001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "pH_SlopeBase",
+            "RegAddress": 48035,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "pH7_E",
+            "RegAddress": 48029,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "Smoothing",
+            "RegAddress": 43004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Temperature]",
+            "Name": "Temperature",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "pH_Vol",
+            "RegAddress": 48007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "ORP_Slope",
+            "RegAddress": 44004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "Intercept",
+            "RegAddress": 48039,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        }
+
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [{
+            "RegAddress": 43006,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Editable": false,
+            "SetValue": 16,
+            "Waiting_mS": 1000,
+            "ResultRegAddress": 41003,
+            "ResultRegType": "ushort",
+            "ResultRegLen": 1,
+            "Results": [{
+                    "RegValue": 517,
+                    "ResultMessage": "Parameter restore succeed."
+                },
+                {
+                    "RegValue": 514,
+                    "ResultMessage": "No factory parameter found."
+                }
+            ]
+        }]
+    }
+}

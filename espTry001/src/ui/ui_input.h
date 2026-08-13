@@ -5,6 +5,7 @@
 struct UiInputContext {
   bool configMode = false;
   bool sensorDetailsAvailable = false;
+  bool calibrationAvailable = false;
 };
 
 // Converts a raw touch coordinate into a semantic action. Both supported

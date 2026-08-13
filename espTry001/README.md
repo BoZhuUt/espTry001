@@ -43,6 +43,11 @@ pio run -t uploadfs
 pio device monitor
 ```
 
+2.8 英寸机型首次启用或更新校准 Profile 时，必须同时执行 `upload` 和
+`uploadfs`。应用固件与 LittleFS 是两个独立分区；只烧录
+`firmware.factory.bin` 不包含 `data/calibration`。每次 PlatformIO 构建会先
+运行校准发布门禁，只把 `approved` Profile 同步到 LittleFS 镜像输入目录。
+
 `generate_sensor_profiles.py` 会在构建前校验
 `config/sensor_profiles.json`，生成固件内置 Profile，并同步 LittleFS
 镜像输入文件。`get_git_version.py` 根据 Git 提交数生成 `V1.0.n`。

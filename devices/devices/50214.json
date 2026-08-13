@@ -1,0 +1,312 @@
+{
+    "PN": 50214,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-601",
+    "ModelImage": "ST-500",
+    "ModelDescription": "Inline ClO2 Probe",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-600-Series-Inline-Disinfection-Sensors-Datasheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-601-User-Manual-V2.05.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 1032,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 1035,
+            "RegType": "ushort",
+            "RegLen": 1
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                    "RegAddress": 1037,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 1044,
+                    "SetValue": 2,
+                    "RegLen": 1,
+                    "RegType": "ushort",
+                    "Waiting_mS": 1000,
+                    "Editable": false
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToLocal",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": []
+        }
+    ],
+	"slope":[
+	     {
+           "Name": "slope",
+		   "Unit": "",
+		   "RegAddress": 1002,
+		   "RegType": "float",
+		   "RegLen": 2,
+		   "Decimal":4
+		  }
+	],
+    "Readings": [{
+        "Name": "ClO2",
+        "Unit": "%",
+        "RegAddress": 1006,
+        "RegType": "float",
+        "Decimal": 2,
+        "RegLen": 2,
+        "Calibrations": [{
+                "Name": "zero_title",
+                "Message": "zero_message",
+                "Cmds": [{
+                    "RegAddress": 1025,
+                    "RegType": "ushort",
+                    "Editable": false,
+                    "SetValue": 4,
+                    "SetValueMax": 0,
+                    "SetValueMin": 0,
+                    "Waiting_mS": 1000,
+                    "ResultRegAddress": 1031,
+                    "ResultRegType": "ushort",
+                    "Results": [{
+                            "RegValue": 0,
+                            "ResultMessage": "Calibration succeed."
+                        },
+                        {
+                            "RegValue": 2048,
+                            "ResultMessage": "Calibration failed, probe fouled."
+                        },
+                        {
+                            "RegValue": 4096,
+                            "ResultMessage": "Calibration failed, DI signal is too high."
+                        }
+                    ]
+                }]
+            },
+            {
+                "Name": "slope_title",
+                "Message": "slope_message",
+                "Cmds": [{
+                        "RegAddress": 1010,
+                        "RegType": "float",
+                        "Editable": true,
+                        "SetValue": 0.2,
+                        "SetValueMax": 0.35,
+                        "SetValueMin": 0.01,
+                        "Waiting_mS": 100,
+                        "Unit": "%",
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 1025,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 3,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 1031,
+                        "ResultRegType": "ushort",
+                        "Results": [{
+                                "RegValue": 0,
+                                "ResultMessage": "Calibration succeed."
+                            },
+                            {
+                                "RegValue": 256,
+                                "ResultMessage": "Calibration failed, signal is too high."
+                            },
+                            {
+                                "RegValue": 1024,
+                                "ResultMessage": "Calibration failed, signal is too low."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }],
+    "Span4_20mA": [{
+        "Name": "ClO2 4-20mA",
+        "Unit": "%",
+        "RegAddress": 1014,
+        "RegType": "float",
+        "Decimal": 2,
+        "4mA": {
+            "Name": "4mA_title",
+            "Message": "4mA_message",
+            "Editable": false,
+            "Placeholder": 0
+        },
+        "20mA": {
+            "Name": "20mA_title",
+            "Message": "20mA_message",
+            "Editable": true,
+            "Placeholder": 16,
+            "Cmds": [{
+                    "RegAddress": 1016,
+                    "RegType": "ushort",
+                    "SetValue": 5,
+                    "SetValueMax": 5,
+                    "SetValueMin": 1,
+                    "Waiting_mS": 1000,
+                    "ResultRegAddress": 0,
+                    "ResultRegType": "",
+                    "Results": []
+                },
+                {
+                    "RegAddress": 1044,
+                    "SetValue": 2,
+                    "RegType": "ushort",
+                    "Waiting_mS": 1000,
+                    "Editable": false
+                }
+            ]
+        }
+    }],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "S365Dark",
+            "RegAddress": 1043,
+            "RegType": "ushort",
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "mAOut",
+            "RegAddress": 1014,
+            "RegType": "float",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "CT365",
+            "RegAddress": 1027,
+            "RegType": "ushort",
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "CS365",
+            "RegAddress": 1028,
+            "RegType": "ushort",
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "CT420",
+            "RegAddress": 1029,
+            "RegType": "ushort",
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "CS420",
+            "RegAddress": 1030,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "t365DI",
+            "RegAddress": 1017,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "s365DI",
+            "RegAddress": 1018,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "t420DI",
+            "RegAddress": 1019,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "s420DI",
+            "RegAddress": 1020,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "t365",
+            "RegAddress": 1021,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "s365",
+            "RegAddress": 1022,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "t420",
+            "RegAddress": 1023,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "s420",
+            "RegAddress": 1024,
+            "RegType": "ushort",
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "Slope",
+            "RegAddress": 1002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        }
+    ],
+    "CleanlinessCheck": {}
+}

@@ -1,0 +1,538 @@
+{
+    "PN": 28903,
+    "ModelType": "LevelSensor",
+    "ModelName": "LG-100",
+    "ModelImage": "LG-100",
+    "ModelDescription": "LoRa Gateway",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "FirmwareUpgrade": {
+        "Enable": true,
+        "value": null,
+        "endValue": null
+    },
+    "MetricUnit": {
+        "RegAddress": 43007,
+        "RegType": "ushort",
+        "RegLen": 1,
+        "Results": [{
+                "RegValue": 17,
+                "LengthUnit": "m",
+                "LengthUnitConversion": "value",
+                "LengthUnitDecimal": 3,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": 18,
+                "LengthUnit": "cm",
+                "LengthUnitConversion": "value*100",
+                "LengthUnitDecimal": 1,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": null,
+                "LengthUnit": "inch",
+                "LengthUnitConversion": "value*39.3700787",
+                "LengthUnitDecimal": 2,
+                "VolumeUnit": "gal",
+                "VolumeUnitConversion": "value*0.2641721*1000",
+                "VolumeUnitDecimal": 3
+            }
+        ]
+    },
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "BLEMac",
+            "RegAddress": 48001,
+            "RegType": "char",
+            "RegLen": 8
+        },
+        {
+            "Name": "AO Name",
+            "VersionJudgment": " softVersion >= 1023",
+            "Display": false,
+            "RegAddress": 45001,
+            "RegType": "char",
+            "RegLen": 8
+        },
+        {
+            "Name": "AO SN",
+            "VersionJudgment": " softVersion >= 1023",
+            "Display": false,
+            "RegAddress": 45009,
+            "RegType": "char",
+            "RegLen": 8
+        }
+    ],
+    "Transmission": true,
+    "Config": [{
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 41007,
+                "RegType": "ushort",
+                "RegLen": 8
+            }, {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 1
+            }]
+        },
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValueMax": 247,
+                "SetValueMin": 1
+            }, {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 1
+            }]
+        },
+        {
+            "Name": "Modbus Parity",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change parity settings",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42003,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "ValidSettings": {
+                    "NONE": 0,
+                    "ODD": 1,
+                    "EVEN": 2
+                }
+            }, {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 1
+            }]
+        },
+        {
+            "Name": "Modbus Baudrate",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change baudrate settings",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42004,
+                "RegType": "uint",
+                "RegLen": 2,
+                "ValidSettings": {
+                    "9600": 9600,
+                    "19200": 19200,
+                    "38400": 38400
+                }
+            }, {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 1
+            }]
+        }
+    ],
+    "Readings": [{
+        "VersionJudgment": " softVersion < 1023",
+        "Name": "Output ID",
+        "Unit": "",
+        "RegAddress": 48048,
+        "RegType": "ushort",
+        "Decimal": null,
+        "RegLen": 1,
+        "Calibrations": []
+    }, {
+        "VersionJudgment": " softVersion >= 1023",
+        "Name": "Register Device Number",
+        "OnlyListDisplay": true,
+        "Unit": "",
+        "RegAddress": 61001,
+        "RegType": "ushort",
+        "Decimal": null,
+        "RegLen": 1,
+        "Calibrations": []
+    }, {
+        "Name": "4-20mA Output",
+        "Unit": "mA",
+        "RegAddress": 47002,
+        "RegType": "float",
+        "Decimal": 2,
+        "RegLen": 2,
+        "Calibrations": []
+    }],
+    "LORA": {
+        "Config": [{
+                "Name": "Master ID",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "Cmds": [{
+                    "RegAddress": 48013,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 5,
+                    "SetValueMin": 1,
+                    "Editable": true
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            },
+            {
+                "Name": "Output ID",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "VersionJudgment": " softVersion < 1023",
+                "Cmds": [{
+                    "RegAddress": 48048,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 255,
+                    "SetValueMin": 6,
+                    "Editable": true
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            },
+            {
+                "Name": "Country",
+                "VersionJudgment": " softVersion >= 1023",
+                "SettingsType": "StoreToDevice",
+                "Tip": "Select a country or region",
+                "Editable": true,
+                "Cmds": [{
+                    "RegAddress": 48053,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "US902_928": 0,
+                        "EU863_870": 1,
+                        "AU915_928": 3,
+                        "NZ921_928": 4,
+                        "KR920_923": 5
+                    }
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            },
+            {
+                "Name": "Channel",
+                "VersionJudgment": " softVersion >= 1023",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "Cmds": [{
+                    "RegAddress": 48045,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "0(903.0M Hz)": 0,
+                        "1(904.6M Hz)": 1,
+                        "2(906.2M Hz)": 2,
+                        "3(907.8M Hz)": 3,
+                        "4(909.4M Hz)": 4,
+                        "5(911.0M Hz)": 5,
+                        "6(912.6M Hz)": 6,
+                        "7(914.2M Hz)": 7
+                    }
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            },
+            {
+                "Name": "Spreading Factor",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "Cmds": [{
+                    "RegAddress": 48031,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12
+                    }
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            }, {
+                "Name": "BandWidth",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "EditableVersionJudgment": [{
+                    "VersionJudgment": "softVersion>=1031",
+                    "value": false
+                }],
+                "Advanced": true,
+                "Cmds": [{
+                    "RegAddress": 48030,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "250KHz": 1,
+                        "500KHz": 2
+                    }
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            },
+            {
+                "Name": "Coding Rate",
+                "SettingsType": "StoreToDevice",
+                "Tip": "config_message",
+                "Editable": true,
+                "Hide": true,
+                "Advanced": true,
+                "Cmds": [{
+                    "RegAddress": 48032,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "4/5": 1,
+                        "4/6": 2,
+                        "4/7": 3,
+                        "4/8": 4
+                    }
+                }, {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }, {
+                    "RegAddress": 48036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }]
+            }
+        ],
+        "DiagnosisVersionJudgment": [{
+            "VersionJudgment": "softVersion<1023",
+            "value": []
+        }],
+        "Diagnosis": [{
+                "DisplayName": "[1]",
+                "Name": "Enroll RecNum",
+
+                "RegAddress": 46051,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[2]",
+                "Name": "Loading RecvNum",
+                "RegAddress": 46053,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[3]",
+                "Name": "Upload RecvNum",
+                "RegAddress": 46055,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[4]",
+                "Name": "Modbus RecNum",
+                "RegAddress": 46057,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[5]",
+                "Name": "Upload Timeslot",
+                "RegAddress": 48012,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Decimal": 0
+            }, {
+                "DisplayName": "[6]",
+                "Name": "Commit SenNum",
+                "RegAddress": 46059,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[7]",
+                "Name": "Commit RecvNum",
+                "RegAddress": 46061,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[8]",
+                "Name": "Rotation SenNum",
+                "RegAddress": 46063,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[9]",
+                "Name": "Rotation RecNum",
+                "RegAddress": 46065,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[10]",
+                "Name": "Broadcast RecNum",
+                "RegAddress": 46067,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            },
+            {
+                "DisplayName": "[11]",
+                "Name": "LoRaDioCount",
+                "RegAddress": 46048,
+                "RegType": "uint",
+                "RegLen": 2,
+                "Decimal": 3
+            }, {
+                "DisplayName": "[12]",
+                "Name": "LoRaErrCode",
+                "RegAddress": 46050,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Decimal": 3
+            }
+        ]
+    }
+}

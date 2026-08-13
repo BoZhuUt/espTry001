@@ -1,0 +1,782 @@
+{
+  "schema_version": 1,
+  "profile_id": "53607.default",
+  "product_num": 53607,
+  "variant": "default",
+  "model_name": "ST-765SS-FCL",
+  "source_file": "53607.json",
+  "requires_version_read": true,
+  "release_status": "draft",
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "reading_name": "Cl-F",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 1
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_2",
+      "reading_name": "Cl-F",
+      "name": "slope_title",
+      "message": "st765_slope_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "slope_title",
+          "type": "float32",
+          "default": 2.0,
+          "minimum": 0.1,
+          "maximum": 5.0,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 2
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_1",
+      "reading_name": "pH",
+      "name": "pH 7 Calibration",
+      "message": "Place the probe into pH 7 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+      "unit": "",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44045,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 0
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 3
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibfration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_2",
+      "reading_name": "pH",
+      "name": "pH 6.86 Calibration",
+      "message": "Place the probe into pH 6.86 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+      "unit": "",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44045,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 1
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 3
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibfration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_3",
+      "reading_name": "pH",
+      "name": "Acid Calibration",
+      "message": "Place the probe into Acid buffer, wait for readings to be stabilized, click Confirm to proceed.",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Acid Calibration",
+          "type": "float32",
+          "default": 4.0,
+          "minimum": 1.0,
+          "maximum": 6.0,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 4
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibfration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_4",
+      "reading_name": "pH",
+      "name": "Base Calibration",
+      "message": "Place the probe into Base buffer, wait for readings to be stabilized, click Confirm to proceed.",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Base Calibration",
+          "type": "float32",
+          "default": 10.0,
+          "minimum": 8.0,
+          "maximum": 14.0,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibfration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_5",
+      "reading_name": "pH",
+      "name": "Process Calibration",
+      "message": "Please input actual pH readings of the process water, click Confirm to proceed.",
+      "unit": "",
+      "when": {
+        "all": [
+          {
+            "field": "software_version",
+            "operator": "gte",
+            "value": 391
+          }
+        ]
+      },
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Process Calibration",
+          "type": "float32",
+          "default": 13,
+          "minimum": 1,
+          "maximum": 13,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 10
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_3.calibration_1",
+      "reading_name": "ORP",
+      "name": "ORP Calibration",
+      "message": "slope_message",
+      "unit": "mV",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "ORP Calibration",
+          "type": "float32",
+          "default": 229,
+          "minimum": -1500,
+          "maximum": 1500,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "mV",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44001,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 7
+                }
+              },
+              "wait_after_ms": 2000,
+              "result": {
+                "address": 44002,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "pending",
+                    "message": "Calibration in process."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Invalid calibration solution value."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Invalid slope and intercept value."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Invalid data type of calibration solution value."
+                  },
+                  {
+                    "value": 255,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1745 @@
+{
+    "PN": 57682,
+    "ModelType": "InlineSensor",
+    "ModelName": "RT-110L",
+    "ModelImage": "RT-110L",
+    "ModelDescription": "Inline Refractometer",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "DisplayConfig",
+            "RegAddress": 43030,
+            "RegType": "ushort",
+            "RegLen": 2
+        },
+        {
+            "Name": "CustomName",
+            "RegAddress": 43032,
+            "RegType": "string",
+            "RegLen": 6
+        },
+        {
+            "Name": "Current 4-20mA Output",
+            "Hide": true,
+            "RegAddress": 44503,
+            "RegType": "ushort",
+            "RegLen": 1
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 7
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 2,
+                    "SetValue": 11
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Parity",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change parity settings",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42003,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "NONE": 0,
+                        "ODD": 1,
+                        "EVEN": 2
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 7
+                }
+            ]
+        },
+        {
+            "Name": "Cleaning Period",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Unit": "s",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 44038,
+                    "Editable": true,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 1800,
+                    "SetValueMin": 300,
+                    "SetValue": 300
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 11
+                }
+            ]
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "Temperature ",
+            "Unit": "°C",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        },
+        {
+            "Name": "nD",
+            "Unit": "",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5,
+            "Calibrations": []
+        },
+        {
+            "Name": "Alv",
+            "Unit": "%",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input Alv Bias,Range is -100 to 100.(ALV Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44006,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "MPG",
+            "Unit": "%",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input MPG Bias,Range is -100 to 100.(MPG Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44004,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "MEG",
+            "Unit": "%",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input MEG Bias,Range is -100 to 100.(MEG Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44002,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "BRIX",
+            "Unit": "%",
+            "RegAddress": 46013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input BRIX Bias,Range is -100 to 100.(BRIX Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44008,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Alv Plus",
+            "Unit": "%",
+            "RegAddress": 46035,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input ALVPlus Bias,Range is -100 to 100.(ALVPlus Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44020,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "GEO",
+            "Unit": "%",
+            "RegAddress": 46038,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input GEO Bias,Range is -100 to 100.(GEO Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44044,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Custom",
+            "Unit": "%",
+            "RegAddress": 46058,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Bias Calibration",
+                    "Message": "Please input Custom Bias,Range is -100 to 100.(Custom Bias = Target value - RT100 value)",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44046,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 100,
+                            "SetValueMin": -100,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 11,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41002,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "timeout."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Bias calibration succeed."
+                                },
+                                {
+                                    "RegValue": 65533,
+                                    "ResultMessage": "connect error"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "Span4_20mA": [
+        {
+            "Name": "Temperature 4-20mA",
+            "Unit": "°C",
+            "RegAddress": 46054,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": -20,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 43045,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": -20,
+                        "SetValueMax": 150,
+                        "SetValueMin": -20,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 80,
+                "Cmds": [
+                    {
+                        "RegAddress": 43047,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 80,
+                        "SetValueMax": 150,
+                        "SetValueMin": -20,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "nD 4-20mA",
+            "Unit": "",
+            "RegAddress": 46040,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 1.30
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 1.51,
+                "Cmds": [
+                    {
+                        "RegAddress": 43043,
+                        "RegLen": 2,
+                        "RegType": "float",
+                        "SetValue": 1,
+                        "SetValueMax": 1.51,
+                        "SetValueMin": 1.41,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "Alv 4-20mA",
+            "Unit": "",
+            "RegAddress": 46046,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52013,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52015,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "BRIX 4-20mA",
+            "Unit": "",
+            "RegAddress": 46048,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52001,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52003,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "MEG 4-20mA",
+            "Unit": "",
+            "RegAddress": 46042,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52005,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52007,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "MPG 4-20mA",
+            "Unit": "",
+            "RegAddress": 46044,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52009,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52011,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "Alv Plus 4-20mA",
+            "Unit": "",
+            "RegAddress": 46050,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52017,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52019,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "GEO 4-20mA",
+            "Unit": "",
+            "RegAddress": 46044,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52021,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52023,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "Custom 4-20mA",
+            "Unit": "",
+            "RegAddress": 46044,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Placeholder": 0,
+                "Editable": true,
+                "Cmds": [
+                    {
+                        "RegAddress": 52025,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": ">=0",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 0,
+                "Cmds": [
+                    {
+                        "RegAddress": 52027,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "Editable": true,
+                        "SetValue": 50,
+                        "SetValueMax": 100,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43001,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 11
+                    }
+                ]
+            }
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "MEG Bias",
+            "Name": "MEG Bias",
+            "RegAddress": 44002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "MPG Bias",
+            "Name": "MPG Bias",
+            "RegAddress": 44004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Alv Bias",
+            "Name": "Alv Bias",
+            "RegAddress": 44006,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Brix Bias",
+            "Name": "Brix Bias",
+            "RegAddress": 44008,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Alv Plus Bias",
+            "Name": "Alv Plus Bias",
+            "RegAddress": 44020,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "GEO Bias",
+            "Name": "GEO Bias",
+            "RegAddress": 44044,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Custom Bias",
+            "Name": "Custom Bias",
+            "RegAddress": 44046,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Custom X1",
+            "Name": "Custom X1",
+            "RegAddress": 44048,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Custom X2",
+            "Name": "Custom X2",
+            "RegAddress": 44050,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "Data Num",
+            "Name": "Data Num",
+            "RegAddress": 46031,
+            "RegType": "uint",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "1stYmax",
+            "Name": "1stYmax",
+            "RegAddress": 46015,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "SpecTemp",
+            "Name": "SpecTemp",
+            "RegAddress": 46027,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "2ndYmax",
+            "Name": "2ndYmax",
+            "RegAddress": 46019,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "1stBestEdg",
+            "Name": "1stBestEdg",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5
+        },
+        {
+            "DisplayName": "1stEdg",
+            "Name": "1stEdg",
+            "RegAddress": 46021,
+            "RegType": "uint",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "2ndBestEdg",
+            "Name": "2ndBestEdg",
+            "RegAddress": 46025,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "2ndEdg",
+            "Name": "2ndEdg",
+            "RegAddress": 46022,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "Dysmoothmax",
+            "Name": "Dysmoothmax",
+            "RegAddress": 46017,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "PeakNum",
+            "Name": "PeakNum",
+            "RegAddress": 46029,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "Alv Max",
+            "Name": "Alv Max",
+            "RegAddress": 52015,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Alv Min",
+            "Name": "Alv Min",
+            "RegAddress": 52013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Alv Plus Max",
+            "Name": "Alv Plus Max",
+            "RegAddress": 52019,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "ALV Plus Min",
+            "Name": "ALV Plus Min",
+            "RegAddress": 52017,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Brix Max",
+            "Name": "Brix Max",
+            "RegAddress": 52003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Brix Min",
+            "Name": "Brix Min",
+            "RegAddress": 52001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "MEG Max",
+            "Name": "MEG Max",
+            "RegAddress": 52007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "MEG Min",
+            "Name": "MEG Min",
+            "RegAddress": 52005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "MPG Max",
+            "Name": "MPG Max",
+            "RegAddress": 52011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "MPG Min",
+            "Name": "MPG Min",
+            "RegAddress": 52009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "GEO Max",
+            "Name": "GEO Max",
+            "RegAddress": 52023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "GEO Min",
+            "Name": "GEO Min",
+            "RegAddress": 52021,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Custom Min",
+            "Name": "Custom Min",
+            "RegAddress": 52025,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Custom Max",
+            "Name": "Custom Max",
+            "RegAddress": 52027,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "nD Max",
+            "Name": "nD Max",
+            "RegAddress": 43043,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "Edge",
+            "Name": "Edge",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 4,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41002,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 1,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 2,
+                        "ResultMessage": "Parameter restore failed."
+                    }
+                ]
+            }
+        ]
+    },
+    "AirCalibration": {
+        "Name": "Air Calibration",
+        "Message": "if there are deposits on the measurement window that are difficult to remove, the measurement area can be soaked in pyxis probe cleaning solution for 10-15 minutes, then rinsed with clean water and wiped dry with a soft cloth to remove any residual liquid. finally, the measurement window can be shaded for air calibration.",
+        "Cmds": [
+            {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 13,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 1,
+                        "ResultMessage": "air calibration succeed."
+                    },
+                    {
+                        "RegValue": 2,
+                        "ResultMessage": "air calibration failed."
+                    }
+                ]
+            }
+        ]
+    },
+    "SetCustomFluid": {
+        "Name": "Set CustomFluid",
+        "Message": "",
+        "Cmds": [
+            {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 13,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 1,
+                        "ResultMessage": "air calibration succeed."
+                    },
+                    {
+                        "RegValue": 2,
+                        "ResultMessage": "air calibration failed."
+                    }
+                ]
+            }
+        ]
+    },
+    "Datalog": {
+        "Func": 16,
+        "CmdGetLogInfo": {
+            "PktLen": 10,
+            "SubFunc": 46030,
+            "SubFuncLen": 2,
+            "SubFuncType": "uchar",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdGetLogData": {
+            "PktLen": 14,
+            "SubFunc": 25,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "LogIndexStartLen": 4,
+            "LogIndexStartType": "uint",
+            "LogDataLen": 4,
+            "LogDataType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdClearLog": {
+            "PktLen": 8,
+            "SubFunc": 43001,
+            "SubFuncLen": 2,
+            "SubFuncType": "ushort",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "LogData": [
+            {
+                "Version": 0,
+                "PktLen": 48,
+                "DataLogMessage": [
+                    {
+                        "Name": "FrameHeader",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Edge",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Temp",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "nD",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "PG",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "EG",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Brix",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ALV",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ALVPlUS",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "GEO",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Custom",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "FrameTail",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            }
+        ]
+    },
+    "SpectrumLog": {
+        "Name": "DataLog Export",
+        "Waiting_mS": 500,
+        "Cmds": [
+            {
+                "RegAddress": 47001,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 47101,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 47201,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 47301,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 47401,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 47501,
+                "RegType": "ushort",
+                "RegLen": 12
+            },
+            {
+                "RegAddress": 48001,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 48101,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 48201,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 48301,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 48401,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 48501,
+                "RegType": "ushort",
+                "RegLen": 12
+            },
+            {
+                "RegAddress": 49001,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 49101,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 49201,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 49301,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 49401,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 49501,
+                "RegType": "ushort",
+                "RegLen": 12
+            },
+            {
+                "RegAddress": 50001,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 50101,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 50201,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 50301,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 50401,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 50501,
+                "RegType": "ushort",
+                "RegLen": 12
+            },
+            {
+                "RegAddress": 51001,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 51101,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 51201,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 51301,
+                "RegType": "ushort",
+                "RegLen": 100
+            },
+            {
+                "RegAddress": 51401,
+                "RegType": "ushort",
+                "RegLen": 52
+            }
+        ]
+    }
+}

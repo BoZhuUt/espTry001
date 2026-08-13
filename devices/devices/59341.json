@@ -1,0 +1,1159 @@
+﻿{
+    "PN": 59341,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-765SS-OCL",
+    "ModelImage": "ST-765SS",
+    "ModbusAddr": 99,
+    "ModelDescription": "Inline OCL Probe",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/03/ST-765SS-Series-pH-Oxidizer-Sensor-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8,
+                    "SetValue": 0,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5,
+                    "Editable": false
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=412",
+            "Name": "Open Fixed Output Current",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42023,
+                    "Editable": true,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValueMax": 20,
+                    "SetValueMin": 4,
+                    "SetValue": 4
+                },
+                {
+                    "RegAddress": 42026,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 150
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=412",
+            "Name": "Close Fixed Current Output",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42026,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 151
+                }
+            ]
+        },
+        {
+            "Name": "ClOffset_nA",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Hide": true,
+            "Cmds": [
+                {
+                    "RegAddress": 44011,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValueMax": null,
+                    "SetValueMin": null
+                },
+                {
+                    "RegAddress": 43036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5,
+                    "Editable": false
+                }
+            ]
+        },
+        {
+            "Name": "ClSlope",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Hide": true,
+            "Cmds": [
+                {
+                    "RegAddress": 44013,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValueMax": null,
+                    "SetValueMin": null
+                },
+                {
+                    "RegAddress": 43036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5,
+                    "Editable": false
+                }
+            ]
+        },
+        {
+            "Name": "T80_for_weight",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Hide": true,
+            "Cmds": [
+                {
+                    "RegAddress": 45049,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": null,
+                    "SetValueMin": null
+                },
+                {
+                    "RegAddress": 43036,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5,
+                    "Editable": false
+                }
+            ]
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "Cl2",
+            "Unit": "ppm",
+            "RegAddress": 46025,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "zero_title",
+                    "Message": "zero_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 13,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "slope_title",
+                    "Message": "st765_slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 45037,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 2.0,
+                            "SetValueMax": 5.0,
+                            "SetValueMin": 0.1,
+                            "Unit": "ppm",
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 14,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "O3",
+            "Unit": "ppm",
+            "RegAddress": 46031,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "zero_title",
+                    "Message": "zero_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 15,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "slope_title",
+                    "Message": "st765_slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 45043,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 2.0,
+                            "SetValueMax": 2.0,
+                            "SetValueMin": 0.1,
+                            "Unit": "ppm",
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 16,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "pH",
+            "Unit": "",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "pH 7 Calibration",
+                    "Message": "Place the probe into pH 7 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44027,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 0,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 3,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "pH 6.86 Calibration",
+                    "Message": "Place the probe into pH 6.86 buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44027,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 1,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 3,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 2000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Acid Calibration",
+                    "Message": "Place the probe into Acid buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44019,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 4.0,
+                            "SetValueMax": 6.0,
+                            "SetValueMin": 1.0,
+                            "Unit": "",
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 4,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 2000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Base Calibration",
+                    "Message": "Place the probe into Base buffer, wait for readings to be stabilized, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44019,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 10.0,
+                            "SetValueMax": 14.0,
+                            "SetValueMin": 8.0,
+                            "Unit": "",
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 5,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 2000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration Idle"
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "ORP",
+            "Unit": "mV",
+            "RegAddress": 46019,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "ORP Calibration",
+                    "Message": "slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44029,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 229,
+                            "SetValueMax": 1500,
+                            "SetValueMin": -1500,
+                            "Unit": "mV",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44001,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 7,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 2000,
+                            "ResultRegAddress": 44002,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration in process."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Invalid calibration solution value."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Invalid slope and intercept value."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Invalid data type of calibration solution value."
+                                },
+                                {
+                                    "RegValue": 255,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        },
+        {
+            "Name": "Status",
+            "Unit": "",
+            "RegAddress": 41001,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0,
+            "Values": {
+                "Initialization": 1,
+                "Measuring": 0,
+                "Cleaning": 2,
+                "Idle": 3
+            },
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [
+        {
+            "Name": "Cl2 4-20mA",
+            "Unit": "ppm",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 0,
+                "Cmds": []
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 5,
+                "Cmds": [
+                    {
+                        "RegAddress": 43026,
+                        "RegLen": 2,
+                        "RegType": "float",
+                        "SetValue": 5,
+                        "SetValueMax": 5,
+                        "Editable": false,
+                        "SetValueMin": 0.1,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "O3 4-20mA",
+            "Unit": "ppm",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 0,
+                "Cmds": []
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 5,
+                "Cmds": [
+                    {
+                        "RegAddress": 43028,
+                        "RegLen": 2,
+                        "RegType": "float",
+                        "SetValue": 2,
+                        "SetValueMax": 2,
+                        "Editable": false,
+                        "SetValueMin": 0.1,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "pH 4-20mA",
+            "Unit": "",
+            "RegAddress": 46027,
+            "RegType": "float",
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Editable": true,
+                "Placeholder": 4,
+                "Cmds": [
+                    {
+                        "RegAddress": 44028,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 4,
+                        "SetValueMax": 14,
+                        "SetValueMin": 0,
+                        "Editable": false,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 14,
+                "Cmds": [
+                    {
+                        "RegAddress": 44030,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 14,
+                        "SetValueMax": 14,
+                        "SetValueMin": 0,
+                        "Editable": false,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            }
+        },
+        {
+            "Name": "ORP 4-20mA",
+            "Unit": "",
+            "RegAddress": 45047,
+            "RegType": "float",
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Editable": true,
+                "Placeholder": 4,
+                "Cmds": [
+                    {
+                        "RegAddress": 45040,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": -1500,
+                        "SetValueMax": 1500,
+                        "SetValueMin": -1500,
+                        "Editable": true,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 14,
+                "Cmds": [
+                    {
+                        "RegAddress": 45042,
+                        "RegType": "float",
+                        "RegLen": 2,
+                        "SetValue": 1500,
+                        "SetValueMax": 1500,
+                        "SetValueMin": -1500,
+                        "Editable": true,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43036,
+                        "RegType": "ushort",
+                        "SetValue": 5,
+                        "Waiting_mS": 1000,
+                        "Editable": false,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            }
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[1]",
+            "Name": "CL2",
+            "RegAddress": 46025,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "O3",
+            "RegAddress": 46031,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "[Cl2_mA]",
+            "Name": "Cl2_mA",
+            "RegAddress": 46033,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[O3_mA]",
+            "Name": "O3_mA",
+            "RegAddress": 46035,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "Work nA_CL2",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "Work nA_O3",
+            "RegAddress": 46029,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "Offset nA_CL2",
+            "RegAddress": 45019,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "Offset nA_O3",
+            "RegAddress": 45033,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "pH",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "vol_pH",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "Temp",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "Temp_Res",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 43036,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 7,
+                "ResultRegAddress": 44002,
+                "ResultRegType": "ushort",
+                "Results": [
+                    {
+                        "RegValue": 0,
+                        "ResultMessage": "Recovering Idle"
+                    },
+                    {
+                        "RegValue": 1,
+                        "ResultMessage": "Recovery in progress."
+                    },
+                    {
+                        "RegValue": 2,
+                        "ResultMessage": "Recovery failed."
+                    },
+                    {
+                        "RegValue": 254,
+                        "ResultMessage": "Recovery succeed."
+                    }
+                ]
+            }
+        ]
+    }
+}

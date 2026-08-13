@@ -5,7 +5,7 @@
 #include "board/board_config.h"
 
 Rs485Service::Rs485Service(HardwareSerial &serial)
-    : serial_(serial), discovery_(serial), poller_(serial) {}
+    : serial_(serial), discovery_(serial), poller_(serial), calibration_(serial) {}
 
 bool Rs485Service::begin(uint32_t timeoutMs) {
   if (taskHandle_ != nullptr) return true;
@@ -80,6 +80,29 @@ bool Rs485Service::startFixedPolling(uint8_t slaveAddress,
   command.type = CommandType::StartFixedPolling;
   command.profile = profile;
   command.slaveAddress = slaveAddress;
+  return sendCommand(command);
+}
+
+bool Rs485Service::startCalibration(uint8_t slaveAddress,
+                                    const CalibrationProfile *profile,
+                                    uint8_t procedureIndex,
+                                    const float *inputValues,
+                                    uint8_t inputCount) {
+  if (slaveAddress == 0 || slaveAddress > 247 || profile == nullptr ||
+      procedureIndex >= profile->procedureCount ||
+      inputCount > CalibrationExecutor::kMaxProcedureInputs ||
+      (inputCount > 0 && inputValues == nullptr)) {
+    return false;
+  }
+  Command command;
+  command.type = CommandType::StartCalibration;
+  command.calibrationProfile = profile;
+  command.slaveAddress = slaveAddress;
+  command.procedureIndex = procedureIndex;
+  command.inputCount = inputCount;
+  if (inputCount > 0) {
+    memcpy(command.inputValues, inputValues, inputCount * sizeof(float));
+  }
   return sendCommand(command);
 }
 
@@ -212,6 +235,9 @@ void Rs485Service::taskLoop() {
       case Mode::FixedPolling:
         updatePolling();
         break;
+      case Mode::Calibration:
+        updateCalibration();
+        break;
       case Mode::Idle:
       case Mode::Fault:
         break;
@@ -225,6 +251,7 @@ void Rs485Service::handleCommand(const Command &command) {
     case CommandType::EnterPass:
       discovery_.cancel();
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
       pollingSlaveAddress_ = 0;
@@ -240,6 +267,7 @@ void Rs485Service::handleCommand(const Command &command) {
     case CommandType::EnterUpgradePass:
       discovery_.cancel();
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
       pollingSlaveAddress_ = 0;
@@ -258,6 +286,7 @@ void Rs485Service::handleCommand(const Command &command) {
     case CommandType::StartDiscovery:
       discovery_.cancel();
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
       pollingSlaveAddress_ = 0;
@@ -280,6 +309,7 @@ void Rs485Service::handleCommand(const Command &command) {
       // Preserve the successful discovery result/state while ownership moves
       // to the poller; the UI uses it as the sensor-details availability flag.
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       activeProfile_ = command.profile;
       pollingSlaveAddress_ = discovery_.result().slaveAddress;
@@ -295,6 +325,7 @@ void Rs485Service::handleCommand(const Command &command) {
     case CommandType::StartFixedPolling:
       discovery_.cancel();
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       resetPassBuffers();
       resetRawBuffers();
@@ -312,9 +343,34 @@ void Rs485Service::handleCommand(const Command &command) {
       }
       break;
 
+    case CommandType::StartCalibration: {
+      discovery_.cancel();
+      poller_.cancel();
+      calibration_.cancel();
+      drainSerial();
+      resetPassBuffers();
+      resetRawBuffers();
+      activeProfile_ = nullptr;
+      pollingSlaveAddress_ = command.slaveAddress;
+      memset(values_, 0, sizeof(values_));
+      memset(valid_, 0, sizeof(valid_));
+      lastModbusError_ = 0xFF;
+      const CalibrationProfile *profile = command.calibrationProfile;
+      if (configureUart(UartFormat::Modbus8E1) &&
+          calibration_.begin(command.slaveAddress, *profile,
+                             command.procedureIndex, command.inputValues,
+                             command.inputCount)) {
+        mode_ = Mode::Calibration;
+      } else {
+        mode_ = Mode::Fault;
+      }
+      break;
+    }
+
     case CommandType::Stop: {
       discovery_.cancel();
       poller_.cancel();
+      calibration_.cancel();
       drainSerial();
       activeProfile_ = nullptr;
       pollingSlaveAddress_ = 0;
@@ -504,6 +560,25 @@ void Rs485Service::updatePolling() {
   }
 }
 
+void Rs485Service::updateCalibration() {
+  calibration_.update();
+  CalibrationExecutor::Event calibrationEvent;
+  if (!calibration_.takeEvent(calibrationEvent)) return;
+
+  Event event;
+  event.type = calibrationEvent.type == CalibrationExecutor::EventType::Finished
+                   ? EventType::CalibrationFinished
+                   : EventType::CalibrationProgress;
+  event.sourceMode = Mode::Calibration;
+  event.calibrationState = calibrationEvent.state;
+  event.calibrationCommandIndex = calibrationEvent.commandIndex;
+  event.calibrationCommandCount = calibrationEvent.commandCount;
+  event.calibrationResultValue = calibrationEvent.resultValue;
+  snprintf(event.calibrationMessage, sizeof(event.calibrationMessage), "%s",
+           calibrationEvent.message);
+  emitEvent(event);
+}
+
 void Rs485Service::drainSerial() {
   while (serial_.available()) serial_.read();
 }
@@ -547,6 +622,11 @@ void Rs485Service::publishStatus(bool force) {
   next.eventQueueDepth =
       static_cast<uint8_t>(uxQueueMessagesWaiting(eventQueue_));
   next.taskStackHighWater = uxTaskGetStackHighWaterMark(nullptr);
+  next.calibrationState = calibration_.state();
+  next.calibrationCommandIndex = calibration_.commandIndex();
+  next.calibrationCommandCount = calibration_.commandCount();
+  snprintf(next.calibrationMessage, sizeof(next.calibrationMessage), "%s",
+           calibration_.message());
 
   portENTER_CRITICAL(&statusMux_);
   next.commandQueuePeak = status_.commandQueuePeak;

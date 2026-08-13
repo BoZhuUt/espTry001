@@ -7,6 +7,7 @@
 #include "board/rtc_driver.h"
 #include "board/touch_driver.h"
 #include "sensor_discovery.h"
+#include "calibration_profile_store.h"
 #include "sensor_profile.h"
 #include "sensor_profile_store.h"
 #include "sensor_profile_update.h"
@@ -76,6 +77,9 @@ void enterTimeSyncMode();
 void drawTimeSyncPage();
 TimeSyncView buildTimeSyncView();
 void updateTimeSyncStateSnapshot();
+void drawCalibrationPage();
+void handleCalibrationTouch(int x, int y);
+bool startSelectedCalibration();
 void processRs485Events();
 void refreshRs485Status();
 void sendLocalModbusResponse(const uint8_t *request, size_t length);
@@ -102,6 +106,7 @@ static_assert(kAppMaxSensorFields == kMaxSensorFields,
 
 Rs485Service rs485Service(Serial1);
 SensorProfileStore profileStore;
+CalibrationProfileStore calibrationProfileStore;
 SensorProfileUpdater profileUpdater;
 SdStorage sdStorage;
 DataLogger dataLogger(sdStorage);
@@ -235,7 +240,19 @@ void loop()
     inputContext.sensorDetailsAvailable =
         appState.isMaster() &&
         rs485Status.discoveryState == SensorDiscovery::State::Success;
-    UiAction action = resolveTouchAction(appState.page, tx, ty, inputContext);
+    inputContext.calibrationAvailable = false;
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+    inputContext.calibrationAvailable =
+        calibrationProfileStore.profile() != nullptr;
+#endif
+
+    UiAction action = UiAction::None;
+    if (appState.page == UiPage::Calibration) {
+      handleCalibrationTouch(tx, ty);
+      delay(180);
+    } else {
+      action = resolveTouchAction(appState.page, tx, ty, inputContext);
+    }
 
     switch (action) {
       case UiAction::CancelConfigAndRestart:
@@ -287,6 +304,13 @@ void loop()
       case UiAction::EnterTimeSync:
         enterTimeSyncMode();
         delay(400);
+        break;
+
+      case UiAction::OpenCalibration:
+        appState.calibration = CalibrationState{};
+        appState.page = UiPage::Calibration;
+        drawCalibrationPage();
+        delay(300);
         break;
 
       case UiAction::BackToSystemInfo:
@@ -464,6 +488,21 @@ void processRs485Events() {
         if (profileLookupComplete) break;
 
         latestScanAvailable = false;
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+        if (calibrationProfileStore.loadForProduct(event.identity.productNum)) {
+          const CalibrationProfile *calibration =
+              calibrationProfileStore.profile();
+          DEBUG_LOG_PRINTF("[CAL] Loaded %s with %u procedure(s)\n",
+                           calibration->profileId,
+                           calibration->procedureCount);
+        } else {
+          DEBUG_LOG_PRINTF("[CAL] PN %lu unavailable: %s\n",
+                           static_cast<unsigned long>(event.identity.productNum),
+                           calibrationProfileStore.lastError());
+        }
+#else
+        calibrationProfileStore.clear();
+#endif
         activeProfile = profileStore.find(event.identity.productNum);
         profileLookupComplete = true;
         if (activeProfile != nullptr) {
@@ -523,6 +562,37 @@ void processRs485Events() {
         if (appState.isPrecheck() &&
             event.sourceMode == Rs485Service::Mode::FixedPolling) {
           appState.precheck.lastModbusError = event.error;
+        }
+        break;
+      case Rs485Service::EventType::CalibrationProgress:
+        if (appState.isCalibration()) {
+          appState.calibration.executorState = event.calibrationState;
+          appState.calibration.commandIndex = event.calibrationCommandIndex;
+          appState.calibration.commandCount = event.calibrationCommandCount;
+          if (event.calibrationMessage[0] != '\0') {
+            snprintf(appState.calibration.statusText,
+                     sizeof(appState.calibration.statusText), "%s",
+                     event.calibrationMessage);
+          } else {
+            snprintf(appState.calibration.statusText,
+                     sizeof(appState.calibration.statusText),
+                     "Executing command %u/%u",
+                     event.calibrationCommandIndex + 1,
+                     event.calibrationCommandCount);
+          }
+          if (appState.page == UiPage::Calibration) drawCalibrationPage();
+        }
+        break;
+      case Rs485Service::EventType::CalibrationFinished:
+        if (appState.isCalibration()) {
+          appState.calibration.executorState = event.calibrationState;
+          appState.calibration.commandIndex = event.calibrationCommandIndex;
+          appState.calibration.commandCount = event.calibrationCommandCount;
+          snprintf(appState.calibration.statusText,
+                   sizeof(appState.calibration.statusText), "%s",
+                   event.calibrationMessage);
+          appState.calibration.phase = CalibrationUiPhase::Finished;
+          if (appState.page == UiPage::Calibration) drawCalibrationPage();
         }
         break;
       case Rs485Service::EventType::Stopped:
@@ -1114,6 +1184,11 @@ SensorInfoView buildSensorInfoView() {
   view.productNum = snapshot.productNum;
   view.deviceName = snapshot.deviceName;
   view.supported = snapshot.supported;
+#if defined(PYXIS_BOARD_WAVESHARE_28)
+  view.calibrationAvailable = calibrationProfileStore.profile() != nullptr;
+#else
+  view.calibrationAvailable = false;
+#endif
   if (!snapshot.supported) return view;
 
   view.pageCount =
@@ -1166,5 +1241,183 @@ void updateSensorStateSnapshot() {
     target.valid =
         latestScanAvailable && latestScanEvent.valid[index];
     target.decimals = source.decimals;
+  }
+}
+
+void drawCalibrationPage() {
+  CalibrationView view;
+  view.phase = appState.calibration.phase;
+  view.profile = calibrationProfileStore.profile();
+  view.selectedProcedure = appState.calibration.selectedProcedure;
+  view.currentInput = appState.calibration.currentInput;
+  view.numericText = appState.calibration.numericText;
+  view.statusText = appState.calibration.statusText;
+  view.commandIndex = appState.calibration.commandIndex;
+  view.commandCount = appState.calibration.commandCount;
+  ui.drawCalibrationPage(view);
+}
+
+bool startSelectedCalibration() {
+  const CalibrationProfile *profile = calibrationProfileStore.profile();
+  if (profile == nullptr ||
+      appState.calibration.selectedProcedure >= profile->procedureCount) {
+    return false;
+  }
+  const CalibrationProcedure &procedure =
+      profile->procedures[appState.calibration.selectedProcedure];
+  uint8_t slaveAddress = rs485Status.identity.slaveAddress;
+  if (!appController.beginCalibration(
+          slaveAddress, profile, appState.calibration.selectedProcedure,
+          appState.calibration.inputValues, procedure.inputCount)) {
+    snprintf(appState.calibration.statusText,
+             sizeof(appState.calibration.statusText),
+             "Unable to start calibration");
+    appState.calibration.phase = CalibrationUiPhase::Finished;
+    return false;
+  }
+  appState.calibration.phase = CalibrationUiPhase::Running;
+  appState.calibration.commandIndex = 0;
+  appState.calibration.commandCount = procedure.commandCount;
+  snprintf(appState.calibration.statusText,
+           sizeof(appState.calibration.statusText), "Starting calibration...");
+  return true;
+}
+
+void handleCalibrationTouch(int x, int y) {
+  CalibrationState &state = appState.calibration;
+  const CalibrationProfile *profile = calibrationProfileStore.profile();
+  if (profile == nullptr) {
+    appState.page = UiPage::SensorInfo;
+    drawSensorInfoPage();
+    return;
+  }
+
+  if (state.phase == CalibrationUiPhase::ProcedureList) {
+    if (y < 40) {
+      appState.page = UiPage::SensorInfo;
+      drawSensorInfoPage();
+      return;
+    }
+    if (y >= 82 && y < 274) {
+      uint8_t selected = static_cast<uint8_t>((y - 82) / 48);
+      if (selected >= profile->procedureCount || selected >= 4) return;
+      state.selectedProcedure = selected;
+      state.currentInput = 0;
+      const CalibrationProcedure &procedure = profile->procedures[selected];
+      for (uint8_t index = 0; index < procedure.inputCount; ++index) {
+        state.inputValues[index] =
+            profile->inputs[procedure.firstInput + index].defaultValue;
+      }
+      if (procedure.inputCount == 0) {
+        state.phase = CalibrationUiPhase::Confirm;
+        snprintf(state.statusText, sizeof(state.statusText),
+                 "Review instructions before START");
+      } else {
+        state.phase = CalibrationUiPhase::NumericInput;
+        const CalibrationInput &input = profile->inputs[procedure.firstInput];
+        snprintf(state.numericText, sizeof(state.numericText), "%.*f",
+                 input.decimals, input.defaultValue);
+        state.numericDefaultShown = true;
+      }
+      drawCalibrationPage();
+    }
+    return;
+  }
+
+  if (state.phase == CalibrationUiPhase::NumericInput) {
+    const CalibrationProcedure &procedure =
+        profile->procedures[state.selectedProcedure];
+    const CalibrationInput &input =
+        profile->inputs[procedure.firstInput + state.currentInput];
+    if (y >= 120 && y < 272) {
+      const int displayWidth = BoardConfig::kDisplayWidth;
+      uint8_t column = min(static_cast<uint8_t>(x * 3 / displayWidth),
+                           static_cast<uint8_t>(2));
+      uint8_t row = min(static_cast<uint8_t>((y - 120) / 38),
+                        static_cast<uint8_t>(3));
+      static const char keys[12] = {'1', '2', '3', '4', '5', '6',
+                                    '7', '8', '9', '-', '0', '.'};
+      char key = keys[row * 3 + column];
+      if (state.numericDefaultShown) {
+        state.numericText[0] = '\0';
+        state.numericDefaultShown = false;
+      }
+      size_t length = strlen(state.numericText);
+      bool allowed = length + 1 < sizeof(state.numericText);
+      if (key == '-' && length != 0) allowed = false;
+      if (key == '.' && strchr(state.numericText, '.') != nullptr) allowed = false;
+      if (allowed) {
+        state.numericText[length] = key;
+        state.numericText[length + 1] = '\0';
+        state.statusText[0] = '\0';
+        drawCalibrationPage();
+      }
+      return;
+    }
+    if (y >= 276) {
+      if (x < BoardConfig::kDisplayWidth / 3) {
+        state = CalibrationState{};
+        drawCalibrationPage();
+      } else if (x < (BoardConfig::kDisplayWidth * 2) / 3) {
+        size_t length = strlen(state.numericText);
+        if (length > 0) state.numericText[length - 1] = '\0';
+        state.numericDefaultShown = false;
+        state.statusText[0] = '\0';
+        drawCalibrationPage();
+      } else {
+        char *end = nullptr;
+        float value = strtof(state.numericText, &end);
+        bool parsed = end != state.numericText && end != nullptr && *end == '\0' &&
+                      isfinite(value);
+        if (parsed && input.type == CalibrationValueType::UInt16 &&
+            fabsf(value - roundf(value)) >= 0.0001f) {
+          parsed = false;
+        }
+        bool below = input.minimumInclusive ? value < input.minimum
+                                            : value <= input.minimum;
+        bool above = input.maximumInclusive ? value > input.maximum
+                                            : value >= input.maximum;
+        if (!parsed || below || above) {
+          snprintf(state.statusText, sizeof(state.statusText),
+                   "Value must be %s%g to %s%g %s",
+                   input.minimumInclusive ? "" : ">", input.minimum,
+                   input.maximumInclusive ? "" : "<", input.maximum,
+                   input.unit);
+          drawCalibrationPage();
+          return;
+        }
+        state.inputValues[state.currentInput] = value;
+        state.currentInput++;
+        if (state.currentInput < procedure.inputCount) {
+          const CalibrationInput &next =
+              profile->inputs[procedure.firstInput + state.currentInput];
+          snprintf(state.numericText, sizeof(state.numericText), "%.*f",
+                   next.decimals, next.defaultValue);
+          state.numericDefaultShown = true;
+        } else {
+          state.phase = CalibrationUiPhase::Confirm;
+          snprintf(state.statusText, sizeof(state.statusText),
+                   "Review value and instructions");
+        }
+        drawCalibrationPage();
+      }
+    }
+    return;
+  }
+
+  if (state.phase == CalibrationUiPhase::Confirm && y >= 235) {
+    if (x < BoardConfig::kDisplayWidth / 2) {
+      state = CalibrationState{};
+    } else {
+      startSelectedCalibration();
+    }
+    drawCalibrationPage();
+    return;
+  }
+
+  if (state.phase == CalibrationUiPhase::Finished && y >= 235) {
+    appController.exitCalibrationAndRediscover();
+    ui.clearScreen();
+    ui.drawDashboardStatic(currentUiOperatingMode());
   }
 }

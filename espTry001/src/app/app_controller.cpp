@@ -145,6 +145,39 @@ void AppController::exitTimeSync() {
   returnToPassThrough(UiPage::SystemInfo);
 }
 
+bool AppController::beginCalibration(uint8_t slaveAddress,
+                                     const CalibrationProfile *profile,
+                                     uint8_t procedureIndex,
+                                     const float *inputValues,
+                                     uint8_t inputCount) {
+  if (profile == nullptr || !storageService_.stopLoggingAndWait() ||
+      !rs485Service_.stopAndWait()) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
+  usbService_.clearRtuFrame();
+  activeProfile_ = nullptr;
+  state_.mode = AppMode::Calibration;
+  if (!rs485Service_.startCalibration(slaveAddress, profile, procedureIndex,
+                                      inputValues, inputCount)) {
+    state_.mode = AppMode::Fault;
+    return false;
+  }
+  return true;
+}
+
+void AppController::exitCalibrationAndRediscover() {
+  if (!rs485Service_.stopAndWait()) {
+    state_.mode = AppMode::Fault;
+    return;
+  }
+  drainSerialInputs();
+  resetMasterSession();
+  state_.mode = AppMode::MasterDiscovery;
+  state_.page = UiPage::Dashboard;
+  if (!rs485Service_.startDiscovery()) state_.mode = AppMode::Fault;
+}
+
 void AppController::returnToPassThrough(UiPage page) {
   if (!rs485Service_.enterPassThrough()) {
     state_.mode = AppMode::Fault;

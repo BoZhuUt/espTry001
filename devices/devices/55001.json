@@ -1,0 +1,540 @@
+{
+    "PN": 55001,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-800",
+    "ModelImage": "ST-800",
+    "ModelDescription": "Inline Nitrate Sensor",
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 7,
+                    "ResultRegAddress": 41003,
+                    "ResultRegType": "ushort",
+                    "Results": [
+                        {
+                            "RegValue": 0,
+                            "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                        },
+                        {
+                            "RegValue": 1,
+                            "ResultMessage": "Set succeed."
+                        },
+                        {
+                            "RegValue": 2,
+                            "ResultMessage": "Set failed."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 7,
+                    "ResultRegAddress": 41003,
+                    "ResultRegType": "ushort",
+                    "Results": [
+                        {
+                            "RegValue": 0,
+                            "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                        },
+                        {
+                            "RegValue": 1,
+                            "ResultMessage": "Set succeed."
+                        },
+                        {
+                            "RegValue": 2,
+                            "ResultMessage": "Set failed."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Parity",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change parity settings",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42003,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "NONE": 0,
+                        "ODD": 1,
+                        "EVEN": 2
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 7,
+                    "ResultRegAddress": 41003,
+                    "ResultRegType": "ushort",
+                    "Results": [
+                        {
+                            "RegValue": 0,
+                            "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                        },
+                        {
+                            "RegValue": 1,
+                            "ResultMessage": "Set succeed."
+                        },
+                        {
+                            "RegValue": 2,
+                            "ResultMessage": "Set failed."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Measurement Mode",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43027,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "Period measurement": 0,
+                        "Air pump mode": 1
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 7,
+                    "Waiting_mS": 1000,
+                    "ResultRegAddress": 41003,
+                    "ResultRegType": "ushort",
+                    "Results": [
+                        {
+                            "RegValue": 0,
+                            "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                        },
+                        {
+                            "RegValue": 1,
+                            "ResultMessage": "Set succeed."
+                        },
+                        {
+                            "RegValue": 2,
+                            "ResultMessage": "Set failed."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Measurement Period",
+            "SettingsType": "StoreToDevice",
+            "Unit": "s",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43024,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "SetValueMax": 3600,
+                    "SetValueMin": ">=600"
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 7,
+                    "ResultRegAddress": 41003,
+                    "ResultRegType": "ushort",
+                    "Results": [
+                        {
+                            "RegValue": 0,
+                            "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                        },
+                        {
+                            "RegValue": 1,
+                            "ResultMessage": "Set succeed."
+                        },
+                        {
+                            "RegValue": 2,
+                            "ResultMessage": "Set failed."
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "NO3-N",
+            "Unit": "ppm",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": [
+                {
+                    "Name": "Water Calibration",
+                    "Message": "Please make sure that the measurement window of the device has been cleaned thoroughly and is placed in pure water.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 4,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Sampling Measurement",
+                    "Message": "This option will immediately perform a measurement. Please make sure that the device is already in the liquid to be measured; Otherwise, it may cause damage to the device's cleaning module.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 35,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Process Calibration",
+                    "Message": "Before process calibration, a sampling measurement must be conducted first to obtain the current measured value of the solution to be tested by the equipment.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44012,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 10,
+                            "SetValueMax": 20,
+                            "SetValueMin": -20,
+                            "Waiting_mS": 1000
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 7,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "slope_title",
+                    "Message": "slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44010,
+                            "RegType": "float",
+                            "Editable": false,
+                            "SetValue": 1,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000
+                        },
+                        {
+                            "RegAddress": 44012,
+                            "RegType": "float",
+                            "Editable": false,
+                            "SetValue": 1,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000
+                        },
+                        {
+                            "RegAddress": 43001,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 7,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 0,
+                                    "ResultMessage": "The process is currently in progress. It will take 90 seconds. Please be patient and wait."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[K]",
+            "Name": "K",
+            "RegAddress": 44010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[B]",
+            "Name": "B",
+            "RegAddress": 44012,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Bubble_alarm]",
+            "Name": "Bubble_alarm",
+            "RegAddress": 46031,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[Turbidity_alarm]",
+            "Name": "Turbidity_alarm",
+            "RegAddress": 43008,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[RAW_N]",
+            "Name": "RAW_N",
+            "RegAddress": 46044,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[RAW_C]",
+            "Name": "RAW_C",
+            "RegAddress": 46038,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Mid]",
+            "Name": "Mid",
+            "RegAddress": 43021,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[MvAvg]",
+            "Name": "MvAvg",
+            "RegAddress": 43023,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[LightFactor]",
+            "Name": "LightFactor",
+            "RegAddress": 46027,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[MeasureLen]",
+            "Name": "MeasureLen",
+            "RegAddress": 46032,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[ValidLen]",
+            "Name": "ValidLen",
+            "RegAddress": 46033,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 43001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 16,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 0,
+                        "ResultMessage": "Parameter restore in progress."
+                    },
+                    {
+                        "RegValue": 1,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 2,
+                        "ResultMessage": "Parameter restore failed."
+                    }
+                ]
+            }
+        ]
+    }
+}

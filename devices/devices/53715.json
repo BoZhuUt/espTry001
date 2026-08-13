@@ -1,0 +1,453 @@
+{
+    "PN": 53715,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-774",
+    "ModelImage": "ST-772",
+    "ModelDescription": "Inline Ultra-Low Dissolved Oxygen Probe",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://pyxis-lab.com/wp-content/uploads/2022/02/ST-774-Dissolved-Oyxgen-Sensor-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://pyxis-lab.com/wp-content/uploads/2022/02/ST-774-User-Manual-V1.07.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "string",
+                    "RegLen": 8
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5
+                }
+            ]
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "DO",
+            "Unit": "ppb",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5,
+            "Conversion": "value*1000",
+            "Calibrations": [
+                {
+                    "Name": "zero_title",
+                    "Message": "Place the probe into sample cell, turn on nitrogen gas flow, allow the gas flow and temperature to be stabilized for 15 minutes, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 8,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Zero calibration succeed."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Zero calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "VersionJudgment": "softVersion>=50133",
+                    "Name": "Process Calibration",
+                    "Message": "Put the probe into calibration solution and wait for the reading to stabilize, enter solution value in the input box and click Confirm to calibrate.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44044,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 30,
+                            "SetValueMax": 40,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 500,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 14,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 10000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "Process calibration succeed."
+                                },
+                                {
+                                    "RegValue": null,
+                                    "ResultMessage": "Process calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Partial Pressure High Calibration",
+                    "Message": "Place the probe into the sample cell, turn on a calibration gas(with known oxygen concentration) flow, allow the gasflow and the temperature to be stabilized for 15 minutes, click Confirm to proceed.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44044,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 0.5,
+                            "SetValueMax": 1,
+                            "SetValueMin": 0.1,
+                            "Unit": "%",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 12,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "High point calibration succeed."
+                                },
+                                {
+                                    "RegValue": 8,
+                                    "ResultMessage": "High point calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "VersionJudgment": "softVersion>=50133",
+                    "Name": "Concentration High Calibration",
+                    "Message": "Put the probe into calibration solution and wait for the reading to stabilize, enter solution value in the input box and click Confirm to calibrate.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44044,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 50,
+                            "SetValueMax": 400,
+                            "SetValueMin": 20,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 13,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 30000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "High point calibration succeed."
+                                },
+                                {
+                                    "RegValue": 8,
+                                    "ResultMessage": "High point calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [
+        {
+            "Name": "DO 4-20mA",
+            "Unit": "ppb",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Conversion": "value*1000",
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 0
+            },
+            "20mA": {
+                "Message": "20mA_Message",
+                "Name": "20mA_title",
+                "Editable": true,
+                "Placeholder": 2000,
+                "Cmds": [
+                    {
+                        "Conversion": "value/1000",
+                        "RegAddress": 43007,
+                        "RegLen": 2,
+                        "Decimal": 5,
+                        "RegType": "float",
+                        "SetValue": 2000,
+                        "SetValueMax": 2000,
+                        "SetValueMin": 1,
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 5
+                    }
+                ]
+            }
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[DO]",
+            "Name": "DO",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "DO 4-20mA",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "RedT",
+            "RegAddress": 46015,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "BlueT",
+            "RegAddress": 46017,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Temperature]",
+            "Name": "Temperature",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "Pressure",
+            "RegAddress": 46013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "KT0",
+            "RegAddress": 44016,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "KT1",
+            "RegAddress": 44018,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "TaoPDT0",
+            "RegAddress": 44020,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "TaoPDT1",
+            "RegAddress": 44022,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "Tao0T0",
+            "RegAddress": 44024,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "Tao0T1",
+            "RegAddress": 44026,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "ppb offset",
+            "RegAddress": 48029,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 43006,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 9,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 5,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 6,
+                        "ResultMessage": "Parameter restore failed."
+                    }
+                ]
+            }
+        ]
+    }
+}

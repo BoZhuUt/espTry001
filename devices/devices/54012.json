@@ -1,0 +1,293 @@
+{
+    "PN": 54012,
+    "ModelType": "LevelSensor",
+    "ModelName": "LSP-101",
+    "ModelImage": "LSP-101",
+    "ModelDescription": "Pressure Level Sensor",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/04/LSP-Series-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/03/LSP-Series-User-Manual-V3.02.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "MetricUnit": {
+        "RegAddress": 43022,
+        "RegType": "ushort",
+        "RegLen": 1,
+        "Results": [
+            {
+                "RegValue": 17,
+                "LengthUnit": "m",
+                "LengthUnitConversion": "value",
+                "LengthUnitDecimal": 3,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value",
+                "VolumeUnitDecimal": 3,
+                "DensityUnit": "kg/m3",
+                "DensityUnitConversion": "value/1000",
+                "DensityUnitDecimal": 0
+            },
+            {
+                "RegValue": 18,
+                "LengthUnit": "cm",
+                "LengthUnitConversion": "value*100",
+                "LengthUnitDecimal": 1,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value",
+                "VolumeUnitDecimal": 3,
+                "DensityUnit": "kg/L",
+                "DensityUnitConversion": "value",
+                "DensityUnitDecimal": 3
+            },
+            {
+                "RegValue": null,
+                "LengthUnit": "inch",
+                "LengthUnitConversion": "value*39.3700787",
+                "LengthUnitDecimal": 2,
+                "VolumeUnit": "gal",
+                "VolumeUnitConversion": "value*0.2641721",
+                "VolumeUnitDecimal": 3,
+                "DensityUnit": "lb/gal",
+                "DensityUnitConversion": "value / 0.1198264268103 / 1000",
+                "DensityUnitDecimal": 3
+            }
+        ]
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Parity",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change parity settings",
+            "Editable": false,
+            "Cmds": [
+                {
+                    "RegAddress": 42004,
+                    "RegType": "unit",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "NONE": 0,
+                        "ODD": 1,
+                        "EVEN": 2
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Baudrate",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change baudrate settings",
+            "Editable": false,
+            "Cmds": [
+                {
+                    "RegAddress": 42005,
+                    "RegType": "uint",
+                    "RegLen": 2,
+                    "ValidSettings": {
+                        "9600": 9600,
+                        "19200": 19200,
+                        "38400": 38400,
+                        "57600": 57600,
+                        "115200": 115200
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "Unit",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change device display unit",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43022,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "inch/gallon": 16,
+                        "meter/liter": 17,
+                        "centimeter/liter": 18
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "MeasurePeriod",
+            "SettingsType": "StoreToDevice",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43033,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "Continuous": 0,
+                        "10 seconds": 10,
+                        "30 seconds": 30,
+                        "3 minutes": 180,
+                        "30 minutes": 1800,
+                        "1 hour": 3600,
+                        "2 hour": 7200,
+                        "4 hour": 14400,
+                        "6 hour": 21600,
+                        "Stopped": 65535,
+                        "Customize": "editable"
+                    }
+                }
+            ]
+        }
+    ],
+    "TankReadings": [
+        {
+            "Name": "Level",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Remaining Volume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "UsedVolume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        }
+    ],
+    "TankConfiguration": [
+        {
+            "Name": "SectionalArea",
+            "Unit": "m2",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43023,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "BucketMaxHeight",
+            "Unit": "mm",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43025,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Density",
+            "Unit": "kg/m3",
+            "SettingsType": "StoreToDevice",
+            "DynamicUnit": "DensityUnit",
+            "Cmds": [
+                {
+                    "RegAddress": 43029,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        }
+    ],
+    "Diagnosis": [],
+    "Datalog": {}
+}

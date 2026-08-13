@@ -17,6 +17,14 @@ if errorlevel 1 (
   exit /b 1
 )
 
+call "%~dp0Build_Calibration_Profile_Manager.bat"
+if errorlevel 1 (
+  echo ERROR: CalibrationProfileManager.exe build failed.
+  echo Close the program if it is currently running, then try again.
+  if /I not "%~1"=="--no-pause" pause
+  exit /b 1
+)
+
 call "%~dp0Build_SensorDataExporter.bat"
 if errorlevel 1 (
   echo ERROR: SensorDataExporter.exe build failed.
@@ -28,6 +36,7 @@ if errorlevel 1 (
 set "PROFILE_JSON=%~dp0..\config\sensor_profiles.json"
 set "UPDATER_EXE=%~dp0SensorProfileUpdater.exe"
 set "MANAGER_EXE=%~dp0SensorProfileManager.exe"
+set "CALIBRATION_MANAGER_EXE=%~dp0CalibrationProfileManager.exe"
 set "EXPORTER_EXE=%~dp0SensorDataExporter.exe"
 set "RELEASE_DIR=%~dp0release"
 set "PROJECT_DIR=%~dp0.."
@@ -54,7 +63,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
   "$packageTime = Get-Date -Format 'yyyyMMdd_HHmmss';" ^
   "New-Item -ItemType Directory -Path $env:RELEASE_DIR -Force | Out-Null;" ^
   "$zip = Join-Path $env:RELEASE_DIR ('Pyxis_SensorLink_Tools_' + $gitVersion + '_' + $packageTime + '.zip');" ^
-  "$files = @($env:PROFILE_JSON, $env:UPDATER_EXE, $env:MANAGER_EXE, $env:EXPORTER_EXE);" ^
+  "$files = @($env:PROFILE_JSON, $env:UPDATER_EXE, $env:MANAGER_EXE, $env:CALIBRATION_MANAGER_EXE, $env:EXPORTER_EXE);" ^
   "Compress-Archive -LiteralPath $files -DestinationPath $zip -CompressionLevel Optimal -Force;" ^
   "$hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash;" ^
   "Write-Host ''; Write-Host ('Git     : ' + $gitVersion);" ^

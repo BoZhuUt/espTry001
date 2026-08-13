@@ -9,6 +9,8 @@ PlatformIO 会在编译前自动调用。也可以手动执行：
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -187,6 +189,15 @@ def generate_cpp(profiles: list[dict[str, Any]], source_name: str,
 
 def main(project_dir: Path) -> None:
     """生成文件；内容未变化时不修改时间戳，避免无意义重编译。"""
+    # Calibration data shares the LittleFS image with sensor_profiles.json.
+    # Build it on every firmware build so an approved profile can never drift
+    # from the filesystem input silently. The publisher refuses stale files.
+    calibration_builder = project_dir / "tools" / "build_calibration_bundle.py"
+    subprocess.run(
+        [sys.executable, str(calibration_builder)],
+        cwd=project_dir,
+        check=True,
+    )
     source = project_dir / "config" / "sensor_profiles.json"
     output = project_dir / "src" / "sensor_profiles_generated.inc"
     runtime_json = project_dir / "data" / "sensor_profiles.json"

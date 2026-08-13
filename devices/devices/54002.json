@@ -1,0 +1,758 @@
+{
+    "PN": 54002,
+    "ModelType": "LevelSensor",
+    "ModelName": "LS-202",
+    "ModelImage": "LS-202",
+    "ModelDescription": "Ultrasonic Level Sensor",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/04/LS-202-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/LS-202-User-Manual-V3.00.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "MetricUnit": {
+        "RegAddress": 43051,
+        "RegType": "ushort",
+        "RegLen": 1,
+        "Results": [
+            {
+                "RegValue": 17,
+                "LengthUnit": "m",
+                "LengthUnitConversion": "value",
+                "LengthUnitDecimal": 3,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": 18,
+                "LengthUnit": "cm",
+                "LengthUnitConversion": "value*100",
+                "LengthUnitDecimal": 1,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": null,
+                "LengthUnit": "inch",
+                "LengthUnitConversion": "value*39.3700787",
+                "LengthUnitDecimal": 2,
+                "VolumeUnit": "gal",
+                "VolumeUnitConversion": "value*0.2641721",
+                "VolumeUnitDecimal": 3
+            }
+        ]
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "EditableVersionJudgment": [
+                {
+                    "VersionJudgment": "softVersion>=10123",
+                    "value": true
+                }
+            ],
+            "Editable": false,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                }
+            ]
+        },
+        {
+            "Name": "MeasurePeriod",
+            "SettingsType": "StoreToDevice",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43013,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 65535,
+                    "SetValueMin": 0,
+                    "ValidSettings": {
+                        "Continuous": 0,
+                        "10 seconds": 10,
+                        "30 seconds": 30,
+                        "3 minutes": 180,
+                        "30 minutes": 1800,
+                        "1 hour": 3600,
+                        "2 hour": 7200,
+                        "4 hour": 14400,
+                        "6 hour": 21600,
+                        "Stopped": 65535
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "Screen off time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Unit": "min",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43048,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 65535,
+                    "SetValueMin": 0,
+                    "readConversion": "value/60",
+                    "setConversion": "value*60",
+                    "ValidSettings": {
+                        "Always on": 0,
+                        "2 min": 120,
+                        "5 min": 300,
+                        "10 min": 600,
+                        "30 min": 1800,
+                        "1 hour": 3600,
+                        "Customize": "editable"
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "Unit",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change device display unit",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43051,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "inch/gallon": 16,
+                        "meter/liter": 17,
+                        "centimeter/liter": 18
+                    }
+                },
+                {
+                    "RegAddress": 43035,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 5
+                }
+            ]
+        }
+    ],
+    "TankReadings": [
+        {
+            "Name": "Distance",
+            "Unit": "m",
+            "isMainReading": false,
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Level",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Remaining Volume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "UsedVolume",
+            "Unit": "L",
+            "isMainReading": false,
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        }
+    ],
+    "TankConfiguration": [
+        {
+            "Name": "SectionalArea",
+            "Unit": "m2",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43003,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "BucketMaxHeight",
+            "Unit": "mm",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43005,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "BucketMinHeight",
+            "Unit": "mm",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43007,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[Turst Distance]",
+            "Name": "Turst Distance",
+            "RegAddress": 43094,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Board Status]",
+            "Name": "Board Status",
+            "RegAddress": 49045,
+            "RegType": "uint",
+            "RegLen": 3,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[Board FirmVersion]",
+            "Name": "Board FirmVersion",
+            "RegAddress": 49043,
+            "RegType": "uint",
+            "RegLen": 3,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[0]",
+            "Name": "PowerTable[0]",
+            "RegAddress": 43061,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[1]",
+            "Name": "PowerTable[1]",
+            "RegAddress": 4062,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "PowerTable[2]",
+            "RegAddress": 43063,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "PowerTable[3]",
+            "RegAddress": 43064,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "PowerTable[4]",
+            "RegAddress": 43065,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "PowerTable[5]",
+            "RegAddress": 43066,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "PowerTable[6]",
+            "RegAddress": 43067,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "PowerTable[7]",
+            "RegAddress": 43068,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "PowerTable[8]",
+            "RegAddress": 43069,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "PowerTable[9]",
+            "RegAddress": 43070,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "PowerTable[10]",
+            "RegAddress": 43071,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "PowerTable[11]",
+            "RegAddress": 43072,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "PowerTable[12]",
+            "RegAddress": 43073,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "PowerTable[13]",
+            "RegAddress": 43074,
+            "RegType": "unit",
+            "RegLen": 2,
+            "Decimal": 1
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "PowerTable[14]",
+            "RegAddress": 43075,
+            "RegType": "unit",
+            "RegLen": 1,
+            "Decimal": 1
+        }
+    ],
+    "Datalog": {
+        "Func": 71,
+        "CmdGetLogInfo": {
+            "PktLen": 10,
+            "SubFunc": 24,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "ReservedLen": 4,
+            "ReservedType": "uchar",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdGetLogData": {
+            "PktLen": 14,
+            "SubFunc": 25,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "LogIndexStartLen": 4,
+            "LogIndexStartType": "uint",
+            "LogDataLen": 4,
+            "LogDataType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdClearLog": {
+            "PktLen": 6,
+            "SubFunc": 26,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "LogData": [
+            {
+                "Version": 0,
+                "PktLen": 32,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Log",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "ReadFlag",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "MinHeight",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "MaxHeight",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SectionArea",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Distance",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Reserved",
+                        "Type": "uchar",
+                        "Len": 3,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "Battery",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            }
+        ]
+    },
+    "StrappingTable": {
+        "Info": [
+            {
+                "Name": "StrappingEnable",
+                "RegAddress": 49095,
+                "RegType": "ushort",
+                "RegLen": 1
+            },
+            {
+                "Name": "StrappingNum",
+                "RegAddress": 49096,
+                "RegType": "ushort",
+                "RegLen": 1
+            }
+        ],
+        "VolumeList": [
+            {
+                "Name": "Level1",
+                "RegAddress": 44001,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume1",
+                "RegAddress": 44003,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level2",
+                "RegAddress": 44005,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume2",
+                "RegAddress": 44007,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level3",
+                "RegAddress": 44009,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume3",
+                "RegAddress": 44011,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level4",
+                "RegAddress": 44013,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume4",
+                "RegAddress": 44015,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level5",
+                "RegAddress": 44017,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume5",
+                "RegAddress": 44019,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level6",
+                "RegAddress": 44021,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume6",
+                "RegAddress": 44023,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level7",
+                "RegAddress": 44025,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume7",
+                "RegAddress": 44027,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level8",
+                "RegAddress": 44029,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume8",
+                "RegAddress": 44031,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level9",
+                "RegAddress": 44033,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume9",
+                "RegAddress": 44035,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level10",
+                "RegAddress": 44037,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume10",
+                "RegAddress": 44039,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level11",
+                "RegAddress": 44041,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume11",
+                "RegAddress": 44043,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level12",
+                "RegAddress": 44045,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume12",
+                "RegAddress": 44047,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level13",
+                "RegAddress": 44049,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume13",
+                "RegAddress": 44051,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level14",
+                "RegAddress": 44053,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume14",
+                "RegAddress": 44055,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level15",
+                "RegAddress": 44057,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume15",
+                "RegAddress": 44059,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Level16",
+                "RegAddress": 44061,
+                "RegType": "float",
+                "RegLen": 2
+            },
+            {
+                "Name": "Volume16",
+                "RegAddress": 44063,
+                "RegType": "float",
+                "RegLen": 2
+            }
+        ]
+    }
+}

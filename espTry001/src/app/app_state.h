@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "ui/ui_types.h"
+#include "calibration_executor.h"
 
 // Application operating mode. Only one value can be active, which prevents
 // contradictory combinations such as PASS and CONFIG owning USB together.
@@ -17,6 +18,7 @@ enum class AppMode : uint8_t {
   Precheck,
   // Append new modes to preserve the numeric values exposed by diagnostics.
   UpgradePass,
+  Calibration,
 };
 
 enum class AppDiscoveryPhase : uint8_t {
@@ -160,6 +162,27 @@ struct TimeSyncState {
   char errorText[64] = "";
 };
 
+enum class CalibrationUiPhase : uint8_t {
+  ProcedureList,
+  NumericInput,
+  Confirm,
+  Running,
+  Finished,
+};
+
+struct CalibrationState {
+  CalibrationUiPhase phase = CalibrationUiPhase::ProcedureList;
+  uint8_t selectedProcedure = 0;
+  uint8_t currentInput = 0;
+  float inputValues[CalibrationExecutor::kMaxProcedureInputs] = {0};
+  char numericText[20] = "";
+  bool numericDefaultShown = false;
+  char statusText[96] = "";
+  CalibrationExecutor::State executorState = CalibrationExecutor::State::Idle;
+  uint8_t commandIndex = 0;
+  uint8_t commandCount = 0;
+};
+
 struct AppState {
   AppMode mode = AppMode::PassThrough;
   UiPage page = UiPage::Dashboard;
@@ -170,6 +193,7 @@ struct AppState {
   ConfigUpdateState configUpdate;
   LogExportState logExport;
   TimeSyncState timeSync;
+  CalibrationState calibration;
 
   bool isMaster() const {
     return mode == AppMode::MasterDiscovery ||
@@ -199,4 +223,6 @@ struct AppState {
   bool isTimeSync() const {
     return mode == AppMode::TimeSync;
   }
+
+  bool isCalibration() const { return mode == AppMode::Calibration; }
 };

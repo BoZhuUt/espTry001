@@ -2,8 +2,6 @@
 
 UiAction resolveTouchAction(UiPage page, int x, int y,
                             const UiInputContext &context) {
-  (void)x;  // Both portrait layouts use full-width horizontal hit regions.
-
   if (context.configMode) {
     return (y > 0 && y < 45) ? UiAction::CancelConfigAndRestart
                              : UiAction::None;
@@ -36,8 +34,16 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
       break;
 
     case UiPage::SensorInfo:
-      if (y >= 280) return UiAction::NextSensorParameterPage;
+      if (y >= 280) {
+        if (context.calibrationAvailable && x >= 120) {
+          return UiAction::OpenCalibration;
+        }
+        return UiAction::NextSensorParameterPage;
+      }
       if (y > 0 && y < 40) return UiAction::BackToDashboard;
+      break;
+
+    case UiPage::Calibration:
       break;
   }
 

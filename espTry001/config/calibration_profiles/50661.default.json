@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "profile_id": "50661.default",
+  "product_num": 50661,
+  "variant": "default",
+  "model_name": "ST-500",
+  "source_file": "50661.json",
+  "requires_version_read": false,
+  "release_status": "approved",
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "reading_name": "PTSA",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 1025,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 4
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 1031,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 2048,
+                    "outcome": "failure",
+                    "message": "Calibration failed, probe fouled."
+                  },
+                  {
+                    "value": 4096,
+                    "outcome": "failure",
+                    "message": "Calibration failed, DI signal is too high."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_2",
+      "reading_name": "PTSA",
+      "name": "slope_title",
+      "message": "slope_message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "slope_title",
+          "type": "uint16",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 300,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 0,
+          "unit": "ppb",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 1026,
+                "type": "uint16",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 1025,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 3
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 1031,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 256,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal is too high."
+                  },
+                  {
+                    "value": 1024,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal is too low."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

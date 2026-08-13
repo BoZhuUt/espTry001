@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build waveshare28",
+			"type": "shell",
+			"command": "C:\\Users\\15189\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"-e",
+				"waveshare28"
+			],
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"label": "Build waveshare28",
+			"type": "shell",
+			"command": "C:\\Users\\15189\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"-e",
+				"waveshare28"
+			],
+			"problemMatcher": [
+				"$gcc"
+			]
+		}
+	]
+}

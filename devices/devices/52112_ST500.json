@@ -1,0 +1,349 @@
+{
+    "PN": 52112,
+    "ModelType": "InlineSensor",
+    "ModelName": "HM-610",
+    "ModelImage": "ST-500",
+    "ModelDescription": "Inline DOM Probe",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 1032,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 1035,
+            "RegType": "ushort",
+            "RegLen": 1
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                    "RegAddress": 1037,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 1044,
+                    "SetValue": 2,
+                    "RegLen": 1,
+                    "RegType": "ushort",
+                    "Waiting_mS": 1000,
+                    "Editable": false
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToLocal",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": []
+        }
+    ],
+    "slope": [{
+        "Name": "t1",
+        "Unit": "",
+        "RegAddress": 1002,
+        "RegType": "float",
+        "RegLen": 2,
+        "Decimal": 4
+    }],
+    "Readings": [{
+        "Name": "DOM",
+        "Unit": "ppm",
+        "RegAddress": 1006,
+        "RegType": "float",
+        "RegLen": 2,
+        "Decimal": 1,
+        "Calibrations": [{
+                "Name": "zero_title",
+                "Message": "zero_message",
+                "Cmds": [{
+                    "RegAddress": 1025,
+                    "RegType": "ushort",
+                    "Editable": false,
+                    "SetValue": 4,
+                    "SetValueMax": 0,
+                    "SetValueMin": 0,
+                    "Waiting_mS": 1000,
+                    "ResultRegAddress": 1031,
+                    "ResultRegType": "ushort",
+                    "Results": [{
+                        "RegValue": 0,
+                        "ResultMessage": "Calibration succeed."
+                    }]
+                }]
+            },
+            {
+                "Name": "slope_title",
+                "Message": "slope_message",
+                "Cmds": [{
+                        "RegAddress": 1010,
+                        "RegType": "float",
+                        "Editable": true,
+                        "SetValue": 100,
+                        "SetValueMax": 300,
+                        "SetValueMin": 1,
+                        "Unit": "ppm",
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 1025,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 3,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 1031,
+                        "ResultRegType": "ushort",
+                        "Results": [{
+                            "RegValue": 0,
+                            "ResultMessage": "calibration succeed."
+                        }]
+                    }
+                ]
+            }
+        ]
+    }],
+    "Span4_20mA": [{
+        "Name": "DOM 4-20mA",
+        "Unit": "",
+        "RegAddress": 1014,
+        "RegType": "float",
+        "RegLen": 2,
+        "Decimal": 2,
+        "4mA": {
+            "Name": "4mA_title",
+            "Editable": false,
+            "Placeholder": 0
+        },
+        "20mA": {
+            "Name": "20mA_Title",
+            "Message": "20mA_Message",
+            "Editable": true,
+            "Placeholder": 300,
+            "Cmds": [{
+                    "RegAddress": 1016,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 300,
+                    "SetValueMax": 300,
+                    "SetValueMin": 1,
+                    "Waiting_mS": 100,
+                    "ResultRegAddress": 0,
+                    "ResultRegType": "",
+                    "ResultRegLen": 0,
+                    "Results": []
+                },
+                {
+                    "RegAddress": 1044,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Waiting_mS": 100,
+                    "SetValue": 2,
+                    "Results": []
+                }
+            ]
+        }
+    }],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "S365Dark",
+            "RegAddress": 1043,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "DOM 4-20mA",
+            "RegAddress": 1014,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "CT365",
+            "RegAddress": 1027,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "CS365",
+            "RegAddress": 1028,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "CT420",
+            "RegAddress": 1029,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "CS420",
+            "RegAddress": 1030,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "t365DI",
+            "RegAddress": 1017,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "s365DI",
+            "RegAddress": 1018,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "t420DI",
+            "RegAddress": 1019,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "s420DI",
+            "RegAddress": 1020,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "t365",
+            "RegAddress": 1021,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "s365",
+            "RegAddress": 1022,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "t420",
+            "RegAddress": 1023,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "s420",
+            "RegAddress": 1024,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[15]",
+            "Name": "Slope",
+            "RegAddress": 1000,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[16]",
+            "Name": "t1",
+            "RegAddress": 1002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[17]",
+            "Name": "t2",
+            "RegAddress": 1004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        }
+    ],
+    "RestoreFactory": {},
+    "CleanlinessCheck": {
+        "Script": "Cleanliness = (DiagnosisData[`t365`]/DiagnosisData[`t365DI`] + 0.075*(DiagnosisData[`s420`]/DiagnosisData[`s420DI`]-1.0))*100",
+        "resultClean": {
+            "minCleanliness": 80,
+            "DiagMessage": "Probe is in good condition.",
+            "PleaseClean": false,
+            "IsClean": true,
+            "IsWarning": false
+        },
+        "resultBecomingFouled": {
+            "minCleanliness": 50,
+            "DiagMessage": "Probe becoming fouled, please clean the probe according to the instruction manual.",
+            "PleaseClean": false,
+            "IsClean": false,
+            "IsWarning": true
+        },
+        "resultFouled": {
+            "minCleanliness": 0,
+            "DiagMessage": "Probe may be fouled, please clean the probe according to the instruction manual.",
+            "PleaseClean": true,
+            "IsClean": false,
+            "IsWarning": false
+        }
+    }
+}

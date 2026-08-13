@@ -1,0 +1,623 @@
+{
+    "PN": 50801,
+    "ModelType": "HandheldMeter",
+    "ModelName": "SP-210",
+    "ModelImage": "SP-210",
+    "ModelDescription": "Handheld Bleach Analyzer",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://n8q4q8b8.rocketcdn.me/wp-content/uploads/2022/06/SP-210-Pocket-Bleach-Analyzer-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://n8q4q8b8.rocketcdn.me/wp-content/uploads/2023/10/SP-210-User-Manual-V1.00.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "Synchronize": true,
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "System Off Time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "System automatically turn off to save battery power",
+            "Editable": true,
+            "Unit": "s",
+            "Cmds": [
+                {
+                    "RegAddress": 49033,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 3600,
+                    "SetValueMin": 10
+                }
+            ]
+        },
+        {
+            "Name": "Screen Off Time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Screen automatically turn off to save battery power",
+            "Editable": true,
+            "Unit": "s",
+            "Cmds": [
+                {
+                    "RegAddress": 49034,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 3600,
+                    "SetValueMin": 10
+                }
+            ]
+        },
+        {
+            "Name": "DateTime",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Automaticaly sync date&time with App",
+            "Editable": false,
+            "Display": false,
+            "Cmds": [
+                {
+                    "RegAddress": 49007,
+                    "RegType": "ushort",
+                    "RegLen": 3
+                }
+            ]
+        },
+        {
+            "Name": "Language",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 49101,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "English": 0,
+                        "Chinese": 17
+                    }
+                }
+            ]
+        }
+    ],
+    "FirmwareUpgrade": {
+        "Enable": true,
+        "value": 49015,
+        "endValue": 165
+    },
+    "Datalog": {
+        "Func": 71,
+        "CmdGetLogName": {
+            "PktLen": 10,
+            "SubFunc": 17,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "ReservedLen": 4,
+            "ReservedType": "uchar",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdGetLogInfo": {
+            "PktLen": 10,
+            "SubFunc": 19,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "ReservedLen": 3,
+            "ReservedType": "uchar",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdGetLogData": {
+            "PktLen": 14,
+            "SubFunc": 23,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "LogIndexStartLen": 4,
+            "LogIndexStartType": "uint",
+            "LogDataLen": 4,
+            "LogDataType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdClearLog": {
+            "PktLen": 6,
+            "SubFunc": 21,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdDeleteLog": {
+            "PktLen": 6,
+            "SubFunc": 22,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "LogData": [
+            {
+                "Version": 86,
+                "PktLen": 64,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Type",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CustomId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "FacilityId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SystemId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "MethodID",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Value",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SName",
+                        "Type": "string",
+                        "Len": 12,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ZeroAD",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleAD",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "absb",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "DP1",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "DP2",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "Unit",
+                        "Type": "string",
+                        "Len": 8,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Humidity",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "BatteryVoltage",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            },
+            {
+                "Version": 34,
+                "PktLen": 64,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Type",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CustomId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "FacilityId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SystemId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ResetFlag",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "HardVer",
+                        "Type": "string",
+                        "Len": 16,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SoftVer",
+                        "Type": "string",
+                        "Len": 16,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "reserved",
+                        "Type": "string",
+                        "Len": 9,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "Humidity",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "BatteryVoltage",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            },
+            {
+                "Version": 50,
+                "PktLen": 64,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Type",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CustomId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "FacilityId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SystemId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "HardVer",
+                        "Type": "string",
+                        "Len": 16,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SoftVer",
+                        "Type": "string",
+                        "Len": 16,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "reserved",
+                        "Type": "string",
+                        "Len": 10,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "Humidity",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "BatteryVoltage",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            },
+            {
+                "Version": 163,
+                "PktLen": 64,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Type",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CustomId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "FacilityId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SystemId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleId",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "MethodID",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CalType",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ErrorCode",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Value",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SName",
+                        "Type": "string",
+                        "Len": 12,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "ZeroAD",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "SampleAD",
+                        "Type": "ushort",
+                        "Len": 2,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "absb",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "DP1",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "DP2",
+                        "Type": "float",
+                        "Decimal": 3,
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Unit",
+                        "Type": "string",
+                        "Len": 8,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "reserved",
+                        "Type": "string",
+                        "Len": 3,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -35,6 +35,13 @@ void UsbService::update(AppMode mode) {
     pumpRawPassThrough();
     return;
   }
+  if (mode == AppMode::Calibration) {
+    // Serial1 is exclusively owned by CalibrationExecutor. Discarding USB
+    // input here prevents queued gateway traffic from executing afterwards.
+    while (usb_.available()) usb_.read();
+    clearRtuFrame();
+    return;
+  }
   bool passThrough = mode == AppMode::PassThrough;
   collectUsbBytes();
 

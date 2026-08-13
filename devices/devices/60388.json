@@ -1,0 +1,638 @@
+{
+    "PN": 60388,
+    "ModelType": "LevelSensor",
+    "ModelName": "PRL-100",
+    "ModelImage": "PRL-100",
+    "ModelDescription": "Radar Level Sensor",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "FirmwareUpgrade": {
+        "Enable": true,
+        "value": null,
+        "endValue": null
+    },
+    "MetricUnit": {
+        "RegAddress": 43007,
+        "RegType": "ushort",
+        "RegLen": 1,
+        "Results": [
+            {
+                "RegValue": 17,
+                "LengthUnit": "m",
+                "LengthUnitConversion": "value",
+                "LengthUnitDecimal": 3,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3,
+                "ConsumptionUnit": "m/day",
+                "ConsumptionUnitConversion": "value",
+                "ConsumptionUnitDecimal": 3
+            },
+            {
+                "RegValue": 18,
+                "LengthUnit": "cm",
+                "LengthUnitConversion": "value*100",
+                "LengthUnitDecimal": 1,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3,
+                "ConsumptionUnit": "cm/day",
+                "ConsumptionUnitConversion": "value*100",
+                "ConsumptionUnitDecimal": 3
+            },
+            {
+                "RegValue": null,
+                "LengthUnit": "inch",
+                "LengthUnitConversion": "value*39.3700787",
+                "LengthUnitDecimal": 2,
+                "VolumeUnit": "gal",
+                "VolumeUnitConversion": "value*0.2641721*1000",
+                "VolumeUnitDecimal": 3,
+                "ConsumptionUnit": "inch/day",
+                "ConsumptionUnitConversion": "value*39.3700787",
+                "ConsumptionUnitDecimal": 3
+            }
+        ]
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "BleMac",
+            "RegAddress": 48001,
+            "RegType": "char",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "System Off Time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43017,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "Always on": 0,
+                        "1min": 60,
+                        "3min": 180,
+                        "5min": 300,
+                        "10min": 600,
+                        "15min": 900,
+                        "30min": 1800
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Screen Off Time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43018,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "Always on": 0,
+                        "1min": 60,
+                        "3min": 180,
+                        "5min": 300,
+                        "10min": 600,
+                        "15min": 900,
+                        "30min": 1800
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Screen Back Light",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43019,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "1": 0,
+                        "2": 1,
+                        "3": 2,
+                        "4": 3,
+                        "5": 4,
+                        "6": 5,
+                        "7": 6,
+                        "8": 7,
+                        "9": 8,
+                        "10": 9
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Measurement period",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43013,
+                    "RegType": "uint",
+                    "RegLen": 2,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "Continue": 0,
+                        "30s": 30,
+                        "1min": 60,
+                        "3min": 180,
+                        "5min": 300,
+                        "15min": 900,
+                        "30min": 1800,
+                        "1h": 3600,
+                        "2h": 7200,
+                        "4h": 14400,
+                        "8h": 28800,
+                        "12h": 43200,
+                        "24h": 86400
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Working Mode",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43032,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "Tank": 0,
+                        "Open Flow Level": 1
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Language",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43031,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "English": 0,
+                        "Chinese": 1,
+                        "Spanish": 2
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "DeadZone",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43038,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 15,
+                    "SetValueMin": ">=0",
+                    "Editable": true,
+                    "Waiting_mS": 1000
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "DistOffset",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change the sensor corrects the offset(Range:0 - 0.5m)",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43008,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 0.5,
+                    "SetValueMin": ">=0",
+                    "Editable": true,
+                    "Waiting_mS": 1000
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Rader Measure Period",
+            "Unit": "ms",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43033,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 2000,
+                    "SetValueMin": 100,
+                    "Editable": true,
+                    "Waiting_mS": 1000
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "ThresholdTol",
+            "Unit": "dB",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message_noScope",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43042,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Range",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change meter range settings. (Range:0-15m)",
+            "Editable": true,
+            "Hide": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43040,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 15.1,
+                    "SetValueMin": 0.1,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        }
+    ],
+    "TankConfiguration": [
+        {
+            "Name": "Customer",
+            "Editable": true,
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 44003,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Site",
+            "Editable": true,
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 44011,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Tank",
+            "Editable": true,
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 44019,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Chemical",
+            "Editable": true,
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 44027,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Installation Height",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "Cmds": [
+                {
+                    "RegAddress": 44035,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Volume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "Cmds": [
+                {
+                    "RegAddress": 44037,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 5,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Min Consumption",
+            "Unit": "m/day",
+            "DynamicUnit": "ConsumptionUnit",
+            "Cmds": [
+                {
+                    "RegAddress": 44039,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Max Consumption",
+            "Unit": "m/day",
+            "DynamicUnit": "ConsumptionUnit",
+            "Cmds": [
+                {
+                    "RegAddress": 44041,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                }
+            ]
+        }
+    ],
+    "TankReadings": [
+        {
+            "Name": "Distance",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Level",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Remaining Volume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46012,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5
+        },
+        {
+            "Name": "UsedVolume",
+            "Unit": "L",
+            "isMainReading": false,
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46014,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5
+        },
+        {
+            "Name": "MaxVolume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46016,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 5
+        }
+    ],
+    "Datalog": {
+        "PRL": "reserve a seat"
+    }
+}

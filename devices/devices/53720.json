@@ -1,0 +1,466 @@
+{
+    "PN": 53720,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-772P",
+    "ModelImage": "ST-772P",
+    "ModelDescription": "Inline Dissolved Oxygen Probe",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-772-Series-User-Manual-V1.09.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-772-Series-User-Manual-V1.09.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Unit_Conversion_Table": {
+        "Concentration": {
+            "Unit": "ppm",
+            "UnitConversion": "value",
+            "UnitDecimal": 3,
+            "UnitsetConversion": "value"
+        },
+        "Saturation": {
+            "Unit": "%",
+            "UnitConversion": "value*100/standards",
+            "UnitDecimal": 3,
+            "UnitsetConversion": "value*standards/100",
+            "FormulaVariables": {
+                "standards": {
+                    "Source": "DeviceValue",
+                    "Name": "Standards",
+                    "DefaultValue": 1
+                }
+            }
+        }
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Standards",
+            "Hide": true,
+            "RegAddress": 46041,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "string",
+                    "RegLen": 8
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 5
+                }
+            ]
+        },
+        {
+            "Name": "Display Form",
+            "SettingsType": "StoreToLocal",
+            "Tip": "Change device display form",
+            "Editable": true,
+            "ValidSettings": {
+                "Concentration": 0,
+                "Saturation": 1
+            }
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "DO",
+            "Unit": "ppm",
+            "DynamicUnit": "Unit",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [
+                {
+                    "Name": "Air Calibration",
+                    "Message": "Place the probe in the air with a stable temperature or in air-saturated water,enter humidity value(0-1.0 RH), wait for reading to stablize then click Confirm to calibrate",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44009,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 0.5,
+                            "SetValueMax": 1,
+                            "SetValueMin": 0,
+                            "Unit": "RH",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 7,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Air calibration succeed."
+                                },
+                                {
+                                    "RegValue": 2,
+                                    "ResultMessage": "Air calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "zero_title",
+                    "Message": "Place the probe in nitrogen gas or 5% sodium sulfite solution (anaerobic water), wait for reading to stablize then click Confirm to calibrate.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 8,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Zero calibration succeed."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Zero calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "VersionJudgment": "softVersion>=5036",
+                    "Name": "Process Calibration",
+                    "Message": "Put the probe into calibration solution and wait for the reading to stabilize, enter solution value in the input box and click Confirm to calibrate.",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44034,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 10,
+                            "SetValueMax": 20,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 500,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 14,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 5000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [
+                                {
+                                    "RegValue": 7,
+                                    "ResultMessage": "Process calibration succeed."
+                                },
+                                {
+                                    "RegValue": null,
+                                    "ResultMessage": "Process calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [
+        {
+            "Name": "DO 4-20mA",
+            "Unit": "ppm",
+            "DynamicUnit": "Unit",
+            "RegAddress": 46037,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 0
+            },
+            "20mA": {
+                "Name": "20mA_Title",
+                "Message": "20mA_Message",
+                "Editable": true,
+                "Placeholder": 20,
+                "Cmds": [
+                    {
+                        "RegAddress": 43007,
+                        "RegLen": 2,
+                        "RegType": "float",
+                        "SetValue": 20,
+                        "SetValueMax": 20,
+                        "SetValueMin": 1,
+                        "Unit": "ppm",
+                        "DynamicUnit": "Unit",
+                        "Waiting_mS": 500,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "ResultRegLen": 0,
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 5
+                    }
+                ]
+            }
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[1]",
+            "Name": "DO",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "RedPhase",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "DO 4-20mA",
+            "RegAddress": 46037,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "BluePhase",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "RedModulus",
+            "RegAddress": 46021,
+            "RegType": "uint",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "BlueModulus",
+            "RegAddress": 46023,
+            "RegType": "uint",
+            "RegLen": 2,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "Temperature",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "Pressure",
+            "RegAddress": 46013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "KT0",
+            "RegAddress": 44016,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "KT1",
+            "RegAddress": 44018,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "TaoPDT0",
+            "RegAddress": 44020,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "TaoPDT1",
+            "RegAddress": 44022,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "Tao0T0",
+            "RegAddress": 44024,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "Tao0T1",
+            "RegAddress": 44026,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "ppm offset",
+            "RegAddress": 44050,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 6
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 43006,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 9,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [
+                    {
+                        "RegValue": 5,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 6,
+                        "ResultMessage": "Parameter restore failed."
+                    }
+                ]
+            }
+        ]
+    }
+}

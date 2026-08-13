@@ -1,0 +1,957 @@
+{
+    "PN": 50191,
+    "ModelType": "LevelSensor",
+    "ModelName": "LSR-803",
+    "ModelImage": "LSR-803",
+    "ModelDescription": "Radar Level Sensor",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "FirmwareUpgrade": {
+        "Enable": true,
+        "value": null,
+        "endValue": null
+    },
+    "MetricUnit": {
+        "RegAddress": 43007,
+        "RegType": "ushort",
+        "RegLen": 1,
+        "Results": [
+            {
+                "RegValue": 17,
+                "LengthUnit": "m",
+                "LengthUnitConversion": "value",
+                "LengthUnitDecimal": 3,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": 18,
+                "LengthUnit": "cm",
+                "LengthUnitConversion": "value*100",
+                "LengthUnitDecimal": 1,
+                "VolumeUnit": "L",
+                "VolumeUnitConversion": "value*1000",
+                "VolumeUnitDecimal": 3
+            },
+            {
+                "RegValue": null,
+                "LengthUnit": "inch",
+                "LengthUnitConversion": "value*39.3700787",
+                "LengthUnitDecimal": 2,
+                "VolumeUnit": "gal",
+                "VolumeUnitConversion": "value*0.2641721*1000",
+                "VolumeUnitDecimal": 3
+            }
+        ]
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "BLEMac",
+            "RegAddress": 48001,
+            "RegType": "char",
+            "RegLen": 8
+        },
+        {
+            "Name": "Power Supply",
+            "RegAddress": 46023,
+            "RegType": "ushort",
+            "RegLen": 1
+        },
+        {
+            "Name": "Battery Voltage",
+            "RegAddress": 46024,
+            "RegType": "float",
+            "RegLen": 2
+        }
+    ],
+    "AngleVersionJudgment": [
+        {
+            "VersionJudgment": "softVersion<10101",
+            "value": []
+        }
+    ],
+    "Angle": [
+        {
+            "Name": "Z Axis",
+            "RegAddress": 46075,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Measurement points Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Parity",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change parity settings",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42003,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "NONE": 0,
+                        "ODD": 1,
+                        "EVEN": 2
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Modbus Baudrate",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change baudrate settings",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42004,
+                    "RegType": "uint",
+                    "RegLen": 2,
+                    "ValidSettings": {
+                        "9600": 9600,
+                        "19200": 19200,
+                        "38400": 38400
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Screen Unit",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change device display unit",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43007,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "Waiting_mS": 1000,
+                    "ValidSettings": {
+                        "inch/gallon": 16,
+                        "meter/liter": 17,
+                        "centimeter/liter": 18
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Measure Time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Unit": "min",
+            "Cmds": [
+                {
+                    "RegAddress": 44005,
+                    "RegType": "uint",
+                    "RegLen": 2,
+                    "SetValueMax": 1440,
+                    "SetValueMin": 1,
+                    "readConversion": "value/60",
+                    "setConversion": "value*60",
+                    "ValidSettings": {
+                        "Continuous": 0,
+                        "30 s": 30,
+                        "1 min": 60,
+                        "3 min": 180,
+                        "5 min": 300,
+                        "10 min": 600,
+                        "30 min": 1800,
+                        "1 hour": 3600,
+                        "2 hours": 7200,
+                        "Stop": 4294967295,
+                        "Customize": "editable"
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Screen off time",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Unit": "min",
+            "Cmds": [
+                {
+                    "RegAddress": 44003,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 590,
+                    "SetValueMin": 1,
+                    "readConversion": "value/60",
+                    "setConversion": "value*60",
+                    "ValidSettings": {
+                        "Always on": 0,
+                        "2 min": 120,
+                        "5 min": 300,
+                        "10 min": 600,
+                        "30 min": 1800,
+                        "1 hour": 3600,
+                        "Customize": "editable"
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Working Mode",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change device working mode",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43032,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "Tank": 0,
+                        "Open flow channel": 1
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "AOMode",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message_noScope",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43012,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "normal": 0,
+                        "4mA": 1,
+                        "12mA": 2,
+                        "20mA": 3
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=10101",
+            "Name": "BigChangeEnable",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43046,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "ValidSettings": {
+                        "Enable": 1,
+                        "Disable": 0
+                    }
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "BigChangeSkipCnt",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43043,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 1000,
+                    "SetValueMin": 3,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=10101",
+            "Name": "BigChangeThreshold",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43044,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 3,
+                    "SetValueMax": 0.5,
+                    "SetValueMin": 0.01
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "AverageNum",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Length of Moving Filter (Range:1-100)",
+            "Editable": true,
+            "Hide": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43034,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 100,
+                    "SetValueMin": 1,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "FilterCoefficient",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Filter Coefficient for Measurement Output,default is 1.0",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 45001,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValue": 1.0,
+                    "Decimal": 2,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Damping Time",
+            "Unit": "s",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Hide": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43037,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 600,
+                    "SetValueMin": 0,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Dead Zone",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43038,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 15,
+                    "SetValueMin": ">=0",
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "DistOffset",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change the sensor corrects the offset(Range:0 - 0.5m)",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43008,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 0.5,
+                    "SetValueMin": ">=0",
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Measure Period",
+            "Unit": "ms",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43033,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": 2000,
+                    "SetValueMin": 100,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "Range",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change meter range settings. (Range:0-15m)",
+            "Editable": true,
+            "Hide": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43040,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 2,
+                    "SetValueMax": 15.1,
+                    "SetValueMin": 0.1,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "ThresholdTol",
+            "Unit": "dB",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message_noScope",
+            "Editable": true,
+            "Hide": true,
+            "Advanced": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43042,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        }
+    ],
+    "TankReadings": [
+        {
+            "Name": "Distance",
+            "Unit": "m",
+            "isMainReading": false,
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Level",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Remaining Volume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46012,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "UsedVolume",
+            "Unit": "L",
+            "isMainReading": false,
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46014,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "MaxVolume",
+            "Unit": "L",
+            "DynamicUnit": "VolumeUnit",
+            "RegAddress": 46016,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "Name": "Percentage",
+            "Unit": "%",
+            "RegAddress": 43003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        }
+    ],
+    "TankConfiguration": [
+        {
+            "Name": "SectionalArea",
+            "Unit": "m2",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43021,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "MaxLevel",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43003,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        },
+        {
+            "Name": "InstallHeight",
+            "Unit": "m",
+            "SettingsType": "StoreToDevice",
+            "Cmds": [
+                {
+                    "RegAddress": 43005,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": false,
+                    "SetValue": 1
+                }
+            ]
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "Measure Value",
+            "Name": "Measure Value",
+            "Unit": "m",
+            "DynamicUnit": "LengthUnit",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "Current",
+            "Name": "Current",
+            "Unit": "mA",
+            "RegAddress": 46008,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "SNR",
+            "Name": "MaxPeak_val",
+            "RegAddress": 46004,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "ErrorCode",
+            "Name": "ErrorCode",
+            "Conversion": "(value).toString(16)",
+            "RegAddress": 46007,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 3,
+            "Warning": [
+                {
+                    "Condition": "ErrorCode == 0",
+                    "Color": "#07c160",
+                    "Level": "Info",
+                    "Message": "The equipment is working properly."
+                },
+                {
+                    "Condition": "ErrorCode == 2000 ",
+                    "Color": "#ff4d4f",
+                    "Level": "Alarm",
+                    "Message": "Time error,Power cycle the meter.If the problem persists, Please contact technical support."
+                },
+                {
+                    "Condition": "ErrorCode == 4000 ",
+                    "Color": "#ff4d4f",
+                    "Level": "Alarm",
+                    "Message": "RTC error,Power cycle the meter.If the problem persists, Please contact technical support."
+                },
+                {
+                    "Condition": "ErrorCode == 8000 ",
+                    "Color": "#ff4d4f",
+                    "Level": "Alarm",
+                    "Message": "Low Power, please replace the battery."
+                },
+                {
+                    "Condition": "ErrorCode != 0 && ErrorCode != 2000 && ErrorCode != 4000 && ErrorCode != 8000",
+                    "Color": "#ff4d4f",
+                    "Level": "Alarm",
+                    "Message": "Radar board is not working properly,Power cycle the meter.If the problem persists, Please contact technical support."
+                }
+            ]
+        }
+    ],
+    "Datalog": {
+        "Func": 71,
+        "CmdGetLogInfo": {
+            "PktLen": 10,
+            "SubFunc": 24,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "ReservedLen": 4,
+            "ReservedType": "uchar",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdGetLogData": {
+            "PktLen": 14,
+            "SubFunc": 25,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "LogIndexStartLen": 4,
+            "LogIndexStartType": "uint",
+            "LogDataLen": 4,
+            "LogDataType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "CmdClearLog": {
+            "PktLen": 6,
+            "SubFunc": 26,
+            "SubFuncLen": 2,
+            "SubFuncType": "uint",
+            "CRCLen": 2,
+            "CRCType": "uint"
+        },
+        "LogData": [
+            {
+                "Version": 0,
+                "PktLen": 32,
+                "DataLogMessage": [
+                    {
+                        "Name": "Index",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Time",
+                        "Type": "uint",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "CurrentVal",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Used Volume",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Level",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Distance",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Remaining Volume",
+                        "Type": "float",
+                        "Len": 4,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "WorkMode",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": true
+                    },
+                    {
+                        "Name": "Battery",
+                        "Type": "uchar",
+                        "Len": 1,
+                        "EnableDisplay": false
+                    },
+                    {
+                        "Name": "CRC",
+                        "Type": "uchar",
+                        "Len": 2,
+                        "EnableDisplay": false
+                    }
+                ]
+            }
+        ]
+    }
+}

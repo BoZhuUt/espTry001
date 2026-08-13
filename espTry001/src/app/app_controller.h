@@ -47,6 +47,12 @@ public:
   // 取消未完成的 ESPTIME1 命令，并恢复 PASS 与 System Info 页面。
   void exitTimeSync();
 
+  bool beginCalibration(uint8_t slaveAddress,
+                        const CalibrationProfile *profile,
+                        uint8_t procedureIndex, const float *inputValues,
+                        uint8_t inputCount);
+  void exitCalibrationAndRediscover();
+
   void returnToPassThrough(UiPage page);
   void showPage(UiPage page);
 

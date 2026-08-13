@@ -1,0 +1,371 @@
+{
+    "PN": 54200,
+    "ModelType": "InlineSensor",
+    "ModelName": "FS-100",
+    "ModelImage": "FS-100",
+    "ModelDescription": "Flow Meter",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": ""
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValueMax": 247,
+                "SetValueMin": 1
+            }]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 41007,
+                "RegType": "ushort",
+                "RegLen": 8
+            }]
+        }
+    ],
+    "slope": [],
+    "Readings": [{
+            "Name": "Flow",
+            "Unit": "mL/min",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": [{
+                    "Name": "Zero CAL",
+                    "Message": "Ensure zero flow condition, wait for readings to stabilize, click Confirm to proceed.",
+                    "Cmds": [{
+                        "RegAddress": 44040,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 200,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 6000,
+                        "ResultRegAddress": 44041,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 2,
+                                "ResultMessage": "Zero calibration succeed."
+                            },
+                            {
+                                "RegValue": 1,
+                                "ResultMessage": "Zero calibration failed."
+                            }
+                        ]
+                    }]
+                },
+                {
+                    "Name": "Slope CAL",
+                    "Message": "Set standard flow rate, wait for readings to stabilize, click Confirm to proceed.",
+                    "Cmds": [{
+                            "RegAddress": 44042,
+                            "RegType": "float",
+                            "RegLen": 2,
+                            "Editable": true,
+                            "SetValue": 750.0,
+                            "SetValueMax": 100000,
+                            "SetValueMin": 10,
+                            "Unit": "mL/min",
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 44040,
+                            "RegType": "ushort",
+                            "RegLen": 1,
+                            "Editable": false,
+                            "SetValue": 201,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 6000,
+                            "ResultRegAddress": 44041,
+                            "ResultRegType": "ushort",
+                            "ResultRegLen": 1,
+                            "Results": [{
+                                    "RegValue": 2,
+                                    "ResultMessage": "Slope calibration succeed."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Slope calibration failed."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        },
+        {
+            "Name": "4-20mA",
+            "Unit": "mA",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [{
+        "Name": "Flow 4-20mA",
+        "Unit": "mL/min",
+        "RegAddress": 46023,
+        "RegType": "float",
+        "Decimal": 2,
+        "4mA": {
+            "Name": "Flow 4mA Value",
+            "Message": "Set the flow rate value corresponding to 4mA output.",
+            "Placeholder": 0,
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 48009,
+                "RegType": "float",
+                "RegLen": 2,
+                "SetValue": 0,
+                "SetValueMax": 10000,
+                "SetValueMin": 0,
+                "Waiting_mS": 500,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "ResultRegLen": 0,
+                "Results": []
+            }]
+        },
+        "20mA": {
+            "Name": "Flow 20mA Value",
+            "Message": "Set the flow rate value corresponding to 20mA output.",
+            "Editable": true,
+            "Placeholder": 2000,
+            "Cmds": [{
+                "RegAddress": 48011,
+                "RegType": "float",
+                "RegLen": 2,
+                "Editable": true,
+                "SetValue": 2000,
+                "SetValueMax": 10000,
+                "SetValueMin": 0,
+                "Waiting_mS": 500,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "ResultRegLen": 0,
+                "Results": []
+            }]
+        }
+    },
+    {
+        "Name": "Temp 4-20mA",
+        "Unit": "°C",
+        "RegAddress": 46025,
+        "RegType": "float",
+        "Decimal": 2,
+        "4mA": {
+            "Name": "Temp 4mA Value",
+            "Message": "Set the temperature value corresponding to 4mA output.",
+            "Placeholder": 0,
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 48013,
+                "RegType": "float",
+                "RegLen": 2,
+                "SetValue": 0,
+                "SetValueMax": 100,
+                "SetValueMin": -10,
+                "Waiting_mS": 500,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "ResultRegLen": 0,
+                "Results": []
+            }]
+        },
+        "20mA": {
+            "Name": "Temp 20mA Value",
+            "Message": "Set the temperature value corresponding to 20mA output.",
+            "Editable": true,
+            "Placeholder": 100,
+            "Cmds": [{
+                "RegAddress": 48015,
+                "RegType": "float",
+                "RegLen": 2,
+                "Editable": true,
+                "SetValue": 100,
+                "SetValueMax": 100,
+                "SetValueMin": -10,
+                "Waiting_mS": 500,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "ResultRegLen": 0,
+                "Results": []
+            }]
+        }
+    }],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "FlowVelocity",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 3
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "TOF_up",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "TOF_down",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "TOFTemp",
+            "RegAddress": 46021,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "HSOcalFactor",
+            "RegAddress": 46017,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "SysErr",
+            "RegAddress": 46019,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "fFlowmA",
+            "RegAddress": 46023,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "fTempmA",
+            "RegAddress": 46025,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "mA2",
+            "RegAddress": 46039,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "FlowMeterL",
+            "RegAddress": 46041,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible, click Confirm to proceed.",
+        "Cmds": [{
+            "RegAddress": 44040,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Editable": false,
+            "SetValue": 110,
+            "Waiting_mS": 1000,
+            "ResultRegAddress": 44041,
+            "ResultRegType": "ushort",
+            "ResultRegLen": 1,
+            "Results": [{
+                    "RegValue": 0,
+                    "ResultMessage": "Factory parameter restore succeed."
+                },
+                {
+                    "RegValue": 1,
+                    "ResultMessage": "Factory parameter restore failed."
+                }
+            ]
+        }]
+    }
+}

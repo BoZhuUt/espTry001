@@ -1,0 +1,272 @@
+{
+    "PN": 53102,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-720D",
+    "ModelImage": "ST-720",
+    "ModelDescription": "Inline Conductivity Probe",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/02/ST-720-ST-726-High-Range-Conductivity-Temperature-Sensor-DataSheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": ""
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": ""
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValueMax": 247,
+                "SetValueMin": 1
+            }]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 41007,
+                "RegType": "ushort",
+                "RegLen": 8
+            }]
+        }
+    ],
+	"slope":[
+	     {
+           "Name": "Slope",
+		   "Unit": "",
+		   "RegAddress": 44005,
+		   "RegType": "float",
+		   "RegLen": 2,
+		   "Decimal":4
+		  }
+	],
+    "Readings": [{
+            "Name": "Conductivity",
+            "Unit": "µS/cm",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": [{
+                "Name": "Conductivity Setting Calibration",
+                "Message": "slope_message",
+                "Cmds": [{
+                        "RegAddress": 44011,
+                        "RegType": "float",
+                        "Editable": true,
+                        "SetValue": 1419,
+                        "SetValueMax": 100000,
+                        "SetValueMin": 1,
+                        "Unit": "µS/cm",
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    },
+                    {
+                        "RegAddress": 44004,
+                        "RegType": "ushort",
+                        "RegLen": 1,
+                        "Editable": false,
+                        "SetValue": 1,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 1000,
+                        "ResultRegAddress": 41003,
+                        "ResultRegType": "ushort",
+                        "ResultRegLen": 1,
+                        "Results": [{
+                                "RegValue": 1,
+                                "ResultMessage": "Conductivity calibration succeed."
+                            },
+                            {
+                                "RegValue": 3,
+                                "ResultMessage": "Slope out of range"
+                            },
+                            {
+                                "RegValue": 4,
+                                "ResultMessage": "Solution value invalid."
+                            }
+                        ]
+                    }
+                ]
+            }]
+        },
+        {
+            "Name": "Temperature",
+            "Unit": "°C",
+            "RegAddress": 46005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "Calibrations": []
+        }
+    ],
+    "Span4_20mA": [],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "rtemp",
+            "RegAddress": 46011,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "Cond_Vi",
+            "RegAddress": 46019,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "Cond_Vv",
+            "RegAddress": 46021,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "RG",
+            "RegAddress": 46023,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "RES_Select",
+            "RegAddress": 46024,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "PGA_Select",
+            "RegAddress": 46025,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "k",
+            "RegAddress": 44005,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "OPAMP_R",
+            "RegAddress": 43017,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "SmoothingFactor",
+            "RegAddress": 43004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "RTD_R0",
+            "RegAddress": 43013,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "TemperatureRange",
+            "RegAddress": 43015,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [{
+                "RegAddress": 41040,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 103
+            },
+            {
+                "RegAddress": 44004,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "Editable": false,
+                "SetValue": 103,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "ResultRegLen": 1,
+                "Results": [{
+                        "RegValue": 517,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 515,
+                        "ResultMessage": "No factory parameter found."
+                    }
+                ]
+            }
+        ]
+    }
+}

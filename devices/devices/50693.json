@@ -1,0 +1,603 @@
+{
+    "PN": 50693,
+    "ModelType": "InlineSensor",
+    "ModelName": "ST-588SS",
+    "ModelImage": "ST-525SS",
+    "ModelDescription": "Inline Fluorescent and Tagged Polymer Probe",
+    "UserGuideUrl": [{
+            "name": "Data Sheet",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/01/ST-588-PTSA-Tagged-Polymer-Data-Sheet.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://www.pyxis-lab.com/wp-content/uploads/2022/01/ST-588-User-Manual-V2.03.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": "https://www.youtube.com/watch?v=O1sUm77i4U0&t=16s"
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "Info": [{
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [{
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 42001,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValueMax": 247,
+                "SetValueMin": 1
+            }]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToLocal",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": []
+        },
+
+        {
+            "VersionJudgment": "softVersion>=10124",
+            "Name": "Open Fixed Output Current",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [{
+                    "RegAddress": 42022,
+                    "Editable": false,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValueMax": 20,
+                    "SetValueMin": 4,
+                    "SetValue": 4
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValue": 150
+                }
+
+            ]
+        }, {
+            "VersionJudgment": "softVersion>=10124",
+            "Name": "Close Fixed Current Output",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [{
+                "RegAddress": 43006,
+                "RegType": "ushort",
+                "RegLen": 1,
+                "SetValue": 151
+            }]
+        }
+    ],
+	"slope":[
+	     {
+           "Name": "PTSA Slope",
+		   "Unit": "",
+		   "RegAddress": 48002,
+		   "RegType": "float",
+		   "RegLen": 2,
+		   "Decimal":4
+		  },
+		 {
+           "Name": "Tag Slope",
+		   "Unit": "",
+		   "RegAddress": 48010,
+		   "RegType": "float",
+		   "RegLen": 2,
+		   "Decimal":4
+		  }
+	],
+    "Readings": [{
+            "Name": "PTSA",
+            "Unit": "ppb",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2,
+            "Calibrations": [{
+                    "Name": "zero_title",
+                    "Message": "zero_message",
+                    "Cmds": [{
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 3,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 48050,
+                        "ResultRegType": "ushort",
+                        "Results": [{
+                                "RegValue": 0,
+                                "ResultMessage": "Calibration succeed."
+                            },
+                            {
+                                "RegValue": 1,
+                                "ResultMessage": "Calibration failed, probe fouled."
+                            },
+                            {
+                                "RegValue": 2,
+                                "ResultMessage": "Calibration failed, DI signal is too high."
+                            },
+                            {
+                                "RegValue": null,
+                                "ResultMessage": "Communication failure, please retry the operation, error code:"
+                            }
+                        ]
+                    }]
+                },
+                {
+                    "Name": "slope_title",
+                    "Message": "slope_message",
+                    "Cmds": [{
+                            "RegAddress": 44002,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 100,
+                            "SetValueMax": 200,
+                            "SetValueMin": 1,
+                            "Waiting_mS": 100,
+                            "Unit": "ppb",
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 4,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 48050,
+                            "ResultRegType": "ushort",
+                            "Results": [{
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration failed, probe fouled."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Calibration failed, DI signal is too high."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Calibration failed, solution is too high."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Calibration failed, solution is too low."
+                                },
+                                {
+                                    "RegValue": null,
+                                    "ResultMessage": "Communication failure, please retry the operation, error code:"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "TAG",
+            "Unit": "ppm",
+            "RegAddress": 46007,
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2,
+            "Calibrations": [{
+                    "Name": "zero_title",
+                    "Message": "zero_message",
+                    "Cmds": [{
+                        "RegAddress": 43006,
+                        "RegType": "ushort",
+                        "Editable": false,
+                        "SetValue": 5,
+                        "SetValueMax": 0,
+                        "SetValueMin": 0,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 48051,
+                        "ResultRegType": "ushort",
+                        "Results": [{
+                                "RegValue": 0,
+                                "ResultMessage": "Calibration succeed."
+                            },
+                            {
+                                "RegValue": 1,
+                                "ResultMessage": "Calibration failed, probe fouled."
+                            },
+                            {
+                                "RegValue": 2,
+                                "ResultMessage": "Calibration failed, DI signal is too high."
+                            },
+                            {
+                                "RegValue": null,
+                                "ResultMessage": "Communication failure, please retry the operation, error code:"
+                            }
+                        ]
+                    }]
+                },
+                {
+                    "Name": "slope_title",
+                    "Message": "slope_message",
+                    "Cmds": [{
+                            "RegAddress": 44004,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 20,
+                            "SetValueMax": 20,
+                            "SetValueMin": 1,
+                            "Waiting_mS": 100,
+                            "Unit": "ppm",
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 6,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 48051,
+                            "ResultRegType": "ushort",
+                            "Results": [{
+                                    "RegValue": 0,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 1,
+                                    "ResultMessage": "Calibration failed, probe fouled."
+                                },
+                                {
+                                    "RegValue": 3,
+                                    "ResultMessage": "Calibration failed, DI signal is too high."
+                                },
+                                {
+                                    "RegValue": 4,
+                                    "ResultMessage": "Calibration failed, solution is too high."
+                                },
+                                {
+                                    "RegValue": 5,
+                                    "ResultMessage": "Calibration failed, solution is too low."
+                                },
+                                {
+                                    "RegValue": null,
+                                    "ResultMessage": "Communication failure, please retry the operation, error code:"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "Span4_20mA": [{
+            "Name": "PTSA 4-20mA",
+            "Unit": "ppb",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Editable": false,
+                "Placeholder": 0
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 100,
+                "Cmds": [{
+                    "RegAddress": 43002,
+                    "RegLen": 2,
+                    "RegType": "float",
+                    "SetValue": 200,
+                    "SetValueMax": 500,
+                    "SetValueMin": 1,
+                    "Waiting_mS": 100,
+                    "ResultRegAddress": 0,
+                    "ResultRegType": "",
+                    "Results": []
+                }]
+            }
+        },
+        {
+            "Name": "TAG 4-20mA",
+            "Unit": "ppm",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2,
+            "4mA": {
+                "Name": "4mA_title",
+                "Editable": false,
+                "Placeholder": 0
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 20,
+                "Cmds": [{
+                    "RegAddress": 43009,
+                    "RegLen": 2,
+                    "RegType": "float",
+                    "SetValue": 20,
+                    "SetValueMax": 20,
+                    "SetValueMin": 1,
+                    "Waiting_mS": 100,
+                    "ResultRegAddress": 0,
+                    "ResultRegType": "",
+                    "Results": []
+                }]
+            }
+        }
+    ],
+    "Diagnosis": [{
+            "DisplayName": "[1]",
+            "Name": "S365Dark",
+            "RegAddress": 48041,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "S470Dark",
+            "RegAddress": 48043,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[PTSA_mA]",
+            "Name": "PTSA 4-20mA",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[TAG_mA]",
+            "Name": "TAG 4-20mA",
+            "RegAddress": 46009,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "CT365",
+            "RegAddress": 48020,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "CS365",
+            "RegAddress": 48021,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "CS410",
+            "RegAddress": 48022,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "CS470",
+            "RegAddress": 48023,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "T365DI",
+            "RegAddress": 48030,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "S365DI",
+            "RegAddress": 48031,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "S410DI",
+            "RegAddress": 48032,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "S470DI",
+            "RegAddress": 48033,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "T365",
+            "RegAddress": 48035,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "S365",
+            "RegAddress": 48036,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "S410",
+            "RegAddress": 48037,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "S470",
+            "RegAddress": 48038,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[15]",
+            "Name": "PTSA Slope",
+            "RegAddress": 48002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[16]",
+            "Name": "Tag Slope",
+            "RegAddress": 48010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+		{
+            "DisplayName": "[17]",
+            "Name": "cleanLiness",
+            "VersionJudgment": "softVersion>=10120",
+            "RegAddress": 46029,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [{
+                "RegAddress": 41040,
+                "RegType": "ushort",
+                "Editable": false,
+                "SetValue": 103,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "Results": []
+            },
+            {
+                "RegAddress": 43006,
+                "RegType": "ushort",
+                "Editable": false,
+                "SetValue": 103,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "Results": [{
+                        "RegValue": 517,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 515,
+                        "ResultMessage": "Parameter restore failed."
+                    },
+                    {
+                        "RegValue": 512,
+                        "ResultMessage": "Invalid command."
+                    }
+                ]
+            }
+        ]
+    },
+    "CleanlinessCheck": {
+        "ScriptVersionJudgment": [{
+            "VersionJudgment": "softVersion>=10120",
+            "value": "Cleanliness = DiagnosisData[`cleanLiness`]"
+        }],
+        "Script": "Cleanliness =( DiagnosisData[`T365`]>600 && DiagnosisData[`S410`]<300)?10:90",
+        "resultClean": {
+            "minCleanliness": 80,
+            "DiagMessage": "Probe is in good condition.",
+            "PleaseClean": false,
+            "IsClean": true,
+            "IsWarning": false
+        },
+        "resultBecomingFouled": {
+            "minCleanliness": 50,
+            "DiagMessage": "Probe becoming fouled, please clean the probe according to the instruction manual.",
+            "PleaseClean": false,
+            "IsClean": false,
+            "IsWarning": true
+        },
+        "resultFouled": {
+            "minCleanliness": 0,
+            "DiagMessage": "Probe may be fouled, please clean the probe according to the instruction manual.",
+            "PleaseClean": true,
+            "IsClean": false,
+            "IsWarning": false
+        }
+    }
+}

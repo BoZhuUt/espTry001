@@ -1,0 +1,706 @@
+{
+    "PN": 53251,
+    "ModelType": "InlineSensor",
+    "ModelName": "LT-635",
+    "ModelImage": "LT-635",
+    "ModelDescription": "Self-Wiping & Submersible Suspended Solids Sensor",
+    "UserGuideUrl": [
+        {
+            "name": "Data Sheet",
+            "url": "https://n8q4q8b8.rocketcdn.me/wp-content/uploads/2022/10/LT-635-Data-Sheet-2.pdf"
+        },
+        {
+            "name": "User Manual",
+            "url": "https://n8q4q8b8.rocketcdn.me/wp-content/uploads/2022/10/LT-635-Turbidity-Suspended-Solids-Sensor-Operation-Manual-V1.4.pdf"
+        },
+        {
+            "name": "Calibration Guide Video",
+            "url": "https://youtu.be/ykO88686Enc"
+        }
+    ],
+    "ModbusTimeout_mS": 2000,
+    "ModbusRetries": 5,
+    "HwVerMin": null,
+    "HwVerMax": null,
+    "SwVerMin": null,
+    "SwVerMax": null,
+    "ParamVermin": null,
+    "ParamVerMax": null,
+    "ModbusAddr": 81,
+    "Unit_Conversion_Table": {
+        "Turbidity": {
+            "Unit": "mg/L",
+            "UnitConversion": "value",
+            "UnitDecimal": 2,
+            "UnitsetConversion": "value",
+            "ReadingDisplayNames": {
+                "MLSS": "Turbidity"
+            },
+            "SpanDisplayNames": {
+                "MLSS 4-20mA": "Turbidity 4-20mA"
+            }
+        },
+        "TSS": {
+            "Unit": "g/L",
+            "UnitConversion": "value/1000",
+            "UnitDecimal": 3,
+            "UnitsetConversion": "value*1000",
+            "ReadingDisplayNames": {
+                "MLSS": "TSS"
+            },
+            "SpanDisplayNames": {
+                "MLSS 4-20mA": "TSS 4-20mA"
+            }
+        },
+        "MLSS": {
+            "Unit": "mg/L",
+            "UnitConversion": "value",
+            "UnitDecimal": 2,
+            "UnitsetConversion": "value",
+            "ReadingDisplayNames": {
+                "MLSS": "MLSS"
+            },
+            "SpanDisplayNames": {
+                "MLSS 4-20mA": "MLSS 4-20mA"
+            }
+        },
+        "Customize": {
+            "Unit": "",
+            "UnitConversion": "value*factor",
+            "UnitDecimal": 2,
+            "UnitsetConversion": "value/factor",
+            "FormulaVariables": {
+                "factor": {
+                    "Source": "DeviceValue",
+                    "Name": "Customize Coefficient",
+                    "DefaultValue": 1
+                }
+            },
+            "DisplayNameVariables": {
+                "measurementName": {
+                    "Source": "DeviceValue",
+                    "Name": "Measurement Name",
+                    "DefaultValue": "Customize"
+                }
+            },
+            "ReadingDisplayNames": {
+                "MLSS": "{measurementName}"
+            },
+            "SpanDisplayNames": {
+                "MLSS 4-20mA": "{measurementName} 4-20mA"
+            }
+        }
+    },
+    "Info": [
+        {
+            "Name": "Product Number",
+            "RegAddress": 41005,
+            "RegType": "uint",
+            "RegLen": 2
+        },
+        {
+            "Name": "Serial Number",
+            "RegAddress": 41015,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Hardware Version",
+            "RegAddress": 41023,
+            "RegType": "ushort",
+            "RegLen": 8
+        },
+        {
+            "Name": "Software Version",
+            "RegAddress": 41031,
+            "RegType": "ushort",
+            "RegLen": 8
+        }
+    ],
+    "Config": [
+        {
+            "Name": "Modbus Address",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Set a new Modbus address for probe, power cycle the probe to make settings effective.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 42001,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 247,
+                    "SetValueMin": 1,
+                    "Editable": true
+                },
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": 100,
+                    "SetValueMin": 1,
+                    "SetValue": 10
+                }
+            ]
+        },
+        {
+            "Name": "Device Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Assign probe a name, uPyxis App will display probe's name.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 41007,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "Name": "Smoothing Factor",
+            "SettingsType": "StoreToDevice",
+            "Tip": "The smaller the value of the smoothing factor, the more stable the turbidity value, but the slower the response of the turbidity probe. Valid range of smoothing factor is from 0.0 to 1.0.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43004,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "SetValueMax": 1,
+                    "SetValueMin": 0,
+                    "SetValue": 0.5
+                }
+            ]
+        },
+        {
+            "Name": "Wiper Switch",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 48033,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "Enable": 1,
+                        "Disable": 0
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "Brushing Frequency",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Times Of Single Brush Movement(at least 1)",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 48034,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Decimal": null,
+                    "SetValueMax": null,
+                    "SetValueMin": 1,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Wiper Cycle",
+            "Unit": "sec",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Brush Movement Cycle(at least 60s)",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 48035,
+                    "RegType": "ushort",
+                    "setConversion": "value*10",
+                    "readConversion": "value/10",
+                    "RegLen": 1,
+                    "Decimal": 0,
+                    "SetValueMax": null,
+                    "SetValueMin": 60,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "Name": "Wipe Once",
+            "SettingsType": "StoreToDevice",
+            "Editable": false,
+            "Cmds": [
+                {
+                    "RegAddress": 43006,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "SetValueMax": null,
+                    "SetValueMin": null,
+                    "SetValue": 32
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=1078",
+            "Name": "minFilter Switch",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43040,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "Enable": 1,
+                        "Disable": 0
+                    }
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=1078",
+            "Name": "minFilter Time",
+            "Unit": "min",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 43042,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 3,
+                    "SetValueMax": 60,
+                    "SetValueMin": 1,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=10115",
+            "Name": "Measurement Name",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Enter a Name for the Custom Display Format.",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 45006,
+                    "RegType": "ushort",
+                    "RegLen": 8
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=10115",
+            "Name": "Customize Coefficient",
+            "SettingsType": "StoreToDevice",
+            "Tip": "config_message",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 45014,
+                    "RegType": "float",
+                    "RegLen": 2,
+                    "Decimal": 5,
+                    "SetValueMax": 10,
+                    "SetValueMin": 0,
+                    "Editable": true
+                }
+            ]
+        },
+        {
+            "VersionJudgment": "softVersion>=10115",
+            "Name": "Display Form",
+            "SettingsType": "StoreToDevice",
+            "Tip": "Change device display form",
+            "Editable": true,
+            "Cmds": [
+                {
+                    "RegAddress": 45016,
+                    "RegType": "ushort",
+                    "RegLen": 1,
+                    "Editable": true,
+                    "ValidSettings": {
+                        "Turbidity": 0,
+                        "TSS": 1,
+                        "MLSS": 2,
+                        "Customize": 3
+                    }
+                }
+            ]
+        }
+    ],
+    "slope": [
+        {
+            "Name": "slopeLow",
+            "Unit": "",
+            "RegAddress": 48002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "Name": "slopeMid",
+            "Unit": "",
+            "RegAddress": 48006,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "Name": "slopeHigh",
+            "Unit": "",
+            "RegAddress": 48010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        }
+    ],
+    "Readings": [
+        {
+            "Name": "MLSS",
+            "DisplayName": "MLSS",
+            "Unit": "mg/L",
+            "DynamicUnit": "Unit",
+            "RegAddress": 46001,
+            "RegType": "float",
+            "Decimal": 2,
+            "RegLen": 2,
+            "Calibrations": [
+                {
+                    "Name": "zero_title",
+                    "Message": "zero_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 3,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 100,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 769,
+                                    "ResultMessage": "Calibration succeed."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "Middle Calibration",
+                    "Message": "slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44005,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 8000,
+                            "SetValueMax": 10000,
+                            "SetValueMin": 2000,
+                            "Waiting_mS": 100,
+                            "Unit": "mg/L",
+                            "DynamicUnit": "Unit",
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 25,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 769,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 260,
+                                    "ResultMessage": "Calibration failed, solution over range"
+                                },
+                                {
+                                    "RegValue": 264,
+                                    "ResultMessage": "Calibration failed, signal over range."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "High Calibration",
+                    "Message": "slope_message",
+                    "Cmds": [
+                        {
+                            "RegAddress": 44009,
+                            "RegType": "float",
+                            "Editable": true,
+                            "SetValue": 15000,
+                            "SetValueMax": 30000,
+                            "SetValueMin": 10000,
+                            "Waiting_mS": 100,
+                            "Unit": "mg/L",
+                            "DynamicUnit": "Unit",
+                            "ResultRegAddress": 0,
+                            "ResultRegType": "",
+                            "Results": []
+                        },
+                        {
+                            "RegAddress": 43006,
+                            "RegType": "ushort",
+                            "Editable": false,
+                            "SetValue": 26,
+                            "SetValueMax": 0,
+                            "SetValueMin": 0,
+                            "Waiting_mS": 1000,
+                            "ResultRegAddress": 41003,
+                            "ResultRegType": "ushort",
+                            "Results": [
+                                {
+                                    "RegValue": 769,
+                                    "ResultMessage": "Calibration succeed."
+                                },
+                                {
+                                    "RegValue": 261,
+                                    "ResultMessage": "Calibration failed, solution over range"
+                                },
+                                {
+                                    "RegValue": 264,
+                                    "ResultMessage": "Calibration failed, signal over range."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "Span4_20mA": [
+        {
+            "Name": "MLSS 4-20mA",
+            "DisplayName": "MLSS 4-20mA",
+            "Unit": "mg/L",
+            "DynamicUnit": "Unit",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 1,
+            "4mA": {
+                "Name": "4mA_title",
+                "Message": "4mA_message",
+                "Editable": false,
+                "Placeholder": 0
+            },
+            "20mA": {
+                "Name": "20mA_title",
+                "Message": "20mA_message",
+                "Editable": true,
+                "Placeholder": 100,
+                "Cmds": [
+                    {
+                        "RegAddress": 48014,
+                        "RegLen": 1,
+                        "RegType": "ushort",
+                        "Unit": "mg/L",
+                        "DynamicUnit": "Unit",
+                        "SetValue": 30000,
+                        "SetValueMax": 30000,
+                        "SetValueMin": 1,
+                        "Waiting_mS": 100,
+                        "ResultRegAddress": 0,
+                        "ResultRegType": "",
+                        "Results": []
+                    }
+                ]
+            }
+        }
+    ],
+    "Diagnosis": [
+        {
+            "DisplayName": "[1]",
+            "Name": "slopeLow",
+            "RegAddress": 48002,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[mA]",
+            "Name": "mA",
+            "RegAddress": 46003,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[2]",
+            "Name": "interceptLow",
+            "RegAddress": 48004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[3]",
+            "Name": "slopeMid",
+            "RegAddress": 48006,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[4]",
+            "Name": "interceptMid",
+            "RegAddress": 48008,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[5]",
+            "Name": "slopeHigh",
+            "RegAddress": 48010,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[6]",
+            "Name": "interceptHigh",
+            "RegAddress": 48012,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 4
+        },
+        {
+            "DisplayName": "[7]",
+            "Name": "s365LowGain",
+            "RegAddress": 48018,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[8]",
+            "Name": "s365MidGain",
+            "RegAddress": 48019,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[9]",
+            "Name": "s365Low",
+            "RegAddress": 48021,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[10]",
+            "Name": "s365Mid",
+            "RegAddress": 48022,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[11]",
+            "Name": "s365DiLow",
+            "RegAddress": 48027,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[12]",
+            "Name": "s365DiMid",
+            "RegAddress": 48028,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[13]",
+            "Name": "operation_mode",
+            "RegAddress": 43033,
+            "RegType": "ushort",
+            "RegLen": 1,
+            "Decimal": 0
+        },
+        {
+            "DisplayName": "[14]",
+            "Name": "s365dataoffset",
+            "RegAddress": 43034,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[15]",
+            "Name": "range_Low",
+            "RegAddress": 43007,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        },
+        {
+            "DisplayName": "[16]",
+            "Name": "smoothingFactor",
+            "RegAddress": 43004,
+            "RegType": "float",
+            "RegLen": 2,
+            "Decimal": 2
+        }
+    ],
+    "RestoreFactory": {
+        "Name": "Factory Parameter Restore",
+        "Message": "This operation will reset all parameters to the factory parameters and is irreversible,click Confirm to proceed.",
+        "Cmds": [
+            {
+                "RegAddress": 41040,
+                "RegType": "ushort",
+                "Editable": false,
+                "SetValue": 103,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 0,
+                "ResultRegType": "",
+                "Results": []
+            },
+            {
+                "RegAddress": 43006,
+                "RegType": "ushort",
+                "Editable": false,
+                "SetValue": 103,
+                "Waiting_mS": 1000,
+                "ResultRegAddress": 41003,
+                "ResultRegType": "ushort",
+                "Results": [
+                    {
+                        "RegValue": 517,
+                        "ResultMessage": "Parameter restore succeed."
+                    },
+                    {
+                        "RegValue": 515,
+                        "ResultMessage": "Parameter restore failed."
+                    },
+                    {
+                        "RegValue": 512,
+                        "ResultMessage": "Invalid command."
+                    }
+                ]
+            }
+        ]
+    }
+}

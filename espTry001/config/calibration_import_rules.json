@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_directory": "D:/pyxis/software/github/espTry001/devices/devices",
+  "exclude_files": [
+    {
+      "file": "50316.json",
+      "reason": "Filename PN differs from JSON PN; excluded by project decision"
+    }
+  ],
+  "exclude_pns": [
+    {
+      "product_num": 56600,
+      "reason": "No calibration JSON; excluded by project decision"
+    }
+  ],
+  "preferred_files": [
+    {
+      "product_num": 56377,
+      "file": "56377_New.json",
+      "reason": "Use new version by project decision"
+    }
+  ],
+  "pilot_pns": [57769, 50661, 53607]
+}

@@ -9,9 +9,10 @@ echo ============================================================
 echo.
 echo This will rebuild and package:
 echo   1. SensorProfileManager.exe
-echo   2. SensorProfileUpdater.exe
-echo   3. SensorDataExporter.exe
-echo   4. Current config\sensor_profiles.json
+echo   2. CalibrationProfileManager.exe
+echo   3. SensorProfileUpdater.exe
+echo   4. SensorDataExporter.exe
+echo   5. Current config\sensor_profiles.json
 echo.
 
 call "%~dp0Package_Profile_Tools.bat" --no-pause

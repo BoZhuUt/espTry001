@@ -621,15 +621,152 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
   gfx->setTextSize(1);
   gfx->drawLine(kContentLeft, 270, kContentRight, 270, RGB565_DARKGREY);
   gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
-  gfx->setCursor(12, 282);
+  gfx->setCursor(8, 282);
   if (view.pageCount > 1) {
-    gfx->printf("Page %u/%u - tap bottom", view.pageNumber, view.pageCount);
+    gfx->printf("Page %u/%u", view.pageNumber, view.pageCount);
   } else {
-    gfx->print("No more parameters");
+    gfx->print("Parameters");
+  }
+  if (view.calibrationAvailable) {
+    gfx->fillRect(120, 276, BoardConfig::kDisplayWidth - 125, 22,
+                  RGB565_ORANGE);
+    gfx->setTextColor(RGB565_BLACK, RGB565_ORANGE);
+    gfx->setCursor(132, 283);
+    gfx->print("CALIBRATE");
   }
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(centeredTextX("Header = back", 1), 302);
   gfx->print("Header = back");
+}
+
+void UiManager::drawCalibrationPage(const CalibrationView &view) {
+#if !defined(PYXIS_BOARD_WAVESHARE_28)
+  (void)view;
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+  gfx->setCursor(5, 20);
+  gfx->print("Calibration requires 2.8-inch display");
+  gfx->flush();
+  return;
+#else
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->setCursor(5, 10);
+  gfx->print("CALIBRATION");
+  gfx->drawLine(5, 34, BoardConfig::kDisplayWidth - 6, 34, RGB565_ORANGE);
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->setCursor(5, 42);
+  if (view.profile != nullptr) {
+    gfx->printf("PN %lu  %s", (unsigned long)view.profile->productNum,
+                view.profile->modelName);
+  }
+
+  if (view.profile == nullptr) {
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+    gfx->setCursor(5, 75);
+    gfx->print("No approved calibration profile");
+  } else if (view.phase == CalibrationUiPhase::ProcedureList) {
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->setCursor(5, 62);
+    gfx->print("Select procedure:");
+    for (uint8_t index = 0; index < view.profile->procedureCount && index < 4;
+         ++index) {
+      const CalibrationProcedure &procedure = view.profile->procedures[index];
+      int16_t y = 82 + index * 48;
+      gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 40, RGB565_DARKGREY);
+      gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+      gfx->setCursor(12, y + 8);
+      gfx->printf("%u. %s", index + 1, procedure.name);
+      gfx->setCursor(12, y + 23);
+      gfx->printf("%s", procedure.readingName);
+    }
+  } else if (view.phase == CalibrationUiPhase::NumericInput) {
+    const CalibrationProcedure &procedure =
+        view.profile->procedures[view.selectedProcedure];
+    const CalibrationInput &input =
+        view.profile->inputs[procedure.firstInput + view.currentInput];
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->setCursor(5, 62);
+    gfx->printf("%s  [%g..%g] %s", input.label, input.minimum, input.maximum,
+                input.unit);
+    gfx->fillRect(5, 78, BoardConfig::kDisplayWidth - 10, 34, RGB565_NAVY);
+    gfx->setTextSize(2);
+    gfx->setTextColor(RGB565_WHITE, RGB565_NAVY);
+    gfx->setCursor(12, 87);
+    gfx->print(view.numericText);
+    static const char *keys[12] = {"1", "2", "3", "4", "5", "6",
+                                   "7", "8", "9", "-", "0", "."};
+    gfx->setTextSize(2);
+    for (uint8_t key = 0; key < 12; ++key) {
+      int16_t x = 5 + (key % 3) * ((BoardConfig::kDisplayWidth - 10) / 3);
+      int16_t y = 120 + (key / 3) * 38;
+      int16_t width = (BoardConfig::kDisplayWidth - 14) / 3;
+      gfx->fillRect(x, y, width, 32, RGB565_DARKGREY);
+      gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+      gfx->setCursor(x + width / 2 - 6, y + 8);
+      gfx->print(keys[key]);
+    }
+    if (view.statusText != nullptr && view.statusText[0] != '\0') {
+      gfx->setTextSize(1);
+      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+      gfx->setCursor(5, 263);
+      gfx->print(view.statusText);
+    }
+    const int16_t actionWidth = (BoardConfig::kDisplayWidth - 20) / 3;
+    const int16_t cancelX = 5;
+    const int16_t deleteX = cancelX + actionWidth + 5;
+    const int16_t nextX = deleteX + actionWidth + 5;
+    gfx->fillRect(cancelX, 276, actionWidth, 36, RGB565_RED);
+    gfx->fillRect(deleteX, 276, actionWidth, 36, RGB565_DARKGREY);
+    gfx->fillRect(nextX, 276, actionWidth, 36, RGB565_GREEN);
+    gfx->setTextSize(1);
+    gfx->setTextColor(RGB565_WHITE, RGB565_RED);
+    gfx->setCursor(cancelX + 5, 289); gfx->print("CANCEL");
+    gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+    gfx->setCursor(deleteX + 3, 289); gfx->print("DEL");
+    gfx->setTextColor(RGB565_BLACK, RGB565_GREEN);
+    gfx->setCursor(nextX + 7, 289); gfx->print("NEXT");
+  } else {
+    const CalibrationProcedure &procedure =
+        view.profile->procedures[view.selectedProcedure];
+    gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+    gfx->setCursor(5, 65);
+    gfx->print(procedure.name);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+    gfx->setCursor(5, 84);
+    gfx->print(procedure.message);
+    gfx->setCursor(5, 122);
+    gfx->printf("Step: %u/%u", view.commandCount == 0 ? 0 : view.commandIndex + 1,
+                view.commandCount);
+    gfx->setCursor(5, 145);
+    gfx->print(view.statusText);
+
+    if (view.phase == CalibrationUiPhase::Confirm) {
+      const int16_t halfWidth = (BoardConfig::kDisplayWidth - 15) / 2;
+      gfx->fillRect(5, 245, halfWidth, 55, RGB565_RED);
+      gfx->fillRect(10 + halfWidth, 245, halfWidth, 55, RGB565_GREEN);
+      gfx->setTextSize(2);
+      gfx->setTextColor(RGB565_WHITE, RGB565_RED);
+      gfx->setCursor(10, 263); gfx->print("CANCEL");
+      gfx->setTextColor(RGB565_BLACK, RGB565_GREEN);
+      gfx->setCursor(15 + halfWidth, 263); gfx->print("START");
+    } else if (view.phase == CalibrationUiPhase::Finished) {
+      gfx->fillRect(35, 245, BoardConfig::kDisplayWidth - 70, 55, RGB565_BLUE);
+      gfx->setTextSize(2);
+      gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+      gfx->setCursor(BoardConfig::kDisplayWidth / 2 - 24, 263);
+      gfx->print("EXIT");
+    } else {
+      gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+      gfx->setCursor(5, 205);
+      gfx->print("Please wait - do not remove probe");
+    }
+  }
+  gfx->flush();
+#endif
 }
 
 void UiManager::drawDashboardDynamic(const DashboardView &view) {
