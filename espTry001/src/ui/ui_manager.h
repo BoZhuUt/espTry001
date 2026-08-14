@@ -102,6 +102,7 @@ struct SensorInfoView {
 struct CalibrationView {
   CalibrationUiPhase phase = CalibrationUiPhase::ProcedureList;
   const CalibrationProfile *profile = nullptr;
+  uint8_t procedurePage = 0;
   uint8_t selectedProcedure = 0;
   uint8_t currentInput = 0;
   const char *numericText = "";

@@ -172,6 +172,7 @@ enum class CalibrationUiPhase : uint8_t {
 
 struct CalibrationState {
   CalibrationUiPhase phase = CalibrationUiPhase::ProcedureList;
+  uint8_t procedurePage = 0;
   uint8_t selectedProcedure = 0;
   uint8_t currentInput = 0;
   float inputValues[CalibrationExecutor::kMaxProcedureInputs] = {0};

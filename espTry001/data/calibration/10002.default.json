@@ -1,0 +1,520 @@
+{
+  "schema_version": 1,
+  "profile_id": "10002.default",
+  "product_num": 10002,
+  "variant": "default",
+  "model_name": "LT-633",
+  "source_file": "10002.json",
+  "requires_version_read": false,
+  "release_status": "approved",
+  "review": {
+    "input_ranges": true,
+    "result_mappings": true,
+    "version_conditions": true,
+    "command_sequences": true,
+    "confirmed_operations": [
+      "reading_1.calibration_1",
+      "reading_1.calibration_2",
+      "reading_1.calibration_3",
+      "reading_1.calibration_4",
+      "reading_1.calibration_5",
+      "output_span_1.20ma"
+    ]
+  },
+  "audit_issues": [
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[0].Cmds[0]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[1].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[2].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[3].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[4].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].inputs",
+      "message": "input ranges and value types require review before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].steps",
+      "message": "command addresses, values, and waits require review before release"
+    }
+  ],
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
+      "reading_name": "Turbidity",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 24
+                }
+              },
+              "wait_after_ms": 100,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 769,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 264,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal over range"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_2",
+      "category": "sensor_calibration",
+      "reading_name": "Turbidity",
+      "name": "Mid-Low Calibration",
+      "message": "slope_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Mid-Low Calibration",
+          "type": "float32",
+          "default": 80,
+          "minimum": 20,
+          "maximum": 120,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "NTU",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44005,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 25
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 769,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 260,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution over range"
+                  },
+                  {
+                    "value": 264,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal over range."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_3",
+      "category": "sensor_calibration",
+      "reading_name": "Turbidity",
+      "name": "Mid-High Calibration",
+      "message": "slope_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Mid-High Calibration",
+          "type": "float32",
+          "default": 500,
+          "minimum": 450,
+          "maximum": 550,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "NTU",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44007,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 27
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 769,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 261,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution over range"
+                  },
+                  {
+                    "value": 264,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal over range."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_4",
+      "category": "sensor_calibration",
+      "reading_name": "Turbidity",
+      "name": "1000NTU Calibration",
+      "message": "slope_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "1000NTU Calibration",
+          "type": "float32",
+          "default": 1000,
+          "minimum": 950,
+          "maximum": 1050,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "NTU",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44017,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 29
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 769,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 261,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution over range"
+                  },
+                  {
+                    "value": 264,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal over range."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_5",
+      "category": "sensor_calibration",
+      "reading_name": "Turbidity",
+      "name": "High Calibration",
+      "message": "slope_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "High Calibration",
+          "type": "float32",
+          "default": 2000,
+          "minimum": 2000,
+          "maximum": 3000,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "NTU",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44009,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 26
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 769,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 261,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution over range"
+                  },
+                  {
+                    "value": 264,
+                    "outcome": "failure",
+                    "message": "Calibration failed, signal over range."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_1.20ma",
+      "category": "output_span",
+      "reading_name": "Turbidity 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "NTU",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "uint16",
+          "default": 4000,
+          "minimum": 1,
+          "maximum": 4000,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 0,
+          "unit": "NTU",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 48014,
+                "type": "uint16",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3,11 +3,38 @@
   "config_version": "2026.08.13.1",
   "profiles": [
     {
+      "profile_id": "10002.default",
+      "product_num": 10002,
+      "variant": "default",
+      "priority": 0,
+      "file": "/calibration/10002.default.json",
+      "match": null,
+      "requires_version_read": false
+    },
+    {
       "profile_id": "50661.default",
       "product_num": 50661,
       "variant": "default",
       "priority": 0,
       "file": "/calibration/50661.default.json",
+      "match": null,
+      "requires_version_read": false
+    },
+    {
+      "profile_id": "50692.default",
+      "product_num": 50692,
+      "variant": "default",
+      "priority": 0,
+      "file": "/calibration/50692.default.json",
+      "match": null,
+      "requires_version_read": false
+    },
+    {
+      "profile_id": "53108.default",
+      "product_num": 53108,
+      "variant": "default",
+      "priority": 0,
+      "file": "/calibration/53108.default.json",
       "match": null,
       "requires_version_read": false
     },

@@ -188,6 +188,8 @@ src/calibration_index_generated.inc         # 首批回退索引
 - `source_file`：用于报告和追溯，不作为运行时匹配依据；
 - `requires_version_read`：任一流程或步骤包含版本条件时为 true；
 - `release_status`：`approved`、`draft` 或 `blocked`；只有 approved 可进入固件发布包；
+- `review`：人工审核记录；包含 `input_ranges`、`result_mappings`、`version_conditions`、`command_sequences` 和 `confirmed_operations`。新导入 Profile 至少必须逐项确认所有操作及其命令地址、值和等待时间；使用对应功能时还必须确认范围、结果映射和版本条件；
+- `audit_issues`：导入阶段发现的问题列表。仍含 `error` 或 `unsupported` 时禁止 approved；
 - `procedures`：1～16 个校准流程。
 
 ## 6. 校准流程与输入

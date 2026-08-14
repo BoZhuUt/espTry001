@@ -150,6 +150,7 @@ void setup()
 
   // 优先加载 LittleFS JSON；挂载、文件或校验失败时自动使用固件内置表。
   profileStore.begin();
+  profileUpdater.attachCalibrationStore(calibrationProfileStore);
   storageService.setMetadata(profileStore.configVersion(),
                              FIRMWARE_VERSION_TEXT);
 
@@ -698,10 +699,13 @@ void updateDashboardStateSnapshot() {
 
   // Copy text into AppState-owned buffers. This avoids retaining pointers into
   // the hot-update Profile store or SensorDiscovery's mutable error storage.
+  const CalibrationProfile *calibration = calibrationProfileStore.profile();
   const char *deviceName =
       activeProfile != nullptr && activeProfile->name != nullptr
           ? activeProfile->name
-          : "Unsupported PN";
+          : (calibration != nullptr && calibration->modelName[0] != '\0'
+                 ? calibration->modelName
+                 : "Unsupported PN");
   snprintf(snapshot.deviceName, sizeof(snapshot.deviceName), "%s", deviceName);
   snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
            rs485Status.discoveryErrorText);
@@ -1261,6 +1265,7 @@ void drawCalibrationPage() {
   CalibrationView view;
   view.phase = appState.calibration.phase;
   view.profile = calibrationProfileStore.profile();
+  view.procedurePage = appState.calibration.procedurePage;
   view.selectedProcedure = appState.calibration.selectedProcedure;
   view.currentInput = appState.calibration.currentInput;
   view.numericText = appState.calibration.numericText;
@@ -1315,9 +1320,23 @@ void handleCalibrationTouch(int x, int y) {
       drawSensorInfoPage();
       return;
     }
-    if (y >= 70 && y < 275) {
-      uint8_t selected = static_cast<uint8_t>((y - 70) / 41);
-      if (selected >= profile->procedureCount || selected >= 5) return;
+    constexpr uint8_t kOperationsPerPage = 5;
+    const uint8_t pageCount =
+        (profile->procedureCount + kOperationsPerPage - 1) / kOperationsPerPage;
+    if (y >= 262) {
+      if (x < BoardConfig::kDisplayWidth / 2) {
+        if (state.procedurePage > 0) state.procedurePage--;
+      } else if (state.procedurePage + 1 < pageCount) {
+        state.procedurePage++;
+      }
+      drawCalibrationPage();
+      return;
+    }
+    if (y >= 66 && y < 256) {
+      uint8_t localIndex = static_cast<uint8_t>((y - 66) / 38);
+      uint8_t selected = state.procedurePage * kOperationsPerPage + localIndex;
+      if (selected >= profile->procedureCount || localIndex >= kOperationsPerPage)
+        return;
       state.selectedProcedure = selected;
       state.currentInput = 0;
       const CalibrationProcedure &procedure = profile->procedures[selected];

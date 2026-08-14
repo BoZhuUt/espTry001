@@ -51,10 +51,12 @@ def read_payload(path: Path) -> bytes:
     return payload
 
 
-def upload(port: str, payload: bytes) -> str:
+def upload(port: str, payload: bytes, magic: bytes = MAGIC) -> str:
     """发送协议头与 JSON，并等待设备返回 ACK 或 NAK。"""
+    if len(magic) != 7:
+        raise ValueError("protocol magic must contain exactly 7 bytes")
     crc32 = zlib.crc32(payload) & 0xFFFFFFFF
-    header = MAGIC + struct.pack("<II", len(payload), crc32)
+    header = magic + struct.pack("<II", len(payload), crc32)
 
     # 必须先创建“未打开”的端口对象，再设置 DTR/RTS，最后 open()。
     # Serial(port, ...) 会先用默认 DTR 打开，再修改控制线，ESP32-S3

@@ -110,6 +110,15 @@ bool CalibrationProfileStore::loadForProduct(uint32_t productNum,
     return fail("Calibration lookup invalid");
   }
 
+  // The hot updater commits the index last. If power is lost in the short
+  // interval after the old index was renamed, restore its backup before the
+  // first post-boot lookup.
+  if (strcmp(indexPath, "/calibration/index.json") == 0 &&
+      !LittleFS.exists(indexPath) &&
+      LittleFS.exists("/calibration/index.backup")) {
+    LittleFS.rename("/calibration/index.backup", indexPath);
+  }
+
   File file = LittleFS.open(indexPath, "r");
   if (!file) return fail("Calibration index missing");
   if (file.size() == 0 || file.size() > kMaxIndexFileSize) {
@@ -153,6 +162,63 @@ bool CalibrationProfileStore::loadForProduct(uint32_t productNum,
   if (matches == 0) return fail("Calibration profile not found");
   if (matches != 1) return fail("Calibration profile ambiguous");
   return loadProfileFile(selectedPath, productNum);
+}
+
+bool CalibrationProfileStore::validateBundle(const char *indexPath) {
+  clear();
+  if (indexPath == nullptr || indexPath[0] == '\0') {
+    return fail("Calibration index path invalid");
+  }
+  File file = LittleFS.open(indexPath, "r");
+  if (!file) return fail("Calibration index missing");
+  if (file.size() == 0 || file.size() > kMaxIndexFileSize) {
+    file.close();
+    return fail("Calibration index size invalid");
+  }
+
+  JsonDocument document;
+  DeserializationError jsonError = deserializeJson(document, file);
+  file.close();
+  if (jsonError) return fail(jsonError.c_str());
+  if (!document["schema_version"].is<uint8_t>() ||
+      document["schema_version"].as<uint8_t>() != kSupportedSchemaVersion) {
+    return fail("Calibration index schema unsupported");
+  }
+  JsonArrayConst profiles = document["profiles"].as<JsonArrayConst>();
+  if (profiles.isNull() || profiles.size() == 0 ||
+      profiles.size() > kMaxProfiles) {
+    return fail("Calibration index profiles invalid");
+  }
+
+  uint32_t productNumbers[kMaxProfiles] = {0};
+  uint8_t profileCount = 0;
+  for (JsonObjectConst candidate : profiles) {
+    if (!candidate["product_num"].is<uint32_t>()) {
+      return fail("Calibration index PN invalid");
+    }
+    uint32_t productNum = candidate["product_num"].as<uint32_t>();
+    if (productNum == 0) return fail("Calibration index PN invalid");
+    for (uint8_t previous = 0; previous < profileCount; ++previous) {
+      if (productNumbers[previous] == productNum) {
+        return fail("Calibration index duplicate PN");
+      }
+    }
+    productNumbers[profileCount++] = productNum;
+    if (!candidate["match"].isNull() ||
+        candidate["requires_version_read"].as<bool>()) {
+      return fail("Calibration version match unsupported");
+    }
+    const char *path = candidate["file"].as<const char *>();
+    if (path == nullptr || strncmp(path, "/calibration/", 13) != 0 ||
+        strchr(path + 13, '/') != nullptr || strlen(path) >= 80) {
+      return fail("Calibration profile path invalid");
+    }
+    if (!loadProfileFile(path, productNum)) return false;
+  }
+
+  clear();
+  lastError_[0] = '\0';
+  return true;
 }
 
 bool CalibrationProfileStore::loadProfileFile(const char *path,

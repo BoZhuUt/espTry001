@@ -7,6 +7,16 @@
   "source_file": "57769.json",
   "requires_version_read": false,
   "release_status": "approved",
+  "review": {
+    "input_ranges": true,
+    "result_mappings": true,
+    "version_conditions": true,
+    "command_sequences": true,
+    "confirmed_operations": [
+      "reading_1.calibration_1",
+      "reading_1.calibration_2"
+    ]
+  },
   "procedures": [
     {
       "id": "reading_1.calibration_1",

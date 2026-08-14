@@ -343,7 +343,7 @@ void UiManager::drawConfigUpdatePage(const ConfigUpdateView &view) {
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 55);
-  gfx->print("USB protocol: ESPCFG1");
+  gfx->print("USB: ESPCFG1 / ESPCAL1");
   gfx->setCursor(5, 75);
   gfx->print("Status:");
   gfx->setCursor(5, 92);
@@ -559,11 +559,19 @@ void UiManager::drawSensorParameterArea(const SensorInfoView &view) {
   gfx->setTextSize(1);
 
   if (!view.supported) {
-    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
     gfx->setCursor(5, 165);
-    gfx->print("Unsupported PN");
-    gfx->setCursor(5, 185);
-    gfx->print("No parameter profile");
+    if (view.calibrationAvailable) {
+      gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+      gfx->print("No live parameter profile");
+      gfx->setCursor(5, 185);
+      gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+      gfx->print("Calibration available");
+    } else {
+      gfx->setTextColor(RGB565_RED, RGB565_BLACK);
+      gfx->print("Unsupported PN");
+      gfx->setCursor(5, 185);
+      gfx->print("No parameter profile");
+    }
   } else {
 #if defined(PYXIS_BOARD_WAVESHARE_28)
     // Keep the original left-to-right "label: value" reading order on the
@@ -670,29 +678,58 @@ void UiManager::drawCalibrationPage(const CalibrationView &view) {
     gfx->print("No approved calibration/output profile");
   } else if (view.phase == CalibrationUiPhase::ProcedureList) {
     gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-    gfx->setCursor(5, 57);
+    gfx->setCursor(5, 55);
     gfx->print("Select operation:");
+    constexpr uint8_t kOperationsPerPage = 5;
+    const uint8_t pageCount =
+        (view.profile->procedureCount + kOperationsPerPage - 1) /
+        kOperationsPerPage;
+    const uint8_t page = view.procedurePage < pageCount
+                             ? view.procedurePage
+                             : static_cast<uint8_t>(pageCount - 1);
+    const uint8_t firstIndex = page * kOperationsPerPage;
     uint8_t calibrationNumber = 0;
-    for (uint8_t index = 0; index < view.profile->procedureCount && index < 5;
-         ++index) {
+    for (uint8_t index = 0; index < firstIndex; ++index) {
+      if (view.profile->procedures[index].category ==
+          CalibrationProcedureCategory::SensorCalibration) {
+        calibrationNumber++;
+      }
+    }
+    for (uint8_t localIndex = 0; localIndex < kOperationsPerPage;
+         ++localIndex) {
+      const uint8_t index = firstIndex + localIndex;
+      if (index >= view.profile->procedureCount) break;
       const CalibrationProcedure &procedure = view.profile->procedures[index];
-      int16_t y = 70 + index * 41;
-      gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 36,
+      int16_t y = 66 + localIndex * 38;
+      gfx->fillRect(5, y, BoardConfig::kDisplayWidth - 10, 33,
                     RGB565_DARKGREY);
       gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
       const bool outputSpan =
           procedure.category == CalibrationProcedureCategory::OutputSpan;
       if (!outputSpan) calibrationNumber++;
-      gfx->setCursor(12, y + 5);
+      gfx->setCursor(12, y + 3);
       if (outputSpan) {
         gfx->print("4-20mA SET");
       } else {
         gfx->printf("CALIB %u", calibrationNumber);
       }
-      gfx->setCursor(12, y + 20);
+      gfx->setCursor(12, y + 18);
       gfx->printf("[%s] %s", outputSpan ? "OUTPUT" : "SENSOR",
                   procedure.readingName);
     }
+    gfx->fillRect(5, 262, BoardConfig::kDisplayWidth - 10, 50, RGB565_NAVY);
+    gfx->setTextColor(page > 0 ? RGB565_WHITE : RGB565_DARKGREY, RGB565_NAVY);
+    gfx->setCursor(15, 280);
+    gfx->print("< PREV");
+    gfx->setTextColor(RGB565_CYAN, RGB565_NAVY);
+    char pageText[12];
+    snprintf(pageText, sizeof(pageText), "%u/%u", page + 1, pageCount);
+    gfx->setCursor(centeredTextX(pageText, 1), 280);
+    gfx->print(pageText);
+    gfx->setTextColor(page + 1 < pageCount ? RGB565_WHITE : RGB565_DARKGREY,
+                      RGB565_NAVY);
+    gfx->setCursor(BoardConfig::kDisplayWidth - 57, 280);
+    gfx->print("NEXT >");
   } else if (view.phase == CalibrationUiPhase::NumericInput) {
     const CalibrationProcedure &procedure =
         view.profile->procedures[view.selectedProcedure];

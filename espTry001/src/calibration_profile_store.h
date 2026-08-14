@@ -96,11 +96,15 @@ struct CalibrationProfile {
 // LittleFS must already be mounted by SensorProfileStore during setup().
 class CalibrationProfileStore {
  public:
+  static constexpr uint8_t kMaxProfiles = 32;
   static constexpr size_t kMaxIndexFileSize = 16 * 1024;
   static constexpr size_t kMaxProfileFileSize = 64 * 1024;
 
   bool loadForProduct(uint32_t productNum,
                       const char *indexPath = "/calibration/index.json");
+  // Validate every profile referenced by a candidate index. This is used by
+  // the hot updater before the candidate index becomes active.
+  bool validateBundle(const char *indexPath);
   void clear();
 
   const CalibrationProfile *profile() const {

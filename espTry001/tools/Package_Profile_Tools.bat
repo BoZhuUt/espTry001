@@ -38,6 +38,13 @@ set "UPDATER_EXE=%~dp0SensorProfileUpdater.exe"
 set "MANAGER_EXE=%~dp0SensorProfileManager.exe"
 set "CALIBRATION_MANAGER_EXE=%~dp0CalibrationProfileManager.exe"
 set "EXPORTER_EXE=%~dp0SensorDataExporter.exe"
+set "CALIBRATION_PROFILES_DIR=%~dp0..\config\calibration_profiles"
+set "CALIBRATION_RULES=%~dp0..\config\calibration_import_rules.json"
+set "CALIBRATION_IMPORTER=%~dp0import_calibration_profiles.py"
+set "CALIBRATION_BUNDLE_BUILDER=%~dp0build_calibration_bundle.py"
+set "CALIBRATION_PACKAGE_BUILDER=%~dp0build_calibration_package.py"
+set "CALIBRATION_UPLOADER=%~dp0upload_calibration_package.py"
+set "SENSOR_UPLOAD_LIBRARY=%~dp0upload_sensor_profiles.py"
 set "RELEASE_DIR=%~dp0release"
 set "PROJECT_DIR=%~dp0.."
 
@@ -63,7 +70,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
   "$packageTime = Get-Date -Format 'yyyyMMdd_HHmmss';" ^
   "New-Item -ItemType Directory -Path $env:RELEASE_DIR -Force | Out-Null;" ^
   "$zip = Join-Path $env:RELEASE_DIR ('Pyxis_SensorLink_Tools_' + $gitVersion + '_' + $packageTime + '.zip');" ^
-  "$files = @($env:PROFILE_JSON, $env:UPDATER_EXE, $env:MANAGER_EXE, $env:CALIBRATION_MANAGER_EXE, $env:EXPORTER_EXE);" ^
+  "$files = @($env:PROFILE_JSON, $env:UPDATER_EXE, $env:MANAGER_EXE, $env:CALIBRATION_MANAGER_EXE, $env:EXPORTER_EXE, $env:CALIBRATION_PROFILES_DIR, $env:CALIBRATION_RULES, $env:CALIBRATION_IMPORTER, $env:CALIBRATION_BUNDLE_BUILDER, $env:CALIBRATION_PACKAGE_BUILDER, $env:CALIBRATION_UPLOADER, $env:SENSOR_UPLOAD_LIBRARY);" ^
   "Compress-Archive -LiteralPath $files -DestinationPath $zip -CompressionLevel Optimal -Force;" ^
   "$hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash;" ^
   "Write-Host ''; Write-Host ('Git     : ' + $gitVersion);" ^

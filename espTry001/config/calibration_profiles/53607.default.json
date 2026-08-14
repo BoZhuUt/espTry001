@@ -7,6 +7,15 @@
   "source_file": "53607.json",
   "requires_version_read": true,
   "release_status": "draft",
+  "review": {
+    "input_ranges": false,
+    "result_mappings": false,
+    "version_conditions": false,
+    "command_sequences": false,
+    "confirmed_operations": [
+      "reading_1.calibration_1"
+    ]
+  },
   "procedures": [
     {
       "id": "reading_1.calibration_1",

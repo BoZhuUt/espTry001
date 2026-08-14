@@ -7,6 +7,17 @@
   "source_file": "50661.json",
   "requires_version_read": false,
   "release_status": "approved",
+  "review": {
+    "input_ranges": true,
+    "result_mappings": true,
+    "version_conditions": true,
+    "command_sequences": true,
+    "confirmed_operations": [
+      "reading_1.calibration_1",
+      "reading_1.calibration_2",
+      "output_span_1.20ma"
+    ]
+  },
   "procedures": [
     {
       "id": "reading_1.calibration_1",

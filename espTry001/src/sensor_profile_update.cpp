@@ -2,10 +2,17 @@
 
 #include <LittleFS.h>
 
-constexpr char SensorProfileUpdater::kMagic[];
+constexpr char SensorProfileUpdater::kSensorMagic[];
+constexpr char SensorProfileUpdater::kCalibrationMagic[];
+constexpr char SensorProfileUpdater::kPackageMagic[];
 constexpr const char *SensorProfileUpdater::kCurrentPath;
 constexpr const char *SensorProfileUpdater::kBackupPath;
 constexpr const char *SensorProfileUpdater::kUploadingPath;
+constexpr const char *SensorProfileUpdater::kCalibrationPackagePath;
+constexpr const char *SensorProfileUpdater::kCalibrationIndexPath;
+constexpr const char *SensorProfileUpdater::kCalibrationIndexBackupPath;
+constexpr const char *SensorProfileUpdater::kCalibrationIndexUploadingPath;
+constexpr const char *SensorProfileUpdater::kCalibrationProfileUploadingPath;
 
 namespace {
 
@@ -19,6 +26,9 @@ void SensorProfileUpdater::begin(SensorProfileStore &store) {
   cancel();
   store_ = &store;
   removeIfExists(kUploadingPath);
+  removeIfExists(kCalibrationPackagePath);
+  removeIfExists(kCalibrationIndexUploadingPath);
+  removeIfExists(kCalibrationProfileUploadingPath);
   state_ = State::ReceivingHeader;
 }
 
@@ -32,6 +42,7 @@ void SensorProfileUpdater::update(Stream &usb) {
     expectedCrc32_ = 0;
     runningCrc32_ = 0xFFFFFFFF;
     receivedLength_ = 0;
+    payloadType_ = PayloadType::None;
     errorText_[0] = '\0';
     state_ = State::ReceivingHeader;
   }
@@ -45,6 +56,9 @@ void SensorProfileUpdater::update(Stream &usb) {
 void SensorProfileUpdater::cancel() {
   if (uploadFile_) uploadFile_.close();
   removeIfExists(kUploadingPath);
+  removeIfExists(kCalibrationPackagePath);
+  removeIfExists(kCalibrationIndexUploadingPath);
+  removeIfExists(kCalibrationProfileUploadingPath);
   state_ = State::Idle;
   store_ = nullptr;
   headerLength_ = 0;
@@ -52,6 +66,7 @@ void SensorProfileUpdater::cancel() {
   expectedCrc32_ = 0;
   runningCrc32_ = 0xFFFFFFFF;
   receivedLength_ = 0;
+  payloadType_ = PayloadType::None;
   successTimeMs_ = 0;
   errorText_[0] = '\0';
 }
@@ -59,8 +74,11 @@ void SensorProfileUpdater::cancel() {
 const char *SensorProfileUpdater::statusText() const {
   switch (state_) {
     case State::Idle: return "Idle";
-    case State::ReceivingHeader: return "Waiting for ESPCFG1";
-    case State::ReceivingPayload: return "Receiving JSON";
+    case State::ReceivingHeader: return "Waiting for ESPCFG1/ESPCAL1";
+    case State::ReceivingPayload:
+      return payloadType_ == PayloadType::CalibrationPackage
+                 ? "Receiving calibration"
+                 : "Receiving JSON";
     case State::Success: return "Installed - restarting";
     case State::Failed: return "Upload failed";
   }
@@ -78,19 +96,30 @@ void SensorProfileUpdater::handleHeader(Stream &usb) {
   }
   if (headerLength_ < kHeaderLength) return;
 
-  if (memcmp(header_, kMagic, kMagicLength) != 0) {
+  if (memcmp(header_, kSensorMagic, kMagicLength) == 0) {
+    payloadType_ = PayloadType::SensorProfiles;
+  } else if (memcmp(header_, kCalibrationMagic, kMagicLength) == 0) {
+    payloadType_ = PayloadType::CalibrationPackage;
+  } else {
     fail(usb, "Bad magic");
     return;
   }
   expectedLength_ = readLe32(header_ + kMagicLength);
   expectedCrc32_ = readLe32(header_ + kMagicLength + 4);
-  if (expectedLength_ == 0 ||
-      expectedLength_ > SensorProfileStore::kMaxJsonFileSize) {
+  uint32_t maximumLength =
+      payloadType_ == PayloadType::CalibrationPackage
+          ? kMaxCalibrationPackageSize
+          : SensorProfileStore::kMaxJsonFileSize;
+  if (expectedLength_ == 0 || expectedLength_ > maximumLength) {
     fail(usb, "Length out of range");
     return;
   }
 
-  uploadFile_ = LittleFS.open(kUploadingPath, "w");
+  const char *uploadPath =
+      payloadType_ == PayloadType::CalibrationPackage
+          ? kCalibrationPackagePath
+          : kUploadingPath;
+  uploadFile_ = LittleFS.open(uploadPath, "w");
   if (!uploadFile_) {
     fail(usb, "Cannot create temp file");
     return;
@@ -133,25 +162,38 @@ void SensorProfileUpdater::handlePayload(Stream &usb) {
     fail(usb, "CRC32 mismatch");
     return;
   }
-  if (store_ == nullptr || !store_->activateFile(kUploadingPath)) {
-    char validationError[96] = "Store unavailable";
-    if (store_ != nullptr) {
-      snprintf(validationError, sizeof(validationError), "%s",
-               store_->lastError());
-      // Candidate parsing uses the same fixed runtime buffer as the active
-      // configuration. Reload the untouched current file so a rejected upload
-      // cannot change the running profile set before the next reboot.
-      store_->begin(kCurrentPath);
+  if (payloadType_ == PayloadType::CalibrationPackage) {
+    if (!installCalibrationPackage()) {
+      char validationError[96] = "Calibration install failed";
+      if (calibrationStore_ != nullptr &&
+          calibrationStore_->lastError()[0] != '\0') {
+        snprintf(validationError, sizeof(validationError), "%s",
+                 calibrationStore_->lastError());
+      }
+      fail(usb, validationError);
+      return;
     }
-    fail(usb, validationError);
-    return;
-  }
-  if (!installCandidate()) {
-    // installCandidate() restores the old file name when replacement fails;
-    // keep the in-memory store consistent with that restored file as well.
-    store_->begin(kCurrentPath);
-    fail(usb, "Atomic replace failed");
-    return;
+  } else {
+    if (store_ == nullptr || !store_->activateFile(kUploadingPath)) {
+      char validationError[96] = "Store unavailable";
+      if (store_ != nullptr) {
+        snprintf(validationError, sizeof(validationError), "%s",
+                 store_->lastError());
+        // Candidate parsing uses the same fixed runtime buffer as the active
+        // configuration. Reload the untouched current file so a rejected upload
+        // cannot change the running profile set before the next reboot.
+        store_->begin(kCurrentPath);
+      }
+      fail(usb, validationError);
+      return;
+    }
+    if (!installCandidate()) {
+      // installCandidate() restores the old file name when replacement fails;
+      // keep the in-memory store consistent with that restored file as well.
+      store_->begin(kCurrentPath);
+      fail(usb, "Atomic replace failed");
+      return;
+    }
   }
 
   usb.print("ACK\n");
@@ -171,9 +213,183 @@ bool SensorProfileUpdater::installCandidate() {
   return true;
 }
 
+bool SensorProfileUpdater::installCalibrationPackage() {
+  if (calibrationStore_ == nullptr) return false;
+  if (!LittleFS.exists("/calibration") && !LittleFS.mkdir("/calibration")) {
+    return false;
+  }
+  if (!unpackCalibrationPackage()) return false;
+  if (!calibrationStore_->validateBundle(kCalibrationIndexUploadingPath)) {
+    return false;
+  }
+  if (!commitCalibrationIndex()) return false;
+  removeIfExists(kCalibrationPackagePath);
+  return true;
+}
+
+bool SensorProfileUpdater::unpackCalibrationPackage() {
+  File package = LittleFS.open(kCalibrationPackagePath, "r");
+  if (!package) return false;
+
+  uint8_t packageHeader[kMagicLength + 2] = {0};
+  if (!readExact(package, packageHeader, sizeof(packageHeader)) ||
+      memcmp(packageHeader, kPackageMagic, kMagicLength) != 0) {
+    package.close();
+    return false;
+  }
+  uint16_t fileCount = static_cast<uint16_t>(packageHeader[kMagicLength]) |
+                       (static_cast<uint16_t>(packageHeader[kMagicLength + 1]) << 8);
+  if (fileCount < 2 ||
+      fileCount > CalibrationProfileStore::kMaxProfiles + 1) {
+    package.close();
+    return false;
+  }
+
+  for (uint16_t fileIndex = 0; fileIndex < fileCount; ++fileIndex) {
+    uint8_t entryHeader[kPackageEntryHeaderLength] = {0};
+    if (!readExact(package, entryHeader, sizeof(entryHeader))) {
+      package.close();
+      return false;
+    }
+    uint8_t kind = entryHeader[0];
+    uint8_t pathLength = entryHeader[1];
+    uint32_t length = readLe32(entryHeader + 2);
+    uint32_t expectedCrc = readLe32(entryHeader + 6);
+    bool indexEntry = kind == 2;
+    if (pathLength == 0 || pathLength >= 80 ||
+        (indexEntry != (fileIndex + 1 == fileCount)) ||
+        (!indexEntry && kind != 1) ||
+        (indexEntry && length > CalibrationProfileStore::kMaxIndexFileSize) ||
+        (!indexEntry && length > CalibrationProfileStore::kMaxProfileFileSize) ||
+        length == 0) {
+      package.close();
+      return false;
+    }
+    char path[80] = {0};
+    if (!readExact(package, reinterpret_cast<uint8_t *>(path), pathLength)) {
+      package.close();
+      return false;
+    }
+    if ((indexEntry && strcmp(path, kCalibrationIndexPath) != 0) ||
+        (!indexEntry && !validCalibrationProfilePath(path)) ||
+        !copyPackageEntry(package, path, length, expectedCrc, indexEntry)) {
+      package.close();
+      return false;
+    }
+  }
+
+  bool complete = package.position() == package.size();
+  package.close();
+  return complete;
+}
+
+bool SensorProfileUpdater::copyPackageEntry(File &package, const char *path,
+                                            uint32_t length,
+                                            uint32_t expectedCrc,
+                                            bool indexEntry) {
+  const char *temporaryPath = indexEntry
+                                  ? kCalibrationIndexUploadingPath
+                                  : kCalibrationProfileUploadingPath;
+  removeIfExists(temporaryPath);
+  File output = LittleFS.open(temporaryPath, "w");
+  if (!output) return false;
+
+  uint8_t buffer[kChunkSize];
+  uint32_t remaining = length;
+  uint32_t crc = 0xFFFFFFFF;
+  while (remaining > 0) {
+    size_t count = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+    if (!readExact(package, buffer, count) || output.write(buffer, count) != count) {
+      output.close();
+      removeIfExists(temporaryPath);
+      return false;
+    }
+    crc = updateCrc32(crc, buffer, count);
+    remaining -= count;
+  }
+  output.flush();
+  output.close();
+  if ((crc ^ 0xFFFFFFFF) != expectedCrc) {
+    removeIfExists(temporaryPath);
+    return false;
+  }
+  if (indexEntry) return true;
+
+  if (LittleFS.exists(path)) {
+    File existing = LittleFS.open(path, "r");
+    if (!existing || existing.size() != length) {
+      if (existing) existing.close();
+      removeIfExists(temporaryPath);
+      return false;
+    }
+    uint32_t existingCrc = 0xFFFFFFFF;
+    while (existing.available()) {
+      size_t count = existing.read(buffer, sizeof(buffer));
+      if (count == 0) break;
+      existingCrc = updateCrc32(existingCrc, buffer, count);
+    }
+    existing.close();
+    removeIfExists(temporaryPath);
+    return (existingCrc ^ 0xFFFFFFFF) == expectedCrc;
+  }
+  if (!LittleFS.rename(temporaryPath, path)) {
+    removeIfExists(temporaryPath);
+    return false;
+  }
+  return true;
+}
+
+bool SensorProfileUpdater::commitCalibrationIndex() {
+  removeIfExists(kCalibrationIndexBackupPath);
+  bool hadCurrent = LittleFS.exists(kCalibrationIndexPath);
+  if (hadCurrent &&
+      !LittleFS.rename(kCalibrationIndexPath, kCalibrationIndexBackupPath)) {
+    return false;
+  }
+  if (!LittleFS.rename(kCalibrationIndexUploadingPath, kCalibrationIndexPath)) {
+    if (hadCurrent) {
+      LittleFS.rename(kCalibrationIndexBackupPath, kCalibrationIndexPath);
+    }
+    return false;
+  }
+  return true;
+}
+
+bool SensorProfileUpdater::readExact(File &file, uint8_t *buffer,
+                                     size_t length) {
+  size_t offset = 0;
+  while (offset < length) {
+    size_t count = file.read(buffer + offset, length - offset);
+    if (count == 0) return false;
+    offset += count;
+  }
+  return true;
+}
+
+bool SensorProfileUpdater::validCalibrationProfilePath(const char *path) const {
+  static constexpr char prefix[] = "/calibration/p";
+  if (path == nullptr || strncmp(path, prefix, sizeof(prefix) - 1) != 0) {
+    return false;
+  }
+  const char *cursor = path + sizeof(prefix) - 1;
+  if (*cursor < '0' || *cursor > '9') return false;
+  while (*cursor >= '0' && *cursor <= '9') ++cursor;
+  if (*cursor++ != '-') return false;
+  for (uint8_t index = 0; index < 8; ++index) {
+    bool decimal = *cursor >= '0' && *cursor <= '9';
+    bool lowerHex = *cursor >= 'a' && *cursor <= 'f';
+    if (!decimal && !lowerHex) return false;
+    ++cursor;
+  }
+  return strcmp(cursor, ".json") == 0;
+}
+
 void SensorProfileUpdater::fail(Stream &usb, const char *message) {
   if (uploadFile_) uploadFile_.close();
   removeIfExists(kUploadingPath);
+  removeIfExists(kCalibrationPackagePath);
+  removeIfExists(kCalibrationIndexUploadingPath);
+  removeIfExists(kCalibrationProfileUploadingPath);
   snprintf(errorText_, sizeof(errorText_), "%s", message != nullptr ? message : "Unknown");
   usb.print("NAK:");
   usb.print(errorText_);

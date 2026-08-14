@@ -154,37 +154,18 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
     if not isinstance(procedures, list):
         return errors
     if profile.get("release_status") == "approved":
-        sensor_count = sum(
-            procedure.get("category") == "sensor_calibration"
-            for procedure in procedures
-            if isinstance(procedure, dict)
-        )
-        output_count = sum(
-            procedure.get("category") == "output_span"
-            for procedure in procedures
-            if isinstance(procedure, dict)
-        )
         check(
-            len(procedures) <= 5,
+            len(procedures) <= 10,
             root,
-            "approved profile exceeds five UI operations",
-            errors,
-        )
-        check(
-            sensor_count <= 4,
-            root,
-            "approved profile exceeds four sensor calibrations",
-            errors,
-        )
-        check(
-            output_count <= 1,
-            root,
-            "approved profile exceeds one output-span operation",
+            "approved profile exceeds ten UI operations",
             errors,
         )
 
     procedure_ids: set[str] = set()
     total_steps = 0
+    has_inputs = False
+    has_results = False
+    has_conditions = bool(profile.get("requires_version_read"))
     for procedure_index, procedure in enumerate(procedures):
         path = f"{root}.procedures[{procedure_index}]"
         check(isinstance(procedure, dict), path, "procedure must be an object", errors)
@@ -202,11 +183,13 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
             errors,
         )
         validate_condition(procedure.get("when"), f"{path}.when", errors)
+        has_conditions |= procedure.get("when") is not None
 
         inputs = procedure.get("inputs")
         check(isinstance(inputs, list) and len(inputs) <= 3, path, "invalid inputs", errors)
         input_ids: set[str] = set()
         if isinstance(inputs, list):
+            has_inputs |= bool(inputs)
             for input_index, item in enumerate(inputs):
                 item_path = f"{path}.inputs[{input_index}]"
                 check(isinstance(item, dict), item_path, "input must be an object", errors)
@@ -242,6 +225,7 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
             if not isinstance(step, dict):
                 continue
             validate_condition(step.get("when"), f"{step_path}.when", errors)
+            has_conditions |= step.get("when") is not None
             alternatives = step.get("alternatives")
             check(
                 isinstance(alternatives, list) and 1 <= len(alternatives) <= 4,
@@ -257,6 +241,7 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
                 if not isinstance(alternative, dict):
                     continue
                 validate_condition(alternative.get("when"), f"{alt_path}.when", errors)
+                has_conditions |= alternative.get("when") is not None
                 write = alternative.get("write")
                 check(isinstance(write, dict), alt_path, "write must be an object", errors)
                 if not isinstance(write, dict):
@@ -275,8 +260,55 @@ def validate_profile(profile: Any, source_name: str) -> list[str]:
                         check(source.get("input_id") in input_ids, alt_path, "unknown input_id", errors)
                 wait_ms = alternative.get("wait_after_ms")
                 check(isinstance(wait_ms, int) and 0 <= wait_ms <= 300_000, alt_path, "invalid wait", errors)
-                validate_result(alternative.get("result"), f"{alt_path}.result", errors)
+                result = alternative.get("result")
+                has_results |= result is not None
+                validate_result(result, f"{alt_path}.result", errors)
     check(total_steps <= 32, root, "profile exceeds 32 command steps", errors)
+    if profile.get("release_status") == "approved":
+        review = profile.get("review")
+        check(isinstance(review, dict), root, "approved profile requires review record", errors)
+        if not isinstance(review, dict):
+            review = {}
+        if has_inputs:
+            check(review.get("input_ranges") is True, root, "input ranges are not reviewed", errors)
+        if has_results:
+            check(review.get("result_mappings") is True, root, "result mappings are not reviewed", errors)
+        if has_conditions:
+            check(review.get("version_conditions") is True, root, "version conditions are not reviewed", errors)
+        check(
+            review.get("command_sequences") is True,
+            root,
+            "command sequences are not reviewed",
+            errors,
+        )
+        confirmed_operations = review.get("confirmed_operations")
+        expected_operation_ids = {
+            procedure.get("id")
+            for procedure in procedures
+            if isinstance(procedure, dict)
+        }
+        check(
+            isinstance(confirmed_operations, list)
+            and set(confirmed_operations) == expected_operation_ids,
+            root,
+            "not all operations are individually confirmed",
+            errors,
+        )
+        audit_issues = profile.get("audit_issues", [])
+        check(isinstance(audit_issues, list), root, "audit_issues must be an array", errors)
+        if isinstance(audit_issues, list):
+            for issue in audit_issues:
+                if isinstance(issue, dict) and issue.get("severity") in {"error", "unsupported"}:
+                    errors.append(
+                        f"{root}: unresolved import {issue.get('severity')}: "
+                        f"{issue.get('message', '')}"
+                    )
+        check(
+            profile.get("requires_version_read") is not True,
+            root,
+            "version-conditioned profiles are not supported by firmware",
+            errors,
+        )
     return errors
 
 
@@ -311,6 +343,18 @@ def main(argv: Iterable[str] = ()) -> int:
 
     approved = [profile for profile in profiles if profile["release_status"] == "approved"]
     skipped = [profile for profile in profiles if profile["release_status"] != "approved"]
+    approved_by_pn: dict[int, list[str]] = {}
+    for profile in approved:
+        approved_by_pn.setdefault(profile["product_num"], []).append(profile["profile_id"])
+    for product_num, profile_ids in approved_by_pn.items():
+        if len(profile_ids) > 1:
+            errors.append(
+                f"duplicate approved PN {product_num}: " + ", ".join(profile_ids)
+            )
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 1
     print(f"Validated {len(profiles)} profile(s): {len(approved)} approved, {len(skipped)} skipped")
     if args.validate_only:
         return 0

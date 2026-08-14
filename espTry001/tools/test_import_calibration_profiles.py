@@ -1,5 +1,6 @@
 import sys
 import unittest
+import copy
 from pathlib import Path
 
 
@@ -76,7 +77,11 @@ class CalibrationImportTests(unittest.TestCase):
         value = procedure["steps"][0]["alternatives"][0]["write"]["value"]
         self.assertEqual(value, {"kind": "input", "input_id": "input_1"})
         self.assertIsNone(procedure["steps"][1]["alternatives"][0]["result"])
-        self.assertEqual(profile["release_status"], "approved")
+        self.assertEqual(profile["release_status"], "draft")
+        self.assertFalse(profile["review"]["input_ranges"])
+        self.assertFalse(profile["review"]["command_sequences"])
+        self.assertEqual(profile["review"]["confirmed_operations"], [])
+        self.assertTrue(profile["audit_issues"])
 
     def test_mapped_result_classifies_pending_success_and_failure(self):
         source = {
@@ -175,6 +180,7 @@ class CalibrationImportTests(unittest.TestCase):
             {"numerator": 1, "denominator": 1000},
         )
         self.assertTrue(profile["requires_version_read"])
+        self.assertFalse(profile["review"]["version_conditions"])
 
     def test_conditional_address_override_becomes_exclusive_alternatives(self):
         source = {
@@ -303,6 +309,53 @@ class CalibrationImportTests(unittest.TestCase):
             {"kind": "fixed", "number": 2},
         )
         self.assertEqual(validate_profile(profile, "50661.default.json"), [])
+
+    def test_approved_profile_ui_capacity_is_ten_operations(self):
+        source = {
+            "PN": 12347,
+            "ModelName": "Capacity Example",
+            "Readings": [
+                {
+                    "Name": "Reading",
+                    "Calibrations": [
+                        {
+                            "Name": "Calibration",
+                            "Cmds": [
+                                {
+                                    "RegAddress": 100,
+                                    "RegType": "ushort",
+                                    "SetValue": 1,
+                                    "Editable": False,
+                                    "Waiting_mS": 0,
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        profile = normalize_profile(source, "12347.json", ImportContext())
+        template = profile["procedures"][0]
+        profile["procedures"] = []
+        for index in range(10):
+            procedure = copy.deepcopy(template)
+            procedure["id"] = f"operation_{index + 1}"
+            profile["procedures"].append(procedure)
+        profile["release_status"] = "approved"
+        profile["review"] = {
+            "input_ranges": True,
+            "result_mappings": True,
+            "version_conditions": True,
+            "command_sequences": True,
+            "confirmed_operations": [item["id"] for item in profile["procedures"]],
+        }
+        self.assertEqual(validate_profile(profile, "12347.default.json"), [])
+        extra = copy.deepcopy(template)
+        extra["id"] = "operation_11"
+        profile["procedures"].append(extra)
+        profile["review"]["confirmed_operations"].append("operation_11")
+        errors = validate_profile(profile, "12347.default.json")
+        self.assertTrue(any("exceeds ten UI operations" in error for error in errors))
 
 
 if __name__ == "__main__":

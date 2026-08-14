@@ -13,6 +13,7 @@ echo   2. CalibrationProfileManager.exe
 echo   3. SensorProfileUpdater.exe
 echo   4. SensorDataExporter.exe
 echo   5. Current config\sensor_profiles.json
+echo   6. Calibration profiles, importer, builder, and USB uploader
 echo.
 
 call "%~dp0Package_Profile_Tools.bat" --no-pause

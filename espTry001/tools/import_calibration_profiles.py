@@ -610,6 +610,37 @@ def normalize_profile(
     if command_count > MAX_COMMANDS_PER_PROFILE:
         raise ValueError(f"command count {command_count} exceeds {MAX_COMMANDS_PER_PROFILE}")
 
+    has_inputs = any(procedure["inputs"] for procedure in procedures)
+    has_results = any(
+        alternative["result"] is not None
+        for procedure in procedures
+        for step in procedure["steps"]
+        for alternative in step["alternatives"]
+    )
+    if has_inputs:
+        ctx.add(
+            "review_required",
+            file_name,
+            product_num,
+            "procedures[].inputs",
+            "input ranges and value types require review before release",
+        )
+    if requires_version_read:
+        ctx.add(
+            "review_required",
+            file_name,
+            product_num,
+            "requires_version_read",
+            "version conditions require review and firmware support before release",
+        )
+    ctx.add(
+        "review_required",
+        file_name,
+        product_num,
+        "procedures[].steps",
+        "command addresses, values, and waits require review before release",
+    )
+
     own_issues = [issue for issue in ctx.issues if issue.file == file_name]
     release_status = "approved"
     if any(issue.severity in ("error", "unsupported") for issue in own_issues):
@@ -625,6 +656,21 @@ def normalize_profile(
         "source_file": file_name,
         "requires_version_read": requires_version_read,
         "release_status": release_status,
+        "review": {
+            "input_ranges": not has_inputs,
+            "result_mappings": not has_results,
+            "version_conditions": not requires_version_read,
+            "command_sequences": False,
+            "confirmed_operations": [],
+        },
+        "audit_issues": [
+            {
+                "severity": issue.severity,
+                "path": issue.path,
+                "message": issue.message,
+            }
+            for issue in own_issues
+        ],
         "procedures": procedures,
     }
 
@@ -674,6 +720,10 @@ def parse_args(argv: Iterable[str]) -> argparse.Namespace:
     )
     parser.add_argument("--source", type=Path, help="override source directory")
     parser.add_argument(
+        "--source-file", type=Path,
+        help="import exactly one mobile-app JSON file from any folder",
+    )
+    parser.add_argument(
         "--output", default="config/calibration_profiles", type=Path
     )
     parser.add_argument(
@@ -686,6 +736,10 @@ def parse_args(argv: Iterable[str]) -> argparse.Namespace:
         "--pilot", action="store_true", help="generate rules file pilot_pns"
     )
     parser.add_argument("--write", action="store_true", help="write normalized profiles")
+    parser.add_argument(
+        "--overwrite", action="store_true",
+        help="replace an existing normalized profile in single-file mode",
+    )
     return parser.parse_args(list(argv))
 
 
@@ -695,8 +749,18 @@ def main(argv: Iterable[str] = ()) -> int:
     if rules.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"rules schema_version must be {SCHEMA_VERSION}")
     source_dir = args.source or Path(str(rules.get("source_directory") or ""))
-    if not source_dir.is_dir():
+    if args.source_file is not None:
+        source_file = args.source_file.resolve()
+        if not source_file.is_file():
+            raise FileNotFoundError(f"source file not found: {source_file}")
+        source_files = [source_file]
+        source_dir = source_file.parent
+    elif not source_dir.is_dir():
         raise FileNotFoundError(f"source directory not found: {source_dir}")
+    else:
+        source_files = sorted(
+            source_dir.glob("*.json"), key=lambda path: path.name.lower()
+        )
 
     selected_pns: set[int] | None = None
     if args.product_num:
@@ -707,7 +771,6 @@ def main(argv: Iterable[str] = ()) -> int:
     excluded_files, excluded_pns, preferred = rules_by_key(rules)
     ctx = ImportContext()
     parsed: list[tuple[Path, dict[str, Any], int]] = []
-    source_files = sorted(source_dir.glob("*.json"), key=lambda path: path.name.lower())
     for path in source_files:
         if path.name in excluded_files:
             ctx.add("info", path.name, None, "", "excluded by project rule")
@@ -785,7 +848,14 @@ def main(argv: Iterable[str] = ()) -> int:
 
     if args.write:
         for profile in profiles:
-            write_json(args.output / f"{profile['profile_id']}.json", profile)
+            output_path = args.output / f"{profile['profile_id']}.json"
+            if (args.source_file is not None and output_path.exists()
+                    and not args.overwrite):
+                raise FileExistsError(
+                    f"normalized profile already exists: {output_path}; "
+                    "review or remove it before importing again"
+                )
+            write_json(output_path, profile)
 
     status_counts = Counter(profile["release_status"] for profile in profiles)
     severity_counts = Counter(issue.severity for issue in ctx.issues)

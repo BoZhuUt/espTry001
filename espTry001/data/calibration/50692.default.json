@@ -1,0 +1,466 @@
+{
+  "schema_version": 1,
+  "profile_id": "50692.default",
+  "product_num": 50692,
+  "variant": "default",
+  "model_name": "ST-588",
+  "source_file": "50692.json",
+  "requires_version_read": false,
+  "release_status": "approved",
+  "review": {
+    "input_ranges": true,
+    "result_mappings": true,
+    "version_conditions": true,
+    "command_sequences": true,
+    "confirmed_operations": [
+      "reading_1.calibration_1",
+      "reading_1.calibration_2",
+      "reading_2.calibration_1",
+      "reading_2.calibration_2",
+      "output_span_1.20ma",
+      "output_span_2.20ma"
+    ]
+  },
+  "audit_issues": [
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[0].Cmds[0]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[1].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[1].Calibrations[0].Cmds[0]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "Readings[1].Calibrations[1].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].inputs",
+      "message": "input ranges and value types require review before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].steps",
+      "message": "command addresses, values, and waits require review before release"
+    }
+  ],
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
+      "reading_name": "PTSA",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 3
+                }
+              },
+              "wait_after_ms": 100,
+              "result": {
+                "address": 48050,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 1,
+                    "outcome": "failure",
+                    "message": "Calibration failed, probe fouled."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed, DI signal is too high."
+                  }
+                ],
+                "communication_error_message": "Communication failure, please retry the operation, error code:"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_1.calibration_2",
+      "category": "sensor_calibration",
+      "reading_name": "PTSA",
+      "name": "slope_title",
+      "message": "slope_message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "slope_title",
+          "type": "float32",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 200,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppb",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44002,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 4
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 48050,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 1,
+                    "outcome": "failure",
+                    "message": "Calibration failed, probe fouled."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Calibration failed, DI signal is too high."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution is too high."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution is too low."
+                  }
+                ],
+                "communication_error_message": "Communication failure, please retry the operation, error code:"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_1",
+      "category": "sensor_calibration",
+      "reading_name": "TAG",
+      "name": "zero_title",
+      "message": "zero_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 5
+                }
+              },
+              "wait_after_ms": 100,
+              "result": {
+                "address": 48051,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 1,
+                    "outcome": "failure",
+                    "message": "Calibration failed, probe fouled."
+                  },
+                  {
+                    "value": 2,
+                    "outcome": "failure",
+                    "message": "Calibration failed, DI signal is too high."
+                  }
+                ],
+                "communication_error_message": "Communication failure, please retry the operation, error code:"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_2.calibration_2",
+      "category": "sensor_calibration",
+      "reading_name": "TAG",
+      "name": "slope_title",
+      "message": "slope_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "slope_title",
+          "type": "float32",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 20,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44004,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43006,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 6
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 48051,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 0,
+                    "outcome": "success",
+                    "message": "Calibration succeed."
+                  },
+                  {
+                    "value": 1,
+                    "outcome": "failure",
+                    "message": "Calibration failed, probe fouled."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Calibration failed, DI signal is too high."
+                  },
+                  {
+                    "value": 4,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution is too high."
+                  },
+                  {
+                    "value": 5,
+                    "outcome": "failure",
+                    "message": "Calibration failed, solution is too low."
+                  }
+                ],
+                "communication_error_message": "Communication failure, please retry the operation, error code:"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_1.20ma",
+      "category": "output_span",
+      "reading_name": "PTSA 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "ppb",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 500,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppb",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43002,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_2.20ma",
+      "category": "output_span",
+      "reading_name": "TAG 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_message",
+      "unit": "ppm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 20,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "ppm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43009,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 100,
+              "result": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

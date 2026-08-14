@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "profile_id": "53108.default",
+  "product_num": 53108,
+  "variant": "default",
+  "model_name": "ST-725",
+  "source_file": "53108.json",
+  "requires_version_read": false,
+  "release_status": "approved",
+  "review": {
+    "input_ranges": true,
+    "result_mappings": true,
+    "version_conditions": true,
+    "command_sequences": true,
+    "confirmed_operations": [
+      "reading_1.calibration_1",
+      "output_span_1.20ma"
+    ]
+  },
+  "audit_issues": [
+    {
+      "severity": "review_required",
+      "path": "Readings[0].Calibrations[0].Cmds[1]",
+      "message": "result outcomes were auto-classified and require approval before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].inputs",
+      "message": "input ranges and value types require review before release"
+    },
+    {
+      "severity": "review_required",
+      "path": "procedures[].steps",
+      "message": "command addresses, values, and waits require review before release"
+    }
+  ],
+  "procedures": [
+    {
+      "id": "reading_1.calibration_1",
+      "category": "sensor_calibration",
+      "reading_name": "Conductivity",
+      "name": "Conductivity Calibration",
+      "message": "slope_message",
+      "unit": "µS/cm",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "Conductivity Calibration",
+          "type": "float32",
+          "default": 200,
+          "minimum": 0.01,
+          "maximum": 200,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "µS/cm",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44029,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        },
+        {
+          "id": "step_1",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 44004,
+                "type": "uint16",
+                "value": {
+                  "kind": "fixed",
+                  "number": 1
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": {
+                "address": 41003,
+                "type": "uint16",
+                "register_count": 1,
+                "poll_interval_ms": 500,
+                "timeout_ms": 120000,
+                "mappings": [
+                  {
+                    "value": 1,
+                    "outcome": "success",
+                    "message": "Conductivity calibration succeed."
+                  },
+                  {
+                    "value": 3,
+                    "outcome": "failure",
+                    "message": "Slope out of range"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "output_span_1.20ma",
+      "category": "output_span",
+      "reading_name": "Conductivity 4-20mA",
+      "name": "20mA_title",
+      "message": "20mA_Message",
+      "unit": "",
+      "when": null,
+      "inputs": [
+        {
+          "id": "input_1",
+          "label": "20mA_title",
+          "type": "float32",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 200,
+          "minimum_inclusive": true,
+          "maximum_inclusive": true,
+          "decimals": 2,
+          "unit": "",
+          "write_scale": {
+            "numerator": 1,
+            "denominator": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_0",
+          "when": null,
+          "alternatives": [
+            {
+              "when": null,
+              "write": {
+                "address": 43002,
+                "type": "float32_cdab",
+                "value": {
+                  "kind": "input",
+                  "input_id": "input_1"
+                }
+              },
+              "wait_after_ms": 1000,
+              "result": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
