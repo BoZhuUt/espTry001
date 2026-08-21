@@ -467,57 +467,89 @@ void UiManager::drawTimeSyncPage(const TimeSyncView &view) {
 
   gfx->setTextSize(1);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
-  gfx->setCursor(5, 55);
+  gfx->setCursor(5, 47);
   gfx->print("USB protocol: ESPTIME1");
 
-  gfx->setCursor(5, 82);
+  gfx->setCursor(5, 65);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-  gfx->print("Status:");
-  gfx->setCursor(55, 82);
+  gfx->print("PC:");
+  gfx->setCursor(30, 65);
   gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
   gfx->print(view.statusText);
 
-  gfx->setCursor(5, 115);
+  gfx->setCursor(5, 84);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->print("RTC:");
-  gfx->setCursor(5, 135);
+  gfx->setCursor(35, 84);
   gfx->setTextColor(view.rtcValid ? RGB565_WHITE : RGB565_ORANGE,
                     RGB565_BLACK);
   if (view.rtcValid) {
     gfx->print(view.rtcDateTimeText);
-    gfx->setCursor(5, 153);
+    gfx->setCursor(5, 101);
     gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
     gfx->printf("UTC+08:00 Source:%s", view.timeSourceText);
   } else {
     gfx->print("Waiting for PC time");
   }
 
-  gfx->setCursor(5, 174);
+  gfx->setCursor(5, 121);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->print("SSID: ");
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  if (view.wifiSsid != nullptr && view.wifiSsid[0] != '\0') {
+    gfx->printf("%.32s", view.wifiSsid);
+  } else {
+    gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+    gfx->print("Not configured");
+  }
+
+  gfx->setCursor(5, 139);
+  gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
+  gfx->print("PWD: ");
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  if (view.wifiSsid == nullptr || view.wifiSsid[0] == '\0') {
+    gfx->print("-");
+  } else if (view.wifiPassword == nullptr || view.wifiPassword[0] == '\0') {
+    gfx->print("(open network)");
+  } else {
+    // A 63-byte password needs two rows on the 240-pixel-wide display.
+    gfx->printf("%.32s", view.wifiPassword);
+    if (strlen(view.wifiPassword) > 32) {
+      gfx->setCursor(5, 156);
+      gfx->printf("%.31s", view.wifiPassword + 32);
+    }
+  }
+
+  gfx->setCursor(5, 177);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->printf("NTP: %s", view.ntpStatusText);
-  if (view.maskedSsid != nullptr && view.maskedSsid[0] != '\0') {
-    gfx->setCursor(5, 190);
-    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
-    gfx->printf("WiFi: %s", view.maskedSsid);
+  if (view.retrySeconds > 0) {
+    gfx->setCursor(5, 194);
+    gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+    gfx->printf("Auto retry in %lus",
+                static_cast<unsigned long>(view.retrySeconds));
   }
 
   if (view.errorText != nullptr && view.errorText[0] != '\0') {
-    gfx->setCursor(5, 207);
+    gfx->setCursor(5, 208);
     gfx->setTextColor(RGB565_RED, RGB565_BLACK);
     gfx->print("Err: ");
-    gfx->print(view.errorText);
-    gfx->setCursor(5, 224);
-    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
-    gfx->print("Fix PC request and retry");
+    gfx->printf("%.30s", view.errorText);
   }
 
-  gfx->drawLine(kContentLeft, 250, kContentRight, 250, RGB565_DARKGREY);
-  gfx->setCursor(centeredTextX("Tap header to exit", 1), 268);
+  gfx->drawRect(15, 220, BoardConfig::kDisplayWidth - 30, 34,
+                RGB565_ORANGE);
+  gfx->setCursor(centeredTextX("RETRY WIFI / NTP", 1), 232);
   gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
-  gfx->print("Tap header to exit");
-  gfx->setCursor(centeredTextX("Run tools/sync_rtc.py", 1), 290);
+  gfx->print("RETRY WIFI / NTP");
+
+  gfx->drawLine(kContentLeft, 262, kContentRight, 262, RGB565_DARKGREY);
+  gfx->setCursor(centeredTextX("Run TimeSyncManager.exe", 1), 274);
+  gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+  gfx->print("Run TimeSyncManager.exe");
+  gfx->setCursor(centeredTextX("Tap header to exit", 1), 295);
   gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
-  gfx->print("Run tools/sync_rtc.py");
+  gfx->print("Tap header to exit");
   gfx->flush();
 }
 

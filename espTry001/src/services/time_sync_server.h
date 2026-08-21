@@ -14,6 +14,7 @@
  *   GET
  *   SET <unix_utc_seconds>
  *   WIFI STATUS
+ *   WIFI GET
  *   WIFI SET <ssid_hex> <password_hex_or_dash>
  *   WIFI CLEAR
  *   NTP START
@@ -79,6 +80,10 @@ class TimeSyncServer {
    */
   static bool decodeHexToken(const char *token, char *output,
                              size_t capacity, bool allowDashAsEmpty);
+
+  // 将 UTF-8 字节编码为无空格十六进制 token；空密码编码为 "-"。
+  static bool encodeHexToken(const char *value, char *output,
+                             size_t capacity, bool dashWhenEmpty);
 
   // 转换单个十六进制字符，非法输入返回 -1。
   static int8_t hexValue(char value);

@@ -158,7 +158,9 @@ struct TimeSyncState {
   char rtcDateTimeText[32] = "";
   char timeSourceText[8] = "NONE";
   char ntpStatusText[20] = "";
-  char maskedSsid[16] = "";
+  uint32_t retrySeconds = 0;
+  char wifiSsid[33] = "";
+  char wifiPassword[64] = "";
   char errorText[64] = "";
 };
 

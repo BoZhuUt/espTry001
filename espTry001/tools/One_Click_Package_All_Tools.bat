@@ -3,6 +3,12 @@ setlocal EnableExtensions
 
 title Pyxis SensorLink - One Click Package
 
+call "%~dp0Check_Tools_Not_Running.bat"
+if errorlevel 1 (
+  if "%~1"=="" pause
+  exit /b 1
+)
+
 set "PACKAGE_NAME=Pyxis_SensorLink_Tools_"
 if not "%~1"=="" (
   set "PACKAGE_NAME=%~1"
@@ -25,6 +31,8 @@ call "%~dp0Build_Calibration_Profile_Manager.bat"
 if errorlevel 1 goto :build_failed
 call "%~dp0Build_SensorDataExporter.bat"
 if errorlevel 1 goto :build_failed
+call "%~dp0Build_TimeSyncManager.bat"
+if errorlevel 1 goto :build_failed
 
 set "TOOLS_DIR=%~dp0"
 set "PROJECT_DIR=%~dp0.."
@@ -41,7 +49,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
   "if (Test-Path -LiteralPath $folder) { throw ('Package folder already exists; choose another name: ' + $folder) };" ^
   "if (Test-Path -LiteralPath $zip) { throw ('Package ZIP already exists; choose another name: ' + $zip) };" ^
   "New-Item -ItemType Directory -Path $folder -Force | Out-Null;" ^
-  "$toolFiles = @('SensorProfileUpdater.exe','SensorProfileManager.exe','CalibrationProfileManager.exe','SensorDataExporter.exe','import_calibration_profiles.py','build_calibration_bundle.py','build_calibration_package.py','upload_calibration_package.py','upload_sensor_profiles.py','sync_rtc.py','CALIBRATION_PROFILE_TOOLS_README.md','SENSOR_PROFILE_MANAGER_README.md');" ^
+  "$toolFiles = @('SensorProfileUpdater.exe','SensorProfileManager.exe','CalibrationProfileManager.exe','SensorDataExporter.exe','TimeSyncManager.exe','import_calibration_profiles.py','build_calibration_bundle.py','build_calibration_package.py','upload_calibration_package.py','upload_sensor_profiles.py','sync_rtc.py','CALIBRATION_PROFILE_TOOLS_README.md','SENSOR_PROFILE_MANAGER_README.md');" ^
   "foreach ($file in $toolFiles) { $source = Join-Path $env:TOOLS_DIR $file; if (-not (Test-Path -LiteralPath $source)) { throw ('Required file missing: ' + $source) }; Copy-Item -LiteralPath $source -Destination (Join-Path $folder $file) };" ^
   "$configFiles = @('sensor_profiles.json','calibration_import_rules.json');" ^
   "foreach ($file in $configFiles) { $source = Join-Path $env:PROJECT_DIR ('config\' + $file); if (-not (Test-Path -LiteralPath $source)) { throw ('Required file missing: ' + $source) }; Copy-Item -LiteralPath $source -Destination (Join-Path $folder $file) };" ^

@@ -116,15 +116,49 @@ void TimeSyncServer::handleCommand(Stream &usb, const char *command) {
 
   if (strcmp(command, "WIFI STATUS") == 0) {
     char maskedSsid[16];
-    char response[96];
+    char response[128];
     wifiTimeService_.maskedSsid(maskedSsid, sizeof(maskedSsid));
     if (wifiTimeService_.configured()) {
-      snprintf(response, sizeof(response), "WIFI CONFIGURED %s %s",
-               maskedSsid, wifiTimeService_.statusText());
+      const uint32_t retrySeconds =
+          wifiTimeService_.retrySecondsRemaining();
+      if (retrySeconds > 0) {
+        snprintf(response, sizeof(response),
+                 "WIFI CONFIGURED %s %s %lus", maskedSsid,
+                 wifiTimeService_.statusText(),
+                 static_cast<unsigned long>(retrySeconds));
+      } else {
+        snprintf(response, sizeof(response), "WIFI CONFIGURED %s %s",
+                 maskedSsid, wifiTimeService_.statusText());
+      }
     } else {
       snprintf(response, sizeof(response), "WIFI NOT_CONFIGURED %s",
                wifiTimeService_.statusText());
     }
+    sendLine(usb, response);
+    state_ = State::WaitingCommand;
+    errorText_[0] = '\0';
+    return;
+  }
+
+  if (strcmp(command, "WIFI GET") == 0) {
+    char ssid[WifiTimeService::kMaxSsidLength + 1];
+    char password[WifiTimeService::kMaxPasswordLength + 1];
+    if (!wifiTimeService_.copyCredentials(ssid, sizeof(ssid), password,
+                                          sizeof(password))) {
+      fail(usb, "NO WIFI CONFIG");
+      return;
+    }
+    char encodedSsid[2 * WifiTimeService::kMaxSsidLength + 1];
+    char encodedPassword[2 * WifiTimeService::kMaxPasswordLength + 1];
+    if (!encodeHexToken(ssid, encodedSsid, sizeof(encodedSsid), false) ||
+        !encodeHexToken(password, encodedPassword, sizeof(encodedPassword),
+                        true)) {
+      fail(usb, "WIFI ENCODING FAILED");
+      return;
+    }
+    char response[kMaxCommandLength + 1];
+    snprintf(response, sizeof(response), "WIFI CREDENTIALS %s %s",
+             encodedSsid, encodedPassword);
     sendLine(usb, response);
     state_ = State::WaitingCommand;
     errorText_[0] = '\0';
@@ -233,6 +267,27 @@ bool TimeSyncServer::decodeHexToken(const char *token, char *output,
     output[index / 2] = static_cast<char>((high << 4) | low);
   }
   output[encodedLength / 2] = '\0';
+  return true;
+}
+
+bool TimeSyncServer::encodeHexToken(const char *value, char *output,
+                                    size_t capacity, bool dashWhenEmpty) {
+  if (value == nullptr || output == nullptr || capacity == 0) return false;
+  const size_t length = strlen(value);
+  if (length == 0 && dashWhenEmpty) {
+    if (capacity < 2) return false;
+    output[0] = '-';
+    output[1] = '\0';
+    return true;
+  }
+  if (length == 0 || length * 2 + 1 > capacity) return false;
+  static const char kHex[] = "0123456789abcdef";
+  for (size_t index = 0; index < length; ++index) {
+    const uint8_t byte = static_cast<uint8_t>(value[index]);
+    output[index * 2] = kHex[byte >> 4];
+    output[index * 2 + 1] = kHex[byte & 0x0F];
+  }
+  output[length * 2] = '\0';
   return true;
 }
 

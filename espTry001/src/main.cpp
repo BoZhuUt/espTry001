@@ -307,6 +307,12 @@ void loop()
         delay(400);
         break;
 
+      case UiAction::RetryTimeSync:
+        wifiTimeService.startManualSync();
+        drawTimeSyncPage();
+        delay(300);
+        break;
+
       case UiAction::OpenCalibration:
         appState.calibration = CalibrationState{};
         appState.page = UiPage::Calibration;
@@ -1137,6 +1143,9 @@ void updateLogExportStateSnapshot() {
  */
 void enterTimeSyncMode() {
   if (!appController.enterTimeSync()) return;
+  // Entering this page is an explicit request to retry saved hotspot
+  // credentials, even if the automatic boot attempt previously failed.
+  wifiTimeService.startManualSync();
   ui.clearScreen();
   drawTimeSyncPage();
 }
@@ -1156,7 +1165,9 @@ TimeSyncView buildTimeSyncView() {
   view.rtcDateTimeText = snapshot.rtcDateTimeText;
   view.timeSourceText = snapshot.timeSourceText;
   view.ntpStatusText = snapshot.ntpStatusText;
-  view.maskedSsid = snapshot.maskedSsid;
+  view.retrySeconds = snapshot.retrySeconds;
+  view.wifiSsid = snapshot.wifiSsid;
+  view.wifiPassword = snapshot.wifiPassword;
   view.errorText = snapshot.errorText;
   return view;
 }
@@ -1178,8 +1189,10 @@ void updateTimeSyncStateSnapshot() {
            timeService.sourceText());
   snprintf(snapshot.ntpStatusText, sizeof(snapshot.ntpStatusText), "%s",
            wifiTimeService.statusText());
-  wifiTimeService.maskedSsid(snapshot.maskedSsid,
-                             sizeof(snapshot.maskedSsid));
+  snapshot.retrySeconds = wifiTimeService.retrySecondsRemaining();
+  wifiTimeService.copyCredentials(
+      snapshot.wifiSsid, sizeof(snapshot.wifiSsid),
+      snapshot.wifiPassword, sizeof(snapshot.wifiPassword));
   snprintf(snapshot.errorText, sizeof(snapshot.errorText), "%s",
            timeSyncServer.errorText());
 }

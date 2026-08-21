@@ -24,6 +24,7 @@ enum class UiAction : uint8_t {
   EnterConfigUpload,
   EnterLogExport,
   EnterTimeSync,
+  RetryTimeSync,
   OpenCalibration,
   BackToSystemInfo,
   NextSensorParameterPage,

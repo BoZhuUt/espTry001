@@ -74,7 +74,9 @@ struct TimeSyncView {
   const char *rtcDateTimeText = "";
   const char *timeSourceText = "NONE";
   const char *ntpStatusText = "";
-  const char *maskedSsid = "";
+  uint32_t retrySeconds = 0;
+  const char *wifiSsid = "";
+  const char *wifiPassword = "";
   const char *errorText = "";
 };
 

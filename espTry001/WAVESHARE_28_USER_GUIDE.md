@@ -135,7 +135,7 @@ BOOT PASS。
 
 - `CONFIG UPLOAD`：在线更新 Sensor Profile 或 Calibration Profile；
 - `LOG EXPORT`：通过 USB 下载或删除 microSD 日志；
-- `TIME SYNC`：通过电脑设置 RTC，必要时配置 NTP。
+- `TIME SYNC`：通过图形化电脑工具设置 RTC、手机热点和 NTP。
 
 这些工具会独占 USB。进入工具页面前应关闭串口监视器、Modbus Poll 或其他占用 COM
 口的软件。
@@ -231,14 +231,21 @@ Calibration Profile 决定校准命令、输入范围、结果映射和 4–20 m
 
 1. 进入 `TOOLS MENU → TIME SYNC`；
 2. 确认没有其他程序占用串口；
-3. 在电脑运行：
+3. 在电脑打开 `TimeSyncManager.exe`；
+4. 选择设备 COM 口并点击“连接设备”；
+5. 无网络时点击“同步电脑时间到 RTC”；
+6. 需要自动 NTP 校时时，输入手机热点名称和密码，再点击“保存并立即校时”。
 
-```powershell
-python sync_rtc.py COM7
-```
+窗口右上角可选择 `简体中文` 或 `English`。语言会立即切换并自动记忆，下次打开继续使用上次选择。
 
-将 `COM7` 替换为实际端口。工具可设置 RTC，并按参数选择是否配置 Wi-Fi/NTP。完成后在
-SYSTEM INFO 查看 RTC 和 NTP 状态。
+设备页面会明文显示已保存的热点名称和密码，用户可以据此修改手机热点。该页面仅应在受控现场使用，
+避免无关人员看到密码。连接失败后设备会按 5、10、30、60 秒逐步退避并持续重试；进入页面或点击
+`RETRY WIFI / NTP` 可立即重试。
+
+NTP 自动使用 `pool.ntp.org`、`time.cloudflare.com` 和 `ntp.tencent.com` 回退，不会把腾讯服务器作为
+美国等海外现场的唯一来源。RTC 始终保存 UTC，当前屏幕和 CSV 仍按 UTC+08:00 显示。
+
+`sync_rtc.py` 继续保留为开发调试工具，日常用户不需要安装 Python。
 
 ## 10. 一键打包电脑工具
 
@@ -248,11 +255,22 @@ SYSTEM INFO 查看 RTC 和 NTP 状态。
 tools\One_Click_Package_All_Tools.bat
 ```
 
-输入包名，直接回车使用默认名称 `Pyxis_SensorLink_Tools_`。脚本会生成完整工具文件夹
-和同名 ZIP，内容包括 EXE、JSON、Calibration Profiles、导入/构建/上传脚本和本文档。
+输入包名，直接回车使用默认名称 `Pyxis_SensorLink_Tools_`。脚本会先重新编译全部 Windows 工具，
+再生成完整工具文件夹和同名 ZIP。工具包包括：
 
-复制使用时应复制整个工具目录，不要只复制单个 EXE。校准在线发布需要 PlatformIO
-Python，或安装了 `pyserial` 的系统 Python。
+- `SensorProfileManager.exe` 和 `SensorProfileUpdater.exe`；
+- `CalibrationProfileManager.exe`；
+- `SensorDataExporter.exe`；
+- 支持中英文切换的 `TimeSyncManager.exe`；
+- Sensor/Calibration JSON、Calibration Profiles；
+- 导入、构建、在线上传及兼容调试脚本；
+- 本使用说明。
+
+为避免 Windows 文件锁导致 EXE 无法重新编译或写入 ZIP，打包脚本会在开始时强制关闭正在运行的
+Pyxis 上位机工具。运行打包前必须先保存 Sensor/Calibration Profile 等尚未保存的编辑内容。
+
+复制使用时应复制整个工具目录，不要只复制单个 EXE。`TimeSyncManager.exe` 本身不需要 Python；
+校准在线发布脚本需要 PlatformIO Python，或安装了 `pyserial` 的系统 Python。
 
 ## 11. 常见问题
 

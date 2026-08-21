@@ -5,7 +5,7 @@
 #include "services/time_service.h"
 
 /**
- * 开机短时 Wi-Fi/NTP 校时服务。
+ * 非阻塞 Wi-Fi/NTP 校时服务。
  *
  * 服务使用非阻塞状态机：主循环只轮询连接和 SNTP 结果，
  * 不等待网络。凭据保存在 NVS，不进入源码、JSON 或日志。
@@ -19,6 +19,7 @@ class WifiTimeService {
   // managed or congested networks; keep the main loop non-blocking while
   // allowing a realistic first-boot window.
   static constexpr uint32_t kNtpTimeoutMs = 30000;
+  static constexpr uint8_t kRetryDelayCount = 4;
 
   enum class State : uint8_t {
     Unsupported,
@@ -26,6 +27,7 @@ class WifiTimeService {
     Idle,
     Connecting,
     WaitingNtp,
+    WaitingRetry,
     PendingRtcWrite,
     Synced,
     WifiTimeout,
@@ -36,7 +38,7 @@ class WifiTimeService {
   explicit WifiTimeService(TimeService &timeService);
 
   /**
-   * 读取 NVS 凭据并发起本次开机的唯一次自动校时。
+   * 读取 NVS 凭据并发起自动校时。
    *
    * 无 RTC 板型或无凭据时立即返回，不启动 Wi-Fi。
    */
@@ -71,9 +73,14 @@ class WifiTimeService {
   bool configured() const { return credentialsLoaded_; }
   State state() const { return state_; }
   const char *statusText() const;
+  uint32_t retrySecondsRemaining() const;
 
   // 返回脱敏 SSID：仅保留首尾字符，永不返回密码。
   void maskedSsid(char *buffer, size_t capacity) const;
+
+  // 只供用户主动进入 TIME SYNC 页面及其独占 USB 协议显示完整凭据。
+  bool copyCredentials(char *ssid, size_t ssidCapacity,
+                       char *password, size_t passwordCapacity) const;
 
  private:
   static constexpr const char *kNvsNamespace = "wifi_time";
@@ -90,6 +97,9 @@ class WifiTimeService {
   // 重置状态并启动 STA 连接，函数本身不等待 DHCP。
   bool startConnection();
 
+  // 网络失败后安排下一次非阻塞尝试，间隔按 5/10/30/60 秒退避。
+  void scheduleRetry(bool ntpFailure);
+
   // 停止 SNTP 和 STA 并关闭射频，保留 NVS 凭据。
   void stopNetwork();
 
@@ -102,6 +112,9 @@ class WifiTimeService {
   State state_ = State::Unsupported;
   bool credentialsLoaded_ = false;
   uint32_t stateStartedMs_ = 0;
+  uint32_t retryAtMs_ = 0;
+  uint8_t retryDelayIndex_ = 0;
+  bool retryAfterNtpFailure_ = false;
   char ssid_[kMaxSsidLength + 1] = "";
   char password_[kMaxPasswordLength + 1] = "";
 };

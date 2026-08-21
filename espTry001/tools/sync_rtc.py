@@ -30,7 +30,13 @@ def read_line(port: serial.Serial, timeout: float = 3.0) -> str:
         if not value:
             continue
         if value == b"\n":
-            return received.rstrip(b"\r").decode("ascii", errors="replace")
+            line = received.rstrip(b"\r").decode("ascii", errors="replace")
+            # Ignore ESP-IDF/Arduino runtime diagnostics sharing USB CDC.
+            # They use forms such as: [1499723][E][STA.cpp:540] ...
+            if line.startswith("[") and "][" in line:
+                received.clear()
+                continue
+            return line
         received.extend(value)
     partial = received.decode("ascii", errors="replace")
     raise TimeoutError(f"读行超时，已收 {len(received)} 字节: {partial!r}")
@@ -97,8 +103,8 @@ def encode_wifi_field(value: str, maximum_bytes: int, label: str,
     return encoded.hex() if encoded else "-"
 
 
-def wait_for_ntp(port: serial.Serial, timeout: float = 40.0) -> str:
-    """轮询脱敏 Wi-Fi 状态，直到 NTP 成功或进入终止错误。"""
+def wait_for_ntp(port: serial.Serial, timeout: float = 150.0) -> str:
+    """轮询 Wi-Fi 状态，允许固件完成多轮自动退避重试。"""
     deadline = time.monotonic() + timeout
     previous = ""
     while time.monotonic() < deadline:
@@ -110,7 +116,7 @@ def wait_for_ntp(port: serial.Serial, timeout: float = 40.0) -> str:
         if " SYNCED" in response:
             return response
         if any(marker in response for marker in
-               ("TIMEOUT", "FAIL", "NOT_CONFIGURED", "NO WIFI CONFIG")):
+               ("FAIL", "NOT_CONFIGURED", "NO WIFI CONFIG")):
             raise RuntimeError(f"NTP 校时失败: {response}")
         time.sleep(0.5)
     raise TimeoutError("等待 NTP 完成超时")

@@ -29,8 +29,12 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
       break;
 
     case UiPage::LogExport:
+      if (y > 0 && y < 40) return UiAction::BackToSystemInfo;
+      break;
+
     case UiPage::TimeSync:
       if (y > 0 && y < 40) return UiAction::BackToSystemInfo;
+      if (y >= 215 && y < 258) return UiAction::RetryTimeSync;
       break;
 
     case UiPage::SensorInfo:

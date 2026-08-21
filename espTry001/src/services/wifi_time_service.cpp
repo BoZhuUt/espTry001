@@ -9,6 +9,12 @@
 
 volatile bool WifiTimeService::sntpCompleted_ = false;
 
+namespace {
+
+constexpr uint32_t kRetryDelaysMs[] = {5000, 10000, 30000, 60000};
+
+}  // namespace
+
 WifiTimeService::WifiTimeService(TimeService &timeService)
     : timeService_(timeService) {}
 
@@ -21,6 +27,7 @@ void WifiTimeService::begin() {
     state_ = State::NoCredentials;
     return;
   }
+  retryDelayIndex_ = 0;
   startConnection();
 }
 
@@ -31,20 +38,25 @@ void WifiTimeService::update(bool rtcWriteAllowed) {
       if (WiFi.status() == WL_CONNECTED) {
         sntpCompleted_ = false;
         sntp_set_time_sync_notification_cb(onSntpCompleted);
-        // Tencent Cloud documents these as its current public NTP endpoints
-        // for devices outside the Tencent private network. Using three nearby
-        // mainland endpoints avoids relying on globally blocked services.
-        configTime(0, 0, "ntp.tencent.com", "ntp1.tencent.com",
-                   "ntp2.tencent.com");
+        // Use globally reachable servers first and keep Tencent as a mainland
+        // fallback. The RTC always stores UTC, so deployment country does not
+        // affect the value written to the chip.
+        configTime(0, 0, "pool.ntp.org", "time.cloudflare.com",
+                   "ntp.tencent.com");
         state_ = State::WaitingNtp;
         stateStartedMs_ = nowMs;
       } else if ((uint32_t)(nowMs - stateStartedMs_) >= kWifiTimeoutMs) {
         stopNetwork();
-        state_ = State::WifiTimeout;
+        scheduleRetry(false);
       }
       break;
 
     case State::WaitingNtp:
+      if (WiFi.status() != WL_CONNECTED) {
+        stopNetwork();
+        scheduleRetry(false);
+        break;
+      }
       // Poll the SDK status as a fallback in case the asynchronous callback
       // occurs while USB/other tasks briefly delay the application loop.
       if (sntpCompleted_ ||
@@ -52,13 +64,20 @@ void WifiTimeService::update(bool rtcWriteAllowed) {
         time_t nowUtc = time(nullptr);
         stopNetwork();
         if (nowUtc >= 946684800LL && nowUtc < 4102444800LL) {
+          retryDelayIndex_ = 0;
           state_ = State::PendingRtcWrite;
         } else {
-          state_ = State::NtpTimeout;
+          scheduleRetry(true);
         }
       } else if ((uint32_t)(nowMs - stateStartedMs_) >= kNtpTimeoutMs) {
         stopNetwork();
-        state_ = State::NtpTimeout;
+        scheduleRetry(true);
+      }
+      break;
+
+    case State::WaitingRetry:
+      if (static_cast<int32_t>(nowMs - retryAtMs_) >= 0) {
+        startConnection();
       }
       break;
 
@@ -109,6 +128,7 @@ bool WifiTimeService::saveCredentials(const char *ssid,
   snprintf(ssid_, sizeof(ssid_), "%s", ssid);
   snprintf(password_, sizeof(password_), "%s", password);
   credentialsLoaded_ = true;
+  retryDelayIndex_ = 0;
   state_ = State::Idle;
   return true;
 }
@@ -131,6 +151,7 @@ bool WifiTimeService::clearCredentials() {
 
 bool WifiTimeService::startManualSync() {
   if (!BoardConfig::kHasRtc || !credentialsLoaded_) return false;
+  retryDelayIndex_ = 0;
   return startConnection();
 }
 
@@ -141,6 +162,8 @@ const char *WifiTimeService::statusText() const {
     case State::Idle:            return "READY";
     case State::Connecting:      return "CONNECTING";
     case State::WaitingNtp:      return "WAITING NTP";
+    case State::WaitingRetry:
+      return retryAfterNtpFailure_ ? "RETRY NTP" : "RETRY WIFI";
     case State::PendingRtcWrite: return "PENDING RTC";
     case State::Synced:          return "SYNCED";
     case State::WifiTimeout:     return "WIFI TIMEOUT";
@@ -148,6 +171,13 @@ const char *WifiTimeService::statusText() const {
     case State::RtcWriteFailed:  return "RTC WRITE FAIL";
   }
   return "UNKNOWN";
+}
+
+uint32_t WifiTimeService::retrySecondsRemaining() const {
+  if (state_ != State::WaitingRetry) return 0;
+  const int32_t remainingMs = static_cast<int32_t>(retryAtMs_ - millis());
+  if (remainingMs <= 0) return 0;
+  return (static_cast<uint32_t>(remainingMs) + 999) / 1000;
 }
 
 void WifiTimeService::maskedSsid(char *buffer, size_t capacity) const {
@@ -162,6 +192,23 @@ void WifiTimeService::maskedSsid(char *buffer, size_t capacity) const {
     return;
   }
   snprintf(buffer, capacity, "%c***%c", ssid_[0], ssid_[length - 1]);
+}
+
+bool WifiTimeService::copyCredentials(char *ssid, size_t ssidCapacity,
+                                      char *password,
+                                      size_t passwordCapacity) const {
+  if (ssid == nullptr || ssidCapacity == 0 || password == nullptr ||
+      passwordCapacity == 0) {
+    return false;
+  }
+  if (!credentialsLoaded_) {
+    ssid[0] = '\0';
+    password[0] = '\0';
+    return false;
+  }
+  snprintf(ssid, ssidCapacity, "%s", ssid_);
+  snprintf(password, passwordCapacity, "%s", password_);
+  return true;
 }
 
 void WifiTimeService::onSntpCompleted(struct timeval *timeValue) {
@@ -198,8 +245,8 @@ bool WifiTimeService::startConnection() {
   WiFi.persistent(false);
   WiFi.setAutoReconnect(false);
   if (!WiFi.mode(WIFI_STA)) {
-    state_ = State::WifiTimeout;
-    return false;
+    scheduleRetry(false);
+    return true;
   }
   WiFi.begin(ssid_, password_);
   state_ = State::Connecting;
@@ -207,11 +254,31 @@ bool WifiTimeService::startConnection() {
   return true;
 }
 
+void WifiTimeService::scheduleRetry(bool ntpFailure) {
+  if (!credentialsLoaded_) {
+    state_ = State::NoCredentials;
+    return;
+  }
+  const uint8_t index = retryDelayIndex_ < kRetryDelayCount
+                            ? retryDelayIndex_
+                            : kRetryDelayCount - 1;
+  retryAtMs_ = millis() + kRetryDelaysMs[index];
+  if (retryDelayIndex_ + 1 < kRetryDelayCount) retryDelayIndex_++;
+  retryAfterNtpFailure_ = ntpFailure;
+  state_ = State::WaitingRetry;
+}
+
 void WifiTimeService::stopNetwork() {
   if (esp_sntp_enabled()) esp_sntp_stop();
   sntp_set_time_sync_notification_cb(nullptr);
-  WiFi.disconnect(true, false);
-  WiFi.mode(WIFI_OFF);
+  // Arduino-ESP32 logs ESP_ERR_WIFI_NOT_INIT to the shared USB CDC stream if
+  // disconnect() is called after the STA driver has already been stopped.
+  // That diagnostic can be mistaken for an ESPTIME1 response, so only call
+  // disconnect while a Wi-Fi mode is actually active. wifioff=true already
+  // ends the STA driver; a second WiFi.mode(WIFI_OFF) call is unnecessary.
+  if (WiFi.getMode() != WIFI_MODE_NULL) {
+    WiFi.disconnect(true, false);
+  }
 }
 
 void WifiTimeService::applyNtpToRtc() {
