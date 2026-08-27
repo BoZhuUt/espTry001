@@ -29,7 +29,7 @@ except ImportError:
 
 
 MAGIC = b"ESPCFG1"
-MAX_JSON_SIZE = 64 * 1024
+MAX_JSON_SIZE = 256 * 1024
 USB_CHUNK_SIZE = 64
 
 

@@ -7,13 +7,13 @@
 // JSON 加载失败时，find() 自动改用编译进固件的生成配置。
 class SensorProfileStore {
 public:
-  static constexpr uint8_t kMaxProfiles = 32;
+  static constexpr uint8_t kMaxProfiles = 50;
   static constexpr uint8_t kMaxBlocksPerProfile = kMaxSensorFields;
   static constexpr size_t kMaxProfileNameLength = 24;
   static constexpr size_t kMaxFieldKeyLength = 24;
   static constexpr size_t kMaxFieldLabelLength = 24;
   static constexpr size_t kMaxConfigVersionLength = 24;
-  static constexpr size_t kMaxJsonFileSize = 64 * 1024;
+  static constexpr size_t kMaxJsonFileSize = 256 * 1024;
 
   // 挂载 LittleFS 并加载指定文件。返回 true 表示运行时 JSON 已启用；
   // 返回 false 时仍可正常调用 find()，它会查询固件内置配置。

@@ -23,7 +23,7 @@ internal static class Program
 
 internal sealed class UpdaterForm : Form
 {
-    private const int MaxJsonSize = 64 * 1024;
+    private const int MaxJsonSize = 256 * 1024;
     private const int ChunkSize = 64;
     private static readonly byte[] Magic = Encoding.ASCII.GetBytes("ESPCFG1");
 
@@ -178,7 +178,7 @@ internal sealed class UpdaterForm : Form
 
         byte[] bytes = File.ReadAllBytes(path);
         if (bytes.Length == 0 || bytes.Length > MaxJsonSize)
-            throw new InvalidDataException("JSON size must be 1..65536 bytes.");
+            throw new InvalidDataException("JSON size must be 1..262144 bytes.");
 
         string text = new UTF8Encoding(false, true).GetString(bytes);
         object decoded = new JavaScriptSerializer().DeserializeObject(text);

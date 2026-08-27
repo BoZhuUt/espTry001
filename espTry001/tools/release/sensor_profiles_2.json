@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "config_version": "2026.07.23.1",
+  "profiles": [
+    {
+      "product_num": 53607,
+      "name": "ST-765SS-FCL",
+      "fields": [
+        {"key": "Work nA", "label": "Work nA", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "CL ppm", "label": "CL ppm", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "pH mV", "label": "pH mV", "function": 3, "address": 46005, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "pH", "label": "pH", "function": 3, "address": 46007, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Temp C", "label": "Temp C", "function": 3, "address": 46009, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "_4_20mA", "label": "_4_20mA", "function": 3, "address": 46011, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "pH 4-20mA", "label": "pH 4-20mA", "function": 3, "address": 46027, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "ORP Vot", "label": "ORP Vot", "function": 3, "address": 46017, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "ORPValue", "label": "ORPValue", "function": 3, "address": 46019, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Rtd ohm", "label": "Rtd ohm", "function": 3, "address": 46013, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Pulse", "label": "Pulse", "function": 3, "address": 46015, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "CvCleanWorknA", "label": "CvCleanWorknA", "function": 3, "address": 46021, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "CvClean_ppm", "label": "CvClean_ppm", "function": 3, "address": 46047, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Count_Vot_mV", "label": "Count_Vot_mV", "function": 3, "address": 46025, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "RawWork_nA", "label": "RawWork_nA", "function": 3, "address": 46029, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "SesFilterWork_nA", "label": "SesFilterWork_nA", "function": 3, "address": 46031, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 52267,
+      "name": "XT-500",
+      "fields": [
+        {"key": "PTSA", "label": "PTSA", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "PTSA_mA", "label": "PTSA_mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365 dark", "label": "t365 dark", "function": 3, "address": 48036, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365 dark", "label": "s365 dark", "function": 3, "address": 48038, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420 dark", "label": "t420 dark", "function": 3, "address": 48040, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420 dark", "label": "s420 dark", "function": 3, "address": 48042, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T1", "label": "T1", "function": 3, "address": 48006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T2", "label": "T2", "function": 3, "address": 48008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365", "label": "t365", "function": 3, "address": 48028, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365", "label": "s365", "function": 3, "address": 48030, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420", "label": "t420", "function": 3, "address": 48032, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420", "label": "s420", "function": 3, "address": 48034, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Slope", "label": "Slope", "function": 3, "address": 48002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "intercept", "label": "intercept", "function": 3, "address": 48004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 53577,
+      "name": "XE-500",
+      "fields": [
+        {"key": "Chlorophyl-a", "label": "Chlorophyl-a", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Chlorophyl-a_mA", "label": "Chlorophyl-a_mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365 dark", "label": "t365 dark", "function": 3, "address": 48036, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365 dark", "label": "s365 dark", "function": 3, "address": 48038, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420 dark", "label": "t420 dark", "function": 3, "address": 48040, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420 dark", "label": "s420 dark", "function": 3, "address": 48042, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T1", "label": "T1", "function": 3, "address": 48006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T2", "label": "T2", "function": 3, "address": 48008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365", "label": "t365", "function": 3, "address": 48028, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365", "label": "s365", "function": 3, "address": 48030, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420", "label": "t420", "function": 3, "address": 48032, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420", "label": "s420", "function": 3, "address": 48034, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Slope", "label": "Slope", "function": 3, "address": 48002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "intercept", "label": "intercept", "function": 3, "address": 48004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 54548,
+      "name": "XH-520",
+      "fields": [
+        {"key": "OiW", "label": "OiW", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "OiW_mA", "label": "OiW_mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365 dark", "label": "t365 dark", "function": 3, "address": 48036, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365 dark", "label": "s365 dark", "function": 3, "address": 48038, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420 dark", "label": "t420 dark", "function": 3, "address": 48040, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420 dark", "label": "s420 dark", "function": 3, "address": 48042, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T1", "label": "T1", "function": 3, "address": 48006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T2", "label": "T2", "function": 3, "address": 48008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365", "label": "t365", "function": 3, "address": 48028, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365", "label": "s365", "function": 3, "address": 48030, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420", "label": "t420", "function": 3, "address": 48032, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420", "label": "s420", "function": 3, "address": 48034, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Slope", "label": "Slope", "function": 3, "address": 48002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "intercept", "label": "intercept", "function": 3, "address": 48004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 57172,
+      "name": "XT-750",
+      "fields": [
+        {"key": "Chroma", "label": "Chroma", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Chroma_mA", "label": "Chroma_mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365 dark", "label": "t365 dark", "function": 3, "address": 48036, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365 dark", "label": "s365 dark", "function": 3, "address": 48038, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420 dark", "label": "t420 dark", "function": 3, "address": 48040, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420 dark", "label": "s420 dark", "function": 3, "address": 48042, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T1", "label": "T1", "function": 3, "address": 48006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T2", "label": "T2", "function": 3, "address": 48008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365", "label": "t365", "function": 3, "address": 48028, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365", "label": "s365", "function": 3, "address": 48030, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420", "label": "t420", "function": 3, "address": 48032, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420", "label": "s420", "function": 3, "address": 48034, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Slope", "label": "Slope", "function": 3, "address": 48002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "intercept", "label": "intercept", "function": 3, "address": 48004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 58948,
+      "name": "HT-500",
+      "fields": [
+        {"key": "PTSA", "label": "PTSA", "function": 3, "address": 46001, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "PTSA_mA", "label": "PTSA_mA", "function": 3, "address": 46003, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365Di", "label": "t365Di", "function": 3, "address": 48020, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365Di", "label": "s365Di", "function": 3, "address": 48022, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420Di", "label": "t420Di", "function": 3, "address": 48024, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420Di", "label": "s420Di", "function": 3, "address": 48026, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T1", "label": "T1", "function": 3, "address": 48006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "T2", "label": "T2", "function": 3, "address": 48008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365", "label": "t365", "function": 3, "address": 48028, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s365", "label": "s365", "function": 3, "address": 48030, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t420", "label": "t420", "function": 3, "address": 48032, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "s420", "label": "s420", "function": 3, "address": 48034, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "Slope", "label": "Slope", "function": 3, "address": 48002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "intercept", "label": "intercept", "function": 3, "address": 48004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2}
+      ]
+    },
+    {
+      "product_num": 50661,
+      "name": "ST-500",
+      "fields": [
+        {"key": "f1", "label": "f1", "function": 3, "address": 1000, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t1", "label": "t1", "function": 3, "address": 1002, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t2", "label": "t2", "function": 3, "address": 1004, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "ppb", "label": "ppb", "function": 3, "address": 1006, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "p1", "label": "p1", "function": 3, "address": 1008, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "p2", "label": "p2", "function": 3, "address": 1010, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "turbidity", "label": "turbidity", "function": 3, "address": 1012, "address_base": 1, "type": "float32", "word_order": "CDAB", "decimals": 2},
+        {"key": "t365Di", "label": "t365Di", "function": 3, "address": 1017, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "s365Di", "label": "s365Di", "function": 3, "address": 1018, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "t420Di", "label": "t420Di", "function": 3, "address": 1019, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "s420Di", "label": "s420Di", "function": 3, "address": 1020, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "t365", "label": "t365", "function": 3, "address": 1021, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "s365", "label": "s365", "function": 3, "address": 1022, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "t420", "label": "t420", "function": 3, "address": 1023, "address_base": 1, "type": "uint16", "decimals": 0},
+        {"key": "s420", "label": "s420", "function": 3, "address": 1024, "address_base": 1, "type": "uint16", "decimals": 0}
+      ]
+    }
+  ]
+}

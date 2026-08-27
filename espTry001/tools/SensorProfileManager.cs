@@ -386,9 +386,9 @@ internal sealed class SensorProfile
 
 internal sealed class ProfileManagerForm : Form
 {
-    private const int MaxProfiles = 32;
+    private const int MaxProfiles = 50;
     private const int MaxFields = 16;
-    private const int MaxJsonBytes = 64 * 1024;
+    private const int MaxJsonBytes = 256 * 1024;
 
     private readonly List<SensorProfile> profiles = new List<SensorProfile>();
     private readonly ListBox profileList = new ListBox();
@@ -1212,7 +1212,7 @@ internal sealed class ProfileManagerForm : Form
                 case "SaveFailed": return "保存失败";
                 case "ValidationFailed": return "校验失败";
                 case "ConfigurationValid": return "配置校验通过。";
-                case "MaxProfiles": return "最多支持 32 个设备配置。";
+                case "MaxProfiles": return "最多支持 50 个设备配置。";
                 case "AtLeastOneProfile": return "至少需要保留一个设备配置。";
                 case "DeletePn": return "确定删除 PN {0} 吗？";
                 case "ConfirmDelete": return "确认删除";
@@ -1224,9 +1224,9 @@ internal sealed class ProfileManagerForm : Form
                 case "ValidStatus": return "校验通过：{0} 个设备，{1} 个参数";
                 case "SavedStatus": return "已保存 {0} 个设备、{1} 字节，并生成 {2}";
                 case "JsonFilter": return "传感器配置 JSON (*.json)|*.json|所有文件 (*.*)|*.*";
-                case "ErrJsonSize": return "JSON 文件不能超过 65536 字节。";
+                case "ErrJsonSize": return "JSON 文件不能超过 262144 字节。";
                 case "ErrVersion": return "配置版本必须为 1～23 个 UTF-8 字节。";
-                case "ErrProfileCount": return "设备配置数量必须为 1～32。";
+                case "ErrProfileCount": return "设备配置数量必须为 1～50。";
                 case "ErrPnRange": return "产品 PN 必须在 1～4294967295 范围内。";
                 case "ErrDuplicatePn": return "产品 PN 重复：{0}";
                 case "ErrName": return "{0}：名称必须为 1～23 个 UTF-8 字节。";
@@ -1276,7 +1276,7 @@ internal sealed class ProfileManagerForm : Form
                 case "SaveFailed": return "Error al guardar";
                 case "ValidationFailed": return "Error de validación";
                 case "ConfigurationValid": return "La configuración es válida.";
-                case "MaxProfiles": return "Se admiten como máximo 32 perfiles.";
+                case "MaxProfiles": return "Se admiten como máximo 50 perfiles.";
                 case "AtLeastOneProfile": return "Debe conservar al menos un perfil.";
                 case "DeletePn": return "¿Eliminar el PN {0}?";
                 case "ConfirmDelete": return "Confirmar eliminación";
@@ -1288,9 +1288,9 @@ internal sealed class ProfileManagerForm : Form
                 case "ValidStatus": return "Válido: {0} perfiles, {1} parámetros";
                 case "SavedStatus": return "Guardados {0} perfiles, {1} bytes y generado {2}";
                 case "JsonFilter": return "Perfiles JSON (*.json)|*.json|Todos los archivos (*.*)|*.*";
-                case "ErrJsonSize": return "El archivo JSON no puede superar 65536 bytes.";
+                case "ErrJsonSize": return "El archivo JSON no puede superar 262144 bytes.";
                 case "ErrVersion": return "La versión debe contener entre 1 y 23 bytes UTF-8.";
-                case "ErrProfileCount": return "El número de perfiles debe estar entre 1 y 32.";
+                case "ErrProfileCount": return "El número de perfiles debe estar entre 1 y 50.";
                 case "ErrPnRange": return "El PN debe estar entre 1 y 4294967295.";
                 case "ErrDuplicatePn": return "PN duplicado: {0}";
                 case "ErrName": return "{0}: el nombre debe contener entre 1 y 23 bytes UTF-8.";
@@ -1340,7 +1340,7 @@ internal sealed class ProfileManagerForm : Form
                 case "SaveFailed": return "Save failed";
                 case "ValidationFailed": return "Validation failed";
                 case "ConfigurationValid": return "Configuration is valid.";
-                case "MaxProfiles": return "A maximum of 32 profiles is supported.";
+                case "MaxProfiles": return "A maximum of 50 profiles is supported.";
                 case "AtLeastOneProfile": return "At least one profile is required.";
                 case "DeletePn": return "Delete PN {0}?";
                 case "ConfirmDelete": return "Confirm delete";
@@ -1352,9 +1352,9 @@ internal sealed class ProfileManagerForm : Form
                 case "ValidStatus": return "Valid: {0} profiles, {1} fields";
                 case "SavedStatus": return "Saved {0} profiles, {1} bytes, and generated {2}";
                 case "JsonFilter": return "Sensor profile JSON (*.json)|*.json|All files (*.*)|*.*";
-                case "ErrJsonSize": return "JSON cannot exceed 65536 bytes.";
+                case "ErrJsonSize": return "JSON cannot exceed 262144 bytes.";
                 case "ErrVersion": return "Config version must contain 1..23 UTF-8 bytes.";
-                case "ErrProfileCount": return "Profile count must be 1..32.";
+                case "ErrProfileCount": return "Profile count must be 1..50.";
                 case "ErrPnRange": return "Product PN must be 1..4294967295.";
                 case "ErrDuplicatePn": return "Duplicate product PN: {0}";
                 case "ErrName": return "{0}: name must contain 1..23 UTF-8 bytes.";

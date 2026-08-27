@@ -52,8 +52,8 @@ function Load-JsonPreview([string]$Path) {
     }
     try {
         $bytes = [System.IO.File]::ReadAllBytes($Path)
-        if ($bytes.Length -eq 0 -or $bytes.Length -gt 65536) {
-            throw "JSON size must be 1..65536 bytes"
+        if ($bytes.Length -eq 0 -or $bytes.Length -gt 262144) {
+            throw "JSON size must be 1..262144 bytes"
         }
         $utf8 = New-Object System.Text.UTF8Encoding($false, $true)
         $text = $utf8.GetString($bytes)

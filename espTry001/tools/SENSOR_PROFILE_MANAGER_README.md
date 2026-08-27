@@ -36,6 +36,6 @@ The PDF contains the configuration version, supported PN/name list, field and re
 
 PDF pages are rendered with Windows fonts and embedded as images so Chinese characters and Spanish accents display consistently on other computers.
 
-The editor enforces the current firmware limits: 1-32 profiles, 1-16 fields per profile, FC03, 1-based addresses, and `uint16` or `float32` with CDAB word order.
+The editor enforces the current firmware limits: 1-50 profiles, 1-16 fields per profile, a 256 KiB JSON file, FC03, 1-based addresses, and `uint16` or `float32` with CDAB word order.
 
 To rebuild the program after changing its C# source, run `Build_Profile_Manager.bat`.

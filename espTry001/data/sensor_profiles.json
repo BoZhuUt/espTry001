@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "config_version": "2026.07.23.1",
+  "config_version": "2026.08.27.1",
   "profiles": [
     {
       "product_num": 55995,
@@ -252,8 +252,8 @@
       ]
     },
     {
-      "product_num": 53001,
-      "name": "ST-710",
+      "product_num": 53003,
+      "name": "ST-712",
       "fields": [
         {
           "key": "pH",
@@ -374,6 +374,3680 @@
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53002,
+      "name": "ST-711",
+      "fields": [
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "ORP",
+          "label": "ORP",
+          "function": 3,
+          "address": 46007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "ORP_mA",
+          "label": "ORP_mA",
+          "function": 3,
+          "address": 46009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "ORP_mv",
+          "label": "ORP_mv",
+          "function": 3,
+          "address": 46013,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53001,
+      "name": "ST-710",
+      "fields": [
+        {
+          "key": "pH",
+          "label": "pH",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_mA",
+          "label": "pH_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pt100Res",
+          "label": "pt100Res",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slope_acid",
+          "label": "slope_acid",
+          "function": 3,
+          "address": 48001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept_acid",
+          "label": "intercept_acid",
+          "function": 3,
+          "address": 48003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "adc_data",
+          "label": "adc_data",
+          "function": 3,
+          "address": 48005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_V_origin",
+          "label": "pH_V_origin",
+          "function": 3,
+          "address": 48007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pointA_E",
+          "label": "pointA_E",
+          "function": 3,
+          "address": 48009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53004,
+      "name": "ST-715-325",
+      "fields": [
+        {
+          "key": "pH",
+          "label": "pH",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_mA",
+          "label": "pH_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pt100Res",
+          "label": "pt100Res",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slope_acid",
+          "label": "slope_acid",
+          "function": 3,
+          "address": 48001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept_acid",
+          "label": "intercept_acid",
+          "function": 3,
+          "address": 48003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "adc_data",
+          "label": "adc_data",
+          "function": 3,
+          "address": 48005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_V_origin",
+          "label": "pH_V_origin",
+          "function": 3,
+          "address": 48007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pointA_E",
+          "label": "pointA_E",
+          "function": 3,
+          "address": 48009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53016,
+      "name": "ST-715-120",
+      "fields": [
+        {
+          "key": "pH",
+          "label": "pH",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_mA",
+          "label": "pH_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pt100Res",
+          "label": "pt100Res",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slope_acid",
+          "label": "slope_acid",
+          "function": 3,
+          "address": 48001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept_acid",
+          "label": "intercept_acid",
+          "function": 3,
+          "address": 48003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "adc_data",
+          "label": "adc_data",
+          "function": 3,
+          "address": 48005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_V_origin",
+          "label": "pH_V_origin",
+          "function": 3,
+          "address": 48007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pointA_E",
+          "label": "pointA_E",
+          "function": 3,
+          "address": 48009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 51761,
+      "name": "ST-716-120",
+      "fields": [
+        {
+          "key": "pH",
+          "label": "pH",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_mA",
+          "label": "pH_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pt100Res",
+          "label": "pt100Res",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slope_acid",
+          "label": "slope_acid",
+          "function": 3,
+          "address": 48001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept_acid",
+          "label": "intercept_acid",
+          "function": 3,
+          "address": 48003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "adc_data",
+          "label": "adc_data",
+          "function": 3,
+          "address": 48005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pH_V_origin",
+          "label": "pH_V_origin",
+          "function": 3,
+          "address": 48007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "pointA_E",
+          "label": "pointA_E",
+          "function": 3,
+          "address": 48009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53251,
+      "name": "LT-635",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeLow",
+          "label": "turbiditySlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptLow",
+          "label": "turbidityInterceptLow",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeMid",
+          "label": "turbiditySlopeMid",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptMid",
+          "label": "turbidityInterceptMid",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeHigh",
+          "label": "turbiditySlopeHigh",
+          "function": 3,
+          "address": 48010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptHigh",
+          "label": "turbidityInterceptHigh",
+          "function": 3,
+          "address": 48012,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365Low",
+          "label": "s365Low",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Mid",
+          "label": "s365Mid",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365High",
+          "label": "s365High",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiLow",
+          "label": "s365DiLow",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiMid",
+          "label": "s365DiMid",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiHigh",
+          "label": "s365DiHigh",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 10002,
+      "name": "LT-633",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeLow",
+          "label": "turbiditySlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptLow",
+          "label": "turbidityInterceptLow",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeMid",
+          "label": "turbiditySlopeMid",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptMid",
+          "label": "turbidityInterceptMid",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbiditySlopeHigh",
+          "label": "turbiditySlopeHigh",
+          "function": 3,
+          "address": 48010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidityInterceptHigh",
+          "label": "turbidityInterceptHigh",
+          "function": 3,
+          "address": 48012,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365Low",
+          "label": "s365Low",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Mid",
+          "label": "s365Mid",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365High",
+          "label": "s365High",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiLow",
+          "label": "s365DiLow",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiMid",
+          "label": "s365DiMid",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DiHigh",
+          "label": "s365DiHigh",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 53249,
+      "name": "LT-631",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptHigh",
+          "label": "InterceptHigh",
+          "function": 3,
+          "address": 48051,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365Low",
+          "label": "s365Low",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DarkLow",
+          "label": "s365DarkLow",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s850Low",
+          "label": "s850Low",
+          "function": 3,
+          "address": 48047,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "highA",
+          "label": "highA",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "highB",
+          "label": "highB",
+          "function": 3,
+          "address": 48010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "highC",
+          "label": "highC",
+          "function": 3,
+          "address": 48012,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowA",
+          "label": "lowA",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowB",
+          "label": "lowB",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowC",
+          "label": "lowC",
+          "function": 3,
+          "address": 48031,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53250,
+      "name": "LT-632",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "temperature",
+          "label": "temperature",
+          "function": 3,
+          "address": 46005,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptHigh",
+          "label": "InterceptHigh",
+          "function": 3,
+          "address": 48051,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365Low",
+          "label": "s365Low",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365DarkLow",
+          "label": "s365DarkLow",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s850Low",
+          "label": "s850Low",
+          "function": 3,
+          "address": 48047,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "highA",
+          "label": "highA",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "highB",
+          "label": "highB",
+          "function": 3,
+          "address": 48010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "highC",
+          "label": "highC",
+          "function": 3,
+          "address": 48012,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowA",
+          "label": "lowA",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowB",
+          "label": "lowB",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "lowC",
+          "label": "lowC",
+          "function": 3,
+          "address": 48031,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53252,
+      "name": "LT-735",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slopeMid",
+          "label": "slopeMid",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Intercept",
+          "label": "Intercept",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365di_LOW",
+          "label": "s365di_LOW",
+          "function": 3,
+          "address": 48016,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365di_MID",
+          "label": "s365di_MID",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365di_HIGH",
+          "label": "s365di_HIGH",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 48018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_MID",
+          "label": "s365_MID",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_LOW",
+          "label": "s365Dark_LOW",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_MID",
+          "label": "s365Dark_MID",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_HIGH",
+          "label": "s365Dark_HIGH",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 45011,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53215,
+      "name": "LT-736",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slopeMid",
+          "label": "slopeMid",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptMid",
+          "label": "interceptMid",
+          "function": 3,
+          "address": 48031,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 48033,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 48018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_MID",
+          "label": "s365_MID",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_LOW",
+          "label": "s365Dark_LOW",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_MID",
+          "label": "s365Dark_MID",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_HIGH",
+          "label": "s365Dark_HIGH",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 48015,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 53216,
+      "name": "LT-737",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 1002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 1056,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 1004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark",
+          "label": "s365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 1058,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365LowCalib",
+          "label": "s365LowCalib",
+          "function": 3,
+          "address": 1052,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidLowCalib",
+          "label": "s365MidLowCalib",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidHighCalib",
+          "label": "s365MidHighCalib",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365HighCalib",
+          "label": "s365HighCalib",
+          "function": 3,
+          "address": 1053,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 53224,
+      "name": "LT-737B",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 1002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 1056,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 1004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark",
+          "label": "s365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 1058,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365LowCalib",
+          "label": "s365LowCalib",
+          "function": 3,
+          "address": 1052,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidLowCalib",
+          "label": "s365MidLowCalib",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidHighCalib",
+          "label": "s365MidHighCalib",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365HighCalib",
+          "label": "s365HighCalib",
+          "function": 3,
+          "address": 1053,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 53221,
+      "name": "LT-739",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 1002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 1056,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 1004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark",
+          "label": "s365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 1058,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365LowCalib",
+          "label": "s365LowCalib",
+          "function": 3,
+          "address": 1052,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidLowCalib",
+          "label": "s365MidLowCalib",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidHighCalib",
+          "label": "s365MidHighCalib",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365HighCalib",
+          "label": "s365HighCalib",
+          "function": 3,
+          "address": 1053,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 53225,
+      "name": "LT-739B",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 1002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 1056,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 1004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark",
+          "label": "s365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 1058,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365LowCalib",
+          "label": "s365LowCalib",
+          "function": 3,
+          "address": 1052,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidLowCalib",
+          "label": "s365MidLowCalib",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365MidHighCalib",
+          "label": "s365MidHighCalib",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365HighCalib",
+          "label": "s365HighCalib",
+          "function": 3,
+          "address": 1053,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 53223,
+      "name": "LT-736B",
+      "fields": [
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity_mA",
+          "label": "turbidity_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeLow",
+          "label": "SlopeLow",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "slopeMid",
+          "label": "slopeMid",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "SlopeHigh",
+          "label": "SlopeHigh",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "InterceptLow",
+          "label": "InterceptLow",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptMid",
+          "label": "interceptMid",
+          "function": 3,
+          "address": 48031,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "interceptHigh",
+          "label": "interceptHigh",
+          "function": 3,
+          "address": 48033,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365_LOW",
+          "label": "s365_LOW",
+          "function": 3,
+          "address": 48018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_MID",
+          "label": "s365_MID",
+          "function": 3,
+          "address": 48027,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365_HIGH",
+          "label": "s365_HIGH",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_LOW",
+          "label": "s365Dark_LOW",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_MID",
+          "label": "s365Dark_MID",
+          "function": 3,
+          "address": 48029,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Dark_HIGH",
+          "label": "s365Dark_HIGH",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "offset",
+          "label": "offset",
+          "function": 3,
+          "address": 48015,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 50692,
+      "name": "ST-588",
+      "fields": [
+        {
+          "key": "PTSA",
+          "label": "PTSA",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "PTSA_mA",
+          "label": "PTSA_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "TAG",
+          "label": "TAG",
+          "function": 3,
+          "address": 46007,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "TAG_mA",
+          "label": "TAG_mA",
+          "function": 3,
+          "address": 46009,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48041,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48031,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48032,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48033,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48035,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48036,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48037,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48038,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "PTSA Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Tag Slope",
+          "label": "Tag Slope",
+          "function": 3,
+          "address": 48010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 50501,
+      "name": "EM-500",
+      "fields": [
+        {
+          "key": "Chlorophyll-a",
+          "label": "Chlorophyll-a",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Chlorophyll-a_mA",
+          "label": "Chlorophyll-a_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 50503,
+      "name": "EM-501",
+      "fields": [
+        {
+          "key": "Algae",
+          "label": "Algae",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Algae_mA",
+          "label": "Algae_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 50522,
+      "name": "EM-510",
+      "fields": [
+        {
+          "key": "Chlorophyll-a",
+          "label": "Chlorophyll-a",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Chlorophyll-a_mA",
+          "label": "Chlorophyll-a_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 52101,
+      "name": "HM-500",
+      "fields": [
+        {
+          "key": "OiW",
+          "label": "OiW",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "OiW_mA",
+          "label": "OiW_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "cleanLiness",
+          "label": "cleanLiness",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52102,
+      "name": "HM-510",
+      "fields": [
+        {
+          "key": "OiW",
+          "label": "OiW",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "OiW_mA",
+          "label": "OiW_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "cleanLiness",
+          "label": "cleanLiness",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52106,
+      "name": "HM-520",
+      "fields": [
+        {
+          "key": "OiW",
+          "label": "OiW",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "OiW_mA",
+          "label": "OiW_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470Dark",
+          "label": "S470Dark",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365DI",
+          "label": "T365DI",
+          "function": 3,
+          "address": 48019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365DI",
+          "label": "S365DI",
+          "function": 3,
+          "address": 48020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410DI",
+          "label": "S410DI",
+          "function": 3,
+          "address": 48021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470DI",
+          "label": "S470DI",
+          "function": 3,
+          "address": 48022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "T365",
+          "label": "T365",
+          "function": 3,
+          "address": 48023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S365",
+          "label": "S365",
+          "function": 3,
+          "address": 48024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S410",
+          "label": "S410",
+          "function": 3,
+          "address": 48025,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "S470",
+          "label": "S470",
+          "function": 3,
+          "address": 48026,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "PTSA Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "cleanLiness",
+          "label": "cleanLiness",
+          "function": 3,
+          "address": 46011,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 50661,
+      "name": "ST-500",
+      "fields": [
+        {
+          "key": "f1",
+          "label": "f1",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t1",
+          "label": "t1",
+          "function": 3,
+          "address": 1002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t2",
+          "label": "t2",
+          "function": 3,
+          "address": 1004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "ppb",
+          "label": "ppb",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "p1",
+          "label": "p1",
+          "function": 3,
+          "address": 1008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "p2",
+          "label": "p2",
+          "function": 3,
+          "address": 1010,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "turbidity",
+          "label": "turbidity",
+          "function": 3,
+          "address": 1012,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Di",
+          "label": "s365Di",
+          "function": 3,
+          "address": 1018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420Di",
+          "label": "t420Di",
+          "function": 3,
+          "address": 1019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420Di",
+          "label": "s420Di",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52411,
+      "name": "HM-1500",
+      "fields": [
+        {
+          "key": "PAH",
+          "label": "PAH",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "PAH 4-20mA",
+          "label": "PAH 4-20mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Di",
+          "label": "s365Di",
+          "function": 3,
+          "address": 1018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420Di",
+          "label": "t420Di",
+          "function": 3,
+          "address": 1019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420Di",
+          "label": "s420Di",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52217,
+      "name": "HM-201",
+      "fields": [
+        {
+          "key": "Sugar",
+          "label": "Sugar",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Sugar 4-20mA",
+          "label": "Sugar 4-20mA",
+          "function": 3,
+          "address": 1014,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Di",
+          "label": "s365Di",
+          "function": 3,
+          "address": 1018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420Di",
+          "label": "t420Di",
+          "function": 3,
+          "address": 1019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420Di",
+          "label": "s420Di",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52111,
+      "name": "HM-600",
+      "fields": [
+        {
+          "key": "DOM",
+          "label": "DOM",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Di",
+          "label": "s365Di",
+          "function": 3,
+          "address": 1018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420Di",
+          "label": "t420Di",
+          "function": 3,
+          "address": 1019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420Di",
+          "label": "s420Di",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 1
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        }
+      ]
+    },
+    {
+      "product_num": 52112,
+      "name": "HM-610",
+      "fields": [
+        {
+          "key": "DOM",
+          "label": "DOM",
+          "function": 3,
+          "address": 1006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365Di",
+          "label": "t365Di",
+          "function": 3,
+          "address": 1017,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365Di",
+          "label": "s365Di",
+          "function": 3,
+          "address": 1018,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420Di",
+          "label": "t420Di",
+          "function": 3,
+          "address": 1019,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420Di",
+          "label": "s420Di",
+          "function": 3,
+          "address": 1020,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 1
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 1021,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 1022,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 1023,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 1024,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 1000,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "S365Dark",
+          "label": "S365Dark",
+          "function": 3,
+          "address": 1043,
+          "address_base": 1,
+          "type": "uint16",
+          "decimals": 0
         }
       ]
     },
@@ -544,12 +4218,12 @@
       ]
     },
     {
-      "product_num": 53251,
-      "name": "LT-635",
+      "product_num": 52267,
+      "name": "XT-500",
       "fields": [
         {
-          "key": "sensorValue",
-          "label": "sensorValue",
+          "key": "PTSA",
+          "label": "PTSA",
           "function": 3,
           "address": 46001,
           "address_base": 1,
@@ -558,8 +4232,8 @@
           "decimals": 2
         },
         {
-          "key": "sensorValue_mA",
-          "label": "sensorValue_mA",
+          "key": "PTSA_mA",
+          "label": "PTSA_mA",
           "function": 3,
           "address": 46003,
           "address_base": 1,
@@ -568,38 +4242,48 @@
           "decimals": 2
         },
         {
-          "key": "temperature",
-          "label": "temperature",
+          "key": "t365 dark",
+          "label": "t365 dark",
           "function": 3,
-          "address": 46005,
+          "address": 48036,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "turbiditySlopeLow",
-          "label": "turbiditySlopeLow",
+          "key": "s365 dark",
+          "label": "s365 dark",
           "function": 3,
-          "address": 48002,
+          "address": 48038,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "turbidityInterceptLow",
-          "label": "turbidityInterceptLow",
+          "key": "t420 dark",
+          "label": "t420 dark",
           "function": 3,
-          "address": 48004,
+          "address": 48040,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "turbiditySlopeMid",
-          "label": "turbiditySlopeMid",
+          "key": "s420 dark",
+          "label": "s420 dark",
+          "function": 3,
+          "address": 48042,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T1",
+          "label": "T1",
           "function": 3,
           "address": 48006,
           "address_base": 1,
@@ -608,8 +4292,8 @@
           "decimals": 2
         },
         {
-          "key": "turbidityInterceptMid",
-          "label": "turbidityInterceptMid",
+          "key": "T2",
+          "label": "T2",
           "function": 3,
           "address": 48008,
           "address_base": 1,
@@ -618,150 +4302,524 @@
           "decimals": 2
         },
         {
-          "key": "turbiditySlopeHigh",
-          "label": "turbiditySlopeHigh",
-          "function": 3,
-          "address": 48010,
-          "address_base": 1,
-          "type": "float32",
-          "word_order": "CDAB",
-          "decimals": 2
-        },
-        {
-          "key": "turbidityInterceptHigh",
-          "label": "turbidityInterceptHigh",
-          "function": 3,
-          "address": 48012,
-          "address_base": 1,
-          "type": "float32",
-          "word_order": "CDAB",
-          "decimals": 2
-        },
-        {
-          "key": "s365Low",
-          "label": "s365Low",
-          "function": 3,
-          "address": 48021,
-          "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
-        },
-        {
-          "key": "s365Mid",
-          "label": "s365Mid",
-          "function": 3,
-          "address": 48022,
-          "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
-        },
-        {
-          "key": "s365High",
-          "label": "s365High",
-          "function": 3,
-          "address": 48023,
-          "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
-        },
-        {
-          "key": "s365DiLow",
-          "label": "s365DiLow",
-          "function": 3,
-          "address": 48027,
-          "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
-        },
-        {
-          "key": "s365DiMid",
-          "label": "s365DiMid",
+          "key": "t365",
+          "label": "t365",
           "function": 3,
           "address": 48028,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
-          "key": "s365DiHigh",
-          "label": "s365DiHigh",
+          "key": "s365",
+          "label": "s365",
           "function": 3,
-          "address": 48029,
+          "address": 48030,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 0
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 48032,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 48034,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept",
+          "label": "intercept",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         }
       ]
     },
     {
-      "product_num": 50661,
-      "name": "ST-500",
+      "product_num": 53577,
+      "name": "XE-500",
       "fields": [
         {
-          "key": "f1",
-          "label": "f1",
+          "key": "Chlorophyl-a",
+          "label": "Chlorophyl-a",
           "function": 3,
-          "address": 1000,
+          "address": 46001,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "t1",
-          "label": "t1",
+          "key": "Chlorophyl-a_mA",
+          "label": "Chlorophyl-a_mA",
           "function": 3,
-          "address": 1002,
+          "address": 46003,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "t2",
-          "label": "t2",
+          "key": "t365 dark",
+          "label": "t365 dark",
           "function": 3,
-          "address": 1004,
+          "address": 48036,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "ppb",
-          "label": "ppb",
+          "key": "s365 dark",
+          "label": "s365 dark",
           "function": 3,
-          "address": 1006,
+          "address": 48038,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "p1",
-          "label": "p1",
+          "key": "t420 dark",
+          "label": "t420 dark",
           "function": 3,
-          "address": 1008,
+          "address": 48040,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "p2",
-          "label": "p2",
+          "key": "s420 dark",
+          "label": "s420 dark",
           "function": 3,
-          "address": 1010,
+          "address": 48042,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
           "decimals": 2
         },
         {
-          "key": "turbidity",
-          "label": "turbidity",
+          "key": "T1",
+          "label": "T1",
           "function": 3,
-          "address": 1012,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T2",
+          "label": "T2",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 48032,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 48034,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept",
+          "label": "intercept",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 54548,
+      "name": "XH-520",
+      "fields": [
+        {
+          "key": "OiW",
+          "label": "OiW",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "OiW_mA",
+          "label": "OiW_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365 dark",
+          "label": "t365 dark",
+          "function": 3,
+          "address": 48036,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365 dark",
+          "label": "s365 dark",
+          "function": 3,
+          "address": 48038,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420 dark",
+          "label": "t420 dark",
+          "function": 3,
+          "address": 48040,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420 dark",
+          "label": "s420 dark",
+          "function": 3,
+          "address": 48042,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T1",
+          "label": "T1",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T2",
+          "label": "T2",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 48032,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 48034,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept",
+          "label": "intercept",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 57172,
+      "name": "XT-750",
+      "fields": [
+        {
+          "key": "Chroma",
+          "label": "Chroma",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Chroma_mA",
+          "label": "Chroma_mA",
+          "function": 3,
+          "address": 46003,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365 dark",
+          "label": "t365 dark",
+          "function": 3,
+          "address": 48036,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365 dark",
+          "label": "s365 dark",
+          "function": 3,
+          "address": 48038,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420 dark",
+          "label": "t420 dark",
+          "function": 3,
+          "address": 48040,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420 dark",
+          "label": "s420 dark",
+          "function": 3,
+          "address": 48042,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T1",
+          "label": "T1",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T2",
+          "label": "T2",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t365",
+          "label": "t365",
+          "function": 3,
+          "address": 48028,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s365",
+          "label": "s365",
+          "function": 3,
+          "address": 48030,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "t420",
+          "label": "t420",
+          "function": 3,
+          "address": 48032,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "s420",
+          "label": "s420",
+          "function": 3,
+          "address": 48034,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept",
+          "label": "intercept",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        }
+      ]
+    },
+    {
+      "product_num": 58948,
+      "name": "HT-500",
+      "fields": [
+        {
+          "key": "PTSA",
+          "label": "PTSA",
+          "function": 3,
+          "address": 46001,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "PTSA_mA",
+          "label": "PTSA_mA",
+          "function": 3,
+          "address": 46003,
           "address_base": 1,
           "type": "float32",
           "word_order": "CDAB",
@@ -771,73 +4829,121 @@
           "key": "t365Di",
           "label": "t365Di",
           "function": 3,
-          "address": 1017,
+          "address": 48020,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "s365Di",
           "label": "s365Di",
           "function": 3,
-          "address": 1018,
+          "address": 48022,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "t420Di",
           "label": "t420Di",
           "function": 3,
-          "address": 1019,
+          "address": 48024,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "s420Di",
           "label": "s420Di",
           "function": 3,
-          "address": 1020,
+          "address": 48026,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T1",
+          "label": "T1",
+          "function": 3,
+          "address": 48006,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "T2",
+          "label": "T2",
+          "function": 3,
+          "address": 48008,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "t365",
           "label": "t365",
           "function": 3,
-          "address": 1021,
+          "address": 48028,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "s365",
           "label": "s365",
           "function": 3,
-          "address": 1022,
+          "address": 48030,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "t420",
           "label": "t420",
           "function": 3,
-          "address": 1023,
+          "address": 48032,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         },
         {
           "key": "s420",
           "label": "s420",
           "function": 3,
-          "address": 1024,
+          "address": 48034,
           "address_base": 1,
-          "type": "uint16",
-          "decimals": 1
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "Slope",
+          "label": "Slope",
+          "function": 3,
+          "address": 48002,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
+        },
+        {
+          "key": "intercept",
+          "label": "intercept",
+          "function": 3,
+          "address": 48004,
+          "address_base": 1,
+          "type": "float32",
+          "word_order": "CDAB",
+          "decimals": 2
         }
       ]
     }
