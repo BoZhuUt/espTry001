@@ -59,35 +59,74 @@ namespace PyxisSensorDataExporter
         private SerialPort _port;
         private byte[] _readBuf = new byte[1];
 
-        public void Connect(string portName)
+        public string[] Connect(string portName)
         {
             if (_port != null && _port.IsOpen)
                 throw new InvalidOperationException("已经连接，请先断开");
 
-            // DTR/RTS 保持 false，避免 ESP32-S3 原生 USB CDC 误触发复位。
-            _port = new SerialPort();
-            _port.PortName = portName;
-            _port.BaudRate = 115200;
-            _port.DataBits = 8;
-            _port.Parity = Parity.None;
-            _port.StopBits = StopBits.One;
-            _port.ReadTimeout = 5000;
-            _port.WriteTimeout = 10000;
-            _port.ReadBufferSize = 65536;
-            _port.DtrEnable = false;
-            _port.RtsEnable = false;
-            _port.Open();
-            Thread.Sleep(100);
-            _port.DiscardInBuffer();
+            Exception lastError = null;
+            DateTime deadline = DateTime.UtcNow.AddSeconds(15);
+            while (DateTime.UtcNow < deadline)
+            {
+                try
+                {
+                    if (!PortExists(portName))
+                    {
+                        Thread.Sleep(300);
+                        continue;
+                    }
+
+                    Disconnect();
+                    _port = new SerialPort();
+                    _port.PortName = portName;
+                    _port.BaudRate = 115200;
+                    _port.DataBits = 8;
+                    _port.Parity = Parity.None;
+                    _port.StopBits = StopBits.One;
+                    _port.Handshake = Handshake.None;
+                    _port.ReadTimeout = 1500;
+                    _port.WriteTimeout = 10000;
+                    _port.ReadBufferSize = 65536;
+                    _port.DtrEnable = false;
+                    _port.RtsEnable = false;
+                    _port.Open();
+                    Thread.Sleep(350);
+                    _port.DiscardInBuffer();
+
+                    string[] info = Ping();
+                    _port.ReadTimeout = 5000;
+                    return info;
+                }
+                catch (Exception error)
+                {
+                    lastError = error;
+                    // R21 makes the current Windows handle stale. Release it
+                    // and retry after the native USB COM port re-enumerates.
+                    Disconnect();
+                    Thread.Sleep(500);
+                }
+            }
+
+            throw new TimeoutException(
+                "ESPLOG1 握手失败。设备若刚发生 USB 复位，上位机会自动重连；" +
+                "请确认设备停留在日志导出页面且 COM 口正确。", lastError);
+        }
+
+        private static bool PortExists(string portName)
+        {
+            foreach (string name in SerialPort.GetPortNames())
+                if (String.Equals(name, portName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
         }
 
         public void Disconnect()
         {
-            if (_port != null)
-            {
-                try { if (_port.IsOpen) _port.Close(); }
-                catch { /* 忽略关闭异常 */ }
-            }
+            if (_port == null) return;
+            try { if (_port.IsOpen) _port.Close(); }
+            catch { /* 忽略关闭异常 */ }
+            _port.Dispose();
+            _port = null;
         }
 
         public void Dispose() { Disconnect(); }
@@ -635,8 +674,7 @@ namespace PyxisSensorDataExporter
             try
             {
                 _client = new EspLogClient();
-                _client.Connect((string)_portCombo.SelectedItem);
-                var info = _client.Ping();
+                var info = _client.Connect((string)_portCombo.SelectedItem);
                 _connected = true;
                 _connectBtn.Text = "断开";
                 _statusLabel.Text = string.Format("已连接 ESPLOG1  cfg={0}  fw={1}", info[0], info[1]);

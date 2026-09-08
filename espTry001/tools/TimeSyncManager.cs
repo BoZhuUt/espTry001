@@ -51,21 +51,30 @@ namespace PyxisTimeSyncManager
         public string Connect(string portName)
         {
             DisposePort();
-            _port = new SerialPort(portName, 115200, Parity.None, 8, StopBits.One);
-            _port.ReadTimeout = 1500;
-            _port.WriteTimeout = 5000;
-            _port.NewLine = "\n";
-            _port.DtrEnable = false;
-            _port.RtsEnable = false;
-            _port.Open();
-            Thread.Sleep(200);
-            _port.DiscardInBuffer();
-
             Exception lastError = null;
-            for (int attempt = 1; attempt <= 4; ++attempt)
+            DateTime deadline = DateTime.UtcNow.AddSeconds(12);
+            while (DateTime.UtcNow < deadline)
             {
                 try
                 {
+                    if (!PortExists(portName))
+                    {
+                        Thread.Sleep(300);
+                        continue;
+                    }
+
+                    DisposePort();
+                    _port = new SerialPort(portName, 115200, Parity.None, 8, StopBits.One);
+                    _port.ReadTimeout = 1500;
+                    _port.WriteTimeout = 5000;
+                    _port.NewLine = "\n";
+                    _port.Handshake = Handshake.None;
+                    _port.DtrEnable = false;
+                    _port.RtsEnable = false;
+                    _port.Open();
+                    Thread.Sleep(350);
+                    _port.DiscardInBuffer();
+
                     string pong = Command("PING", 1500);
                     if (!pong.StartsWith("PONG ESPTIME1 "))
                         throw new InvalidOperationException(Strings.T(
@@ -75,8 +84,12 @@ namespace PyxisTimeSyncManager
                 catch (Exception error)
                 {
                     lastError = error;
-                    try { _port.DiscardInBuffer(); } catch { }
-                    Thread.Sleep(350);
+                    // A freshly enumerated ESP32-S3 USB Serial/JTAG port may
+                    // reset once when Windows first opens it. Its old handle
+                    // is then unusable; close it and wait for the same COM
+                    // name to reappear before probing again.
+                    DisposePort();
+                    Thread.Sleep(500);
                 }
             }
 
@@ -86,6 +99,14 @@ namespace PyxisTimeSyncManager
                     "ESPTIME1 握手失败。请确认设备停留在 TIME SYNC 页面，并选择了正确的 COM 口。",
                     "ESPTIME1 handshake failed. Keep the device on the TIME SYNC page and select the correct COM port."),
                 lastError);
+        }
+
+        private static bool PortExists(string portName)
+        {
+            foreach (string name in SerialPort.GetPortNames())
+                if (String.Equals(name, portName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
         }
 
         public string Command(string command)

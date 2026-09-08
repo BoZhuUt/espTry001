@@ -26,6 +26,7 @@
 #include "usb/storage_usb_bridge.h"
 
 #include <esp_system.h>
+#include <esp_attr.h>
 #include <esp32s3/rom/rtc.h>
 
 #define LOCAL_SLAVE_ID           247
@@ -100,6 +101,48 @@ bool latestScanAvailable = false;
 esp_reset_reason_t startupResetReason = ESP_RST_UNKNOWN;
 RESET_REASON startupRawResetReasonCpu0 = NO_MEAN;
 RESET_REASON startupRawResetReasonCpu1 = NO_MEAN;
+
+namespace {
+
+constexpr uint32_t kUsbSessionRecoveryMagic = 0x50595855;  // "PYXU"
+constexpr uint8_t kRecoverLogExport = 1;
+constexpr uint8_t kRecoverTimeSync = 2;
+
+struct UsbSessionRecoveryState {
+  uint32_t magic;
+  uint8_t session;
+  uint8_t invertedSession;
+};
+
+RTC_NOINIT_ATTR UsbSessionRecoveryState usbSessionRecovery;
+
+void rememberUsbSession(uint8_t session) {
+  usbSessionRecovery.magic = kUsbSessionRecoveryMagic;
+  usbSessionRecovery.session = session;
+  usbSessionRecovery.invertedSession = static_cast<uint8_t>(~session);
+}
+
+void forgetUsbSession() {
+  usbSessionRecovery.magic = 0;
+  usbSessionRecovery.session = 0;
+  usbSessionRecovery.invertedSession = 0;
+}
+
+uint8_t recoverableUsbSession() {
+  if (startupRawResetReasonCpu0 != USB_UART_CHIP_RESET ||
+      usbSessionRecovery.magic != kUsbSessionRecoveryMagic ||
+      usbSessionRecovery.invertedSession !=
+          static_cast<uint8_t>(~usbSessionRecovery.session)) {
+    return 0;
+  }
+  if (usbSessionRecovery.session != kRecoverLogExport &&
+      usbSessionRecovery.session != kRecoverTimeSync) {
+    return 0;
+  }
+  return usbSessionRecovery.session;
+}
+
+}  // namespace
 
 static_assert(kAppMaxSensorFields == kMaxSensorFields,
               "AppState and SensorProfile field limits must match");
@@ -215,6 +258,18 @@ void setup()
     ui.clearScreen();
     ui.drawDashboardStatic(currentUiOperatingMode());
   }
+
+  // Windows usbser.sys can generate one USB-UART reset while a freshly
+  // enumerated native USB port is opened. Resume only the two read/configure
+  // sessions that are safe to recreate, and only after an exact R21 reset.
+  const uint8_t recoveredSession = recoverableUsbSession();
+  if (recoveredSession == kRecoverLogExport) {
+    enterLogExportMode();
+  } else if (recoveredSession == kRecoverTimeSync) {
+    enterTimeSyncMode();
+  } else {
+    forgetUsbSession();
+  }
 }
 
 void loop()
@@ -322,8 +377,10 @@ void loop()
 
       case UiAction::BackToSystemInfo:
         if (appState.page == UiPage::LogExport) {
+          forgetUsbSession();
           appController.exitLogExport();
         } else if (appState.page == UiPage::TimeSync) {
+          forgetUsbSession();
           appController.exitTimeSync();
         } else {
           appController.showPage(UiPage::SystemInfo);
@@ -404,6 +461,7 @@ void loop()
       lastExportDrawMs = millis();
     }
     if (storageStatus.exportShouldExit) {
+      forgetUsbSession();
       appController.exitLogExport();
       ui.clearScreen();
       drawAuthorPage();
@@ -426,6 +484,7 @@ void loop()
       lastTimeSyncDrawMs = millis();
     }
     if (timeSyncServer.closeRequested()) {
+      forgetUsbSession();
       appController.exitTimeSync();
       ui.clearScreen();
       drawAuthorPage();
@@ -1089,6 +1148,7 @@ void enterLogExportMode() {
   // AppController会先flush/close CSV，再让ESPLOG1取得SD与USB使用权。
   bool entered = appController.enterLogExport(FIRMWARE_VERSION_TEXT);
   if (!entered) return;
+  rememberUsbSession(kRecoverLogExport);
   ui.clearScreen();
   drawLogExportPage();
 }
@@ -1143,6 +1203,7 @@ void updateLogExportStateSnapshot() {
  */
 void enterTimeSyncMode() {
   if (!appController.enterTimeSync()) return;
+  rememberUsbSession(kRecoverTimeSync);
   // Entering this page is an explicit request to retry saved hotspot
   // credentials, even if the automatic boot attempt previously failed.
   wifiTimeService.startManualSync();
