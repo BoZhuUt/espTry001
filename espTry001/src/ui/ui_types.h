@@ -28,5 +28,6 @@ enum class UiAction : uint8_t {
   OpenCalibration,
   BackToSystemInfo,
   NextSensorParameterPage,
-  BackToDashboard
+  BackToDashboard,
+  EnterFirmwareDownload
 };

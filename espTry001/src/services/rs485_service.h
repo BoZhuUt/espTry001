@@ -11,6 +11,7 @@
 #include "sensor_discovery.h"
 #include "sensor_profile.h"
 #include "calibration_executor.h"
+#include "usb/cdc_line_coding.h"
 
 class Rs485Service {
  public:
@@ -29,6 +30,7 @@ class Rs485Service {
   enum class UartFormat : uint8_t {
     Modbus8E1,
     Boot8N1,
+    HostCdc,
   };
 
   enum class EventType : uint8_t {
@@ -88,6 +90,10 @@ class Rs485Service {
     uint16_t rawResponsePeak = 0;
     UartFormat uartFormat = UartFormat::Modbus8E1;
     uint32_t uartReconfigureCount = 0;
+    uint32_t uartBaud = 9600;
+    uint8_t uartParity = 2;
+    uint32_t passCodingRevision = 0;
+    bool passCodingSupported = true;
     UBaseType_t taskStackHighWater = 0;
     CalibrationExecutor::State calibrationState = CalibrationExecutor::State::Idle;
     uint8_t calibrationCommandIndex = 0;
@@ -110,6 +116,7 @@ class Rs485Service {
 
   bool begin(uint32_t timeoutMs = 3000);
   bool enterPassThrough();
+  bool setPassLineCoding(const CdcLineCoding &coding, uint32_t revision);
   bool enterUpgradePassAndWait(uint32_t timeoutMs = kStopTimeoutMs);
   bool startDiscovery();
   bool startPolling(const SensorProfile *profile);
@@ -154,10 +161,13 @@ class Rs485Service {
     StartFixedPolling,
     StartCalibration,
     Stop,
+    SetPassLineCoding,
   };
 
   struct Command {
     CommandType type = CommandType::Stop;
+    CdcLineCoding coding;
+    uint32_t codingRevision = 0;
     const SensorProfile *profile = nullptr;
     const CalibrationProfile *calibrationProfile = nullptr;
     uint8_t slaveAddress = 0;
@@ -239,6 +249,10 @@ class Rs485Service {
   bool sensorFoundEmitted_ = false;
   bool uartStarted_ = false;
   UartFormat uartFormat_ = UartFormat::Modbus8E1;
+  CdcLineCoding passCoding_;
+  uint32_t passCodingRevision_ = 0;
+  uint32_t uartBaud_ = 0;
+  uint8_t uartParity_ = 2;
   uint32_t uartReconfigureCount_ = 0;
   uint32_t lastStatusPublishMs_ = 0;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <esp_event.h>
 
 #include "app/app_state.h"
 #include "services/rs485_service.h"
@@ -35,6 +36,7 @@ public:
   // Local Modbus requests remain available in MASTER; non-local forwarding is
   // enabled only in PASS.
   void update(AppMode mode);
+  void beginCdc();
 
   // Drop a partial RTU request whenever USB protocol ownership changes.
   void clearRtuFrame();
@@ -43,6 +45,16 @@ public:
   UsbTransferActivity takeTransferActivity();
 
 private:
+  static void cdcEvent(void *arg, esp_event_base_t base, int32_t id, void *data);
+  bool syncPassCoding(AppMode mode);
+  mutable portMUX_TYPE codingMux_ = portMUX_INITIALIZER_UNLOCKED;
+  CdcLineCoding hostCoding_;
+  CdcLineCoding loopCoding_;
+  uint32_t hostCodingRevision_ = 1;
+  bool hostCodingReceived_ = false;
+  uint32_t loopCodingRevision_ = 0;
+  uint32_t submittedCodingRevision_ = 0;
+  AppMode previousMode_ = AppMode::Fault;
   void collectUsbBytes();
   void dispatchCompletedFrame(bool passThrough);
   void forwardRs485ToUsb(bool passThrough);

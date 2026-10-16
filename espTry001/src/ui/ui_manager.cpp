@@ -109,7 +109,7 @@ void UiManager::drawDashboardStatic(UiOperatingMode mode) {
   gfx->printf("485 Config: %s\n",
               mode == UiOperatingMode::UpgradePass
                   ? "9600,8N1"
-                  : "9600,8E1");
+                  : mode == UiOperatingMode::Pass ? "Follow PC" : "9600,8E1");
   gfx->drawLine(kContentLeft, 78, kContentRight, 78, RGB565_YELLOW);
   gfx->setTextColor(RGB565_CYAN, RGB565_BLACK);
   gfx->setCursor(5, 88);
@@ -189,15 +189,11 @@ void UiManager::drawToolsMenuPage() {
     drawToolsCard(200, RGB565_ORANGE, "TIME SYNC",
                   "Set RTC from computer");
 
-    gfx->drawLine(10, 268, BoardConfig::kDisplayWidth - 11, 268,
-                  RGB565_DARKGREY);
+    gfx->fillRect(10, 272, BoardConfig::kDisplayWidth - 20, 42, RGB565_DARKGREY);
     gfx->setTextSize(1);
-    gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
-    gfx->setCursor(centeredTextX("Connect PC via USB first", 1), 278);
-    gfx->print("Connect PC via USB first");
-    gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
-    gfx->setCursor(centeredTextX("Tap a card to continue", 1), 296);
-    gfx->print("Tap a card to continue");
+    gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+    gfx->setCursor(centeredTextX("FIRMWARE DOWNLOAD", 1), 286);
+    gfx->print("FIRMWARE DOWNLOAD");
     gfx->flush();
     return;
   }
@@ -237,12 +233,26 @@ void UiManager::drawToolsMenuPage() {
   gfx->setCursor(15, 238);
   gfx->print("  SYNC");
 
+  gfx->fillRect(10, 272, BoardConfig::kDisplayWidth - 20, 42, RGB565_DARKGREY);
   gfx->setTextSize(1);
-  gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
-  gfx->setCursor(15, 270);
-  gfx->print("Connect PC tool via USB");
-  gfx->setCursor(15, 285);
-  gfx->print("before tapping LOG EXPORT");
+  gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREY);
+  gfx->setCursor(centeredTextX("FIRMWARE DOWNLOAD", 1), 286);
+  gfx->print("FIRMWARE DOWNLOAD");
+  gfx->flush();
+}
+
+void UiManager::drawFirmwareDownloadPage() {
+  gfx->fillScreen(RGB565_BLACK);
+  gfx->setTextSize(2);
+  gfx->setTextColor(RGB565_YELLOW, RGB565_BLACK);
+  gfx->setCursor(centeredTextX("USB DOWNLOAD", 2), 20);
+  gfx->print("USB DOWNLOAD");
+  gfx->setTextSize(1);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  gfx->setCursor(10, 70);
+  gfx->print("Use PC firmware uploader");
+  gfx->setCursor(10, 100);
+  gfx->print("Power cycle to return");
   gfx->flush();
 }
 
@@ -878,7 +888,17 @@ void UiManager::drawDashboardDynamic(const DashboardView &view) {
     gfx->setTextColor(RGB565_DARKGREY, RGB565_BLACK);
     gfx->println("Link: USB PassThrough");
     gfx->setCursor(5, 217);
-    gfx->println("Master is computer.   ");
+    gfx->fillRect(0, 214, BoardConfig::kDisplayWidth, 12, RGB565_BLACK);
+    gfx->setTextColor(view.passCodingSupported ? RGB565_CYAN : RGB565_ORANGE,
+                      RGB565_BLACK);
+    if (view.passCodingSupported) {
+      const char parity = view.passParity == 0 ? 'N'
+                          : view.passParity == 1 ? 'O' : 'E';
+      gfx->printf("UART:%lu 8%c1 (PC)",
+                  static_cast<unsigned long>(view.passBaud), parity);
+    } else {
+      gfx->print("Unsupported PC format");
+    }
     gfx->flush();
     return;
   }

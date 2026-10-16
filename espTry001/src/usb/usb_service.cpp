@@ -1,4 +1,80 @@
 #include "usb_service.h"
+#include <USB.h>
+#include <tusb.h>
+
+namespace { UsbService *cdcOwner = nullptr; }
+
+#if ARDUINO_USB_MODE != 0 || !ARDUINO_USB_CDC_ON_BOOT
+#error "UsbService requires the built-in TinyUSB CDC Serial transport"
+#endif
+
+void UsbService::beginCdc() {
+  // Normal serial tools must not reboot the bridge when toggling DTR/RTS.
+  Serial.enableReboot(false);
+  cdcOwner = this;
+  Serial.onEvent([](void *, esp_event_base_t base, int32_t id, void *data) {
+    cdcEvent(cdcOwner, base, id, data);
+  });
+  USB.onEvent([](void *, esp_event_base_t base, int32_t id, void *data) {
+    cdcEvent(cdcOwner, base, id, data);
+  });
+  // CDC starts before setup() in Arduino. Recover settings received before
+  // our event handler was registered, without overwriting a newer callback.
+  cdc_line_coding_t coding;
+  tud_cdc_get_line_coding(&coding);
+  portENTER_CRITICAL(&codingMux_);
+  if (!hostCodingReceived_ && Serial.baudRate() != 0) {
+    hostCoding_ = {coding.bit_rate, coding.stop_bits,
+                   coding.parity, coding.data_bits};
+    ++hostCodingRevision_;
+  }
+  portEXIT_CRITICAL(&codingMux_);
+}
+
+void UsbService::cdcEvent(void *arg, esp_event_base_t base, int32_t id, void *data) {
+  // The wrapper routes the single CDC transport to its UsbService owner.
+  auto *self = static_cast<UsbService *>(arg);
+  auto *event = static_cast<arduino_usb_cdc_event_data_t *>(data);
+  portENTER_CRITICAL(&self->codingMux_);
+  if (base == ARDUINO_USB_EVENTS) {
+    if (id == ARDUINO_USB_STOPPED_EVENT) ++self->hostCodingRevision_;
+  } else if (id == ARDUINO_USB_CDC_LINE_CODING_EVENT) {
+    self->hostCodingReceived_ = true;
+    self->hostCoding_ = {event->line_coding.bit_rate,
+                         event->line_coding.stop_bits,
+                         event->line_coding.parity,
+                         event->line_coding.data_bits};
+    ++self->hostCodingRevision_;
+  }
+  // DTR/RTS do not change UART settings or interrupt an in-flight frame.
+  portEXIT_CRITICAL(&self->codingMux_);
+}
+
+bool UsbService::syncPassCoding(AppMode mode) {
+  CdcLineCoding coding;
+  uint32_t revision;
+  portENTER_CRITICAL(&codingMux_);
+  coding = hostCoding_;
+  revision = hostCodingRevision_;
+  portEXIT_CRITICAL(&codingMux_);
+  if (revision != loopCodingRevision_ || mode != previousMode_) {
+    if (mode == AppMode::PassThrough || previousMode_ == AppMode::PassThrough) {
+      clearRtuFrame();
+    }
+    loopCoding_ = coding;
+    loopCodingRevision_ = revision;
+    previousMode_ = mode;
+  }
+  if (submittedCodingRevision_ != revision) {
+    if (!rs485Service_.setPassLineCoding(coding, revision)) return false;
+    submittedCodingRevision_ = revision;
+  }
+  if (mode != AppMode::PassThrough) return true;
+  Rs485Service::Status status;
+  rs485Service_.getStatus(status);
+  return status.mode == Rs485Service::Mode::PassThrough &&
+         status.passCodingRevision == revision;
+}
 
 UsbService::UsbService(Stream &usb, Rs485Service &rs485Service,
                        SensorProfileUpdater &profileUpdater,
@@ -15,6 +91,7 @@ UsbService::UsbService(Stream &usb, Rs485Service &rs485Service,
       localFrameHandler_(localFrameHandler) {}
 
 void UsbService::update(AppMode mode) {
+  const bool codingApplied = syncPassCoding(mode);
   // Exclusive application protocols get the complete USB byte stream. Do not
   // let Modbus framing inspect or buffer any part of their payload.
   if (mode == AppMode::ConfigUpload) {
@@ -43,10 +120,14 @@ void UsbService::update(AppMode mode) {
     return;
   }
   bool passThrough = mode == AppMode::PassThrough;
+  // Leave new host bytes in CDC until Rs485Task has applied the settings.
+  // Unsupported settings still allow address 247 diagnostic requests.
+  if (passThrough && !codingApplied) return;
+  passThrough = passThrough && loopCoding_.supported();
   collectUsbBytes();
 
   if (rtuFrameLength_ > 0 &&
-      (uint32_t)(micros() - lastUsbByteTimeUs_) >= kRtuFrameGapUs) {
+      (uint32_t)(micros() - lastUsbByteTimeUs_) >= loopCoding_.frameGapUs()) {
     dispatchCompletedFrame(passThrough);
   }
 
@@ -90,6 +171,13 @@ void UsbService::collectUsbBytes() {
 }
 
 void UsbService::dispatchCompletedFrame(bool passThrough) {
+  portENTER_CRITICAL(&codingMux_);
+  const bool codingChanged = hostCodingRevision_ != loopCodingRevision_;
+  portEXIT_CRITICAL(&codingMux_);
+  if (passThrough && codingChanged) {
+    clearRtuFrame();
+    return;
+  }
   if (rtuFrame_[0] == localSlaveId_) {
     if (localFrameHandler_ != nullptr) {
       localFrameHandler_(rtuFrame_, rtuFrameLength_);

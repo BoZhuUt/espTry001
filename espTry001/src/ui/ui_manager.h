@@ -158,6 +158,9 @@ struct DashboardView {
   uint32_t rawUartToUsbDrops = 0;
   uint16_t rawRequestPeak = 0;
   uint16_t rawResponsePeak = 0;
+  uint32_t passBaud = 9600;
+  uint8_t passParity = 2;
+  bool passCodingSupported = true;
 };
 
 // Owns all low-level drawing calls. Business code supplies state and decides
@@ -173,6 +176,7 @@ public:
   void clearTransferStatus(UiOperatingMode mode);
   void showTransferStatus(const char *text, uint16_t color);
   void drawToolsMenuPage();
+  void drawFirmwareDownloadPage();
   void drawSystemInfoPage(const SystemInfoView &view);
   void drawConfigUpdatePage(const ConfigUpdateView &view);
   void drawLogExportPage(const LogExportView &view);

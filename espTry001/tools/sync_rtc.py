@@ -5,7 +5,7 @@
 
     python tools/sync_rtc.py COM12
 
-脚本不会修改电脑时间。它禁用 DTR/RTS，避免打开串口时复位 ESP32-S3。
+Firmware does not require DTR/RTS; automatic reboot is disabled.
 """
 
 from __future__ import annotations

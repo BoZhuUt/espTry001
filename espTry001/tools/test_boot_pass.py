@@ -130,12 +130,19 @@ def main() -> int:
                         help="repetitions per pattern and direction (default: 5)")
     parser.add_argument("--timeout", type=float, default=4.0,
                         help="seconds allowed for each 1029-byte transfer")
+    parser.add_argument("--host-baud", type=int, default=BAUDRATE,
+                        help="USB host setting; RS485 must remain fixed at 9600")
+    parser.add_argument("--host-parity", choices=("N", "E", "O"), default="N",
+                        help="USB host parity; RS485 must remain fixed at N")
     args = parser.parse_args()
     if args.count < 1 or args.timeout <= 0:
         parser.error("--count and --timeout must be positive")
 
     print(f"Open ESP={args.esp_port}, RS485={args.rs485_port} at 9600-8-N-1")
     with open_port(args.esp_port) as esp, open_port(args.rs485_port) as adapter:
+        esp.baudrate = args.host_baud
+        esp.parity = args.host_parity
+        print(f"USB host={args.host_baud}/8{args.host_parity}1; RS485=9600/8N1")
         time.sleep(0.2)
         esp.reset_input_buffer()
         adapter.reset_input_buffer()

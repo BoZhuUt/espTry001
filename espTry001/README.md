@@ -118,3 +118,51 @@ python tools/monitor_stability.py COM21 --interval 60 --duration 24 --output sta
 - GFX Library for Arduino 1.4.7
 - ModbusMaster 2.0.1
 - ArduinoJson 7.4.3
+
+## TinyUSB CDC 串口参数跟随
+
+以下描述适用于本次修订固件；刷入与实测状态见文末验收记录。
+
+普通 PASS 模式自动跟随电脑 COM 口设置，首版支持 9600/19200/115200
+与 8N1/8E1/8O1 的九种组合。屏幕显示下行实际参数；其他格式会显示
+`Unsupported PC format` 并暂停下行转发，恢复有效设置后可继续。
+发现、采集、校准固定为 9600 8E1；BOOT PASS 固定为 9600 8N1。
+USB 配置上传、文件导出和校时仍使用原有协议。
+
+上位机无需开启 DTR 或 RTS，也无需为本固件修改原有程序或控制线设置。
+设备端发送按 USB 端点就绪状态判断，现有工具保持 DTR/RTS 关闭即可。
+固件禁用 DTR/RTS 和 1200bps 自动重启；
+刷入此修订版后，可在 TOOLS → FIRMWARE DOWNLOAD 从屏幕进入下载模式。
+旧版或无法使用屏幕时，需按住 BOOT 再按 RESET，松开
+BOOT 后选择下载端口。切换固件后 Windows 可能重新分配 COM 号。
+本次 2.8 寸板验证：应用端口 COM8，ROM 下载端口 COM24。烧录后若仍停在
+下载端口，可断电再上电；使用 esptool 时，`--after watchdog-reset` 已验证可恢复运行。
+
+切换参数时，正在发送的旧帧会先结束，未完成事务和旧队列会丢弃；请在
+修改设置后重新发起事务。USB 包不是 UART 字符，组帧保留 5ms 下限。
+
+从站 247 的 FC03 新增只读诊断（旧寄存器保持兼容）：
+
+| 资料地址 | 内容 |
+|---:|---|
+| 40044–40045 | 实际 UART 波特率 UInt32，高字在前 |
+| 40046 | 实际 UART 校验编码：0=N、1=O、2=E |
+| 40047 | 最近上位机格式是否支持：1/0 |
+| 40048–40049 | RS485 任务已接收的上位机设置版本 UInt32 |
+| 40050–40051 | UART 重配次数 UInt32 |
+
+本机检查：`python tools/test_cdc_native.py`。
+实机普通 PASS 验收（两个串口分别连接板端和独立 RS485 适配器）：
+
+```powershell
+python tools/test_cdc_passthrough.py COMxx COM6 --dtr off --report reports/cdc_dtr_off.json
+python tools/test_cdc_passthrough.py COMxx COM6 --dtr on --report reports/cdc_dtr_on.json
+```
+
+脚本核对实际 UART 参数，并逐字节校验双向传输、在线切参、相同设置重开，
+以及不支持格式的拒绝/恢复。执行步骤与实际结果见
+[TINYUSB_CDC_PLAN.md](TINYUSB_CDC_PLAN.md)。
+
+2026-10-16 实机记录：2.8 寸修订固件已刷入，DTR off/on 九组合完整透传验收通过；
+屏幕下载入口、固定模式、BOOT PASS 大包、配置错误拒绝、日志查询与校时只读回归通过。
+日志目录为空，GET/整文件 CRC 未覆盖；1.47 寸仅完成编译。详细边界见上述计划。

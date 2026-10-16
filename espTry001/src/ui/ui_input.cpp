@@ -26,6 +26,7 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
       if (y >= 60 && y < 120) return UiAction::EnterConfigUpload;
       if (y >= 130 && y < 190) return UiAction::EnterLogExport;
       if (y >= 200 && y < 260) return UiAction::EnterTimeSync;
+      if (y >= 272 && y < 320) return UiAction::EnterFirmwareDownload;
       break;
 
     case UiPage::LogExport:

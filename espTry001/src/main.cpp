@@ -23,14 +23,16 @@
 #include "ui/ui_input.h"
 #include "ui/ui_manager.h"
 #include "usb/usb_service.h"
+#include "usb/usb_cdc_stream.h"
 #include "usb/storage_usb_bridge.h"
 
 #include <esp_system.h>
+#include <esp32-hal-tinyusb.h>
 #include <esp_attr.h>
 #include <esp32s3/rom/rtc.h>
 
 #define LOCAL_SLAVE_ID           247
-#define LOCAL_REG_COUNT          43
+#define LOCAL_REG_COUNT          51
 
 #ifdef AUTO_VERSION
 #define FIRMWARE_VERSION_TEXT AUTO_VERSION
@@ -162,11 +164,12 @@ BoardRtc::Driver rtcDriver;
 TimeService timeService(rtcDriver);
 WifiTimeService wifiTimeService(timeService);
 TimeSyncServer timeSyncServer(timeService, wifiTimeService);
-UsbService usbService(Serial, rs485Service, profileUpdater, logExportUsbBridge,
+UsbCdcStream usbTransport(Serial);
+UsbService usbService(usbTransport, rs485Service, profileUpdater, logExportUsbBridge,
                       timeSyncServer, LOCAL_SLAVE_ID, sendLocalModbusResponse);
 AppController appController(
     appState, storageService, rs485Service, profileStore, profileUpdater,
-    timeSyncServer, usbService, Serial, activeProfile, profileLookupComplete,
+    timeSyncServer, usbService, usbTransport, activeProfile, profileLookupComplete,
     appState.sensor.parameterPage);
 
 // ==========================================
@@ -174,6 +177,7 @@ AppController appController(
 // ==========================================
 void setup()
 {
+  usbService.beginCdc();
   // Capture this before peripheral initialization. esp_reset_reason() remains
   // readable later, but storing it here makes the diagnostic's boot scope clear.
   startupResetReason = esp_reset_reason();
@@ -314,7 +318,7 @@ void loop()
       case UiAction::CancelConfigAndRestart:
         // CONFIG 模式退出时重启，重新加载最后一个有效配置。
         appController.cancelConfigUpload();
-        Serial.flush();
+        usbTransport.flush();
         delay(50);
         ESP.restart();
         break;
@@ -360,6 +364,23 @@ void loop()
       case UiAction::EnterTimeSync:
         enterTimeSyncMode();
         delay(400);
+        break;
+
+      case UiAction::EnterFirmwareDownload:
+        // Finish SD writes and release UART before entering ROM download mode.
+        if (!storageService.stopLoggingAndWait() || !rs485Service.stopAndWait()) {
+          appState.mode = AppMode::Fault;
+          ui.showTransferStatus("Stop failed; retry", RGB565_RED);
+          break;
+        }
+        forgetUsbSession();
+        ui.drawFirmwareDownloadPage();
+        usbTransport.flush();
+        delay(50);
+        usb_persist_restart(RESTART_BOOTLOADER);
+        // The framework can return if no shutdown-handler slot is available.
+        appState.mode = AppMode::Fault;
+        ui.showTransferStatus("Download failed; retry", RGB565_RED);
         break;
 
       case UiAction::RetryTimeSync:
@@ -437,7 +458,7 @@ void loop()
       lastUpdateDrawMs = millis();
     }
     if (profileUpdater.shouldRestart()) {
-      Serial.flush();
+      usbTransport.flush();
       delay(50);
       ESP.restart();
     }
@@ -710,6 +731,9 @@ DashboardView buildDashboardView() {
   view.rawUartToUsbDrops = rs485Status.rawUartToUsbDrops;
   view.rawRequestPeak = rs485Status.rawRequestPeak;
   view.rawResponsePeak = rs485Status.rawResponsePeak;
+  view.passBaud = rs485Status.uartBaud;
+  view.passParity = rs485Status.uartParity;
+  view.passCodingSupported = rs485Status.passCodingSupported;
 
   switch (snapshot.discoveryPhase) {
     case AppDiscoveryPhase::DiscoveringAddress:
@@ -834,7 +858,7 @@ static void sendLocalModbusException(uint8_t function, uint8_t exceptionCode) {
   uint16_t crc = modbusCrc16(response, 3);
   response[3] = crc & 0xFF;
   response[4] = crc >> 8;
-  Serial.write(response, sizeof(response));
+  usbTransport.write(response, sizeof(response));
 }
 
 void sendLocalModbusResponse(const uint8_t *request, size_t length) {
@@ -916,6 +940,14 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length) {
                           localRegisters[40], localRegisters[41]);
   localRegisters[42] =
       static_cast<uint16_t>(storageDiagnostics.exportState);
+  uint32ToModbusRegisters(rs485Diagnostics.uartBaud,
+                          localRegisters[43], localRegisters[44]);
+  localRegisters[45] = rs485Diagnostics.uartParity;
+  localRegisters[46] = rs485Diagnostics.passCodingSupported ? 1 : 0;
+  uint32ToModbusRegisters(rs485Diagnostics.passCodingRevision,
+                          localRegisters[47], localRegisters[48]);
+  uint32ToModbusRegisters(rs485Diagnostics.uartReconfigureCount,
+                          localRegisters[49], localRegisters[50]);
 
   uint8_t response[3 + LOCAL_REG_COUNT * 2 + 2] = {0};
   response[0] = LOCAL_SLAVE_ID;
@@ -930,7 +962,7 @@ void sendLocalModbusResponse(const uint8_t *request, size_t length) {
   uint16_t crc = modbusCrc16(response, responseLength);
   response[responseLength++] = crc & 0xFF;
   response[responseLength++] = crc >> 8;
-  Serial.write(response, responseLength);
+  usbTransport.write(response, responseLength);
 }
 
 void drawAuthorPage() {

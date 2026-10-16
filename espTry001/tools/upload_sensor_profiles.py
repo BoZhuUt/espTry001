@@ -58,9 +58,8 @@ def upload(port: str, payload: bytes, magic: bytes = MAGIC) -> str:
     crc32 = zlib.crc32(payload) & 0xFFFFFFFF
     header = magic + struct.pack("<II", len(payload), crc32)
 
-    # 必须先创建“未打开”的端口对象，再设置 DTR/RTS，最后 open()。
-    # Serial(port, ...) 会先用默认 DTR 打开，再修改控制线，ESP32-S3
-    # 原生 USB CDC 可能把这个跳变解释为复位，导致 CONFIG 页面丢失。
+    # Firmware does not require DTR/RTS. Set both low for legacy compatibility.
+    # Set control lines before opening to avoid unnecessary transitions.
     connection = serial.Serial()
     connection.port = port
     connection.baudrate = 115200
