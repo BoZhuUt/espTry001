@@ -16,6 +16,9 @@
 
 ## 运行架构
 
+传感器离线升级新增了虚拟 U 盘导入与 SD 固件选择入口，使用方法和实机验收项见
+[传感器离线升级](MOBILE_SENSOR_UPGRADE.md)。原有 CDC / UPGRADE PASS 保留。
+
 固件使用单一 `AppMode` 管理协议所有权：
 
 - `loopTask`：触摸、ADC、UI、应用编排和物理 USB CDC；

@@ -91,6 +91,11 @@ UsbService::UsbService(Stream &usb, Rs485Service &rs485Service,
       localFrameHandler_(localFrameHandler) {}
 
 void UsbService::update(AppMode mode) {
+  if (mode == AppMode::MobileUpgrade) {
+    // Offline sender owns both raw queues. Never pump PC CDC into them.
+    while (usb_.available()) usb_.read();
+    return;
+  }
   const bool codingApplied = syncPassCoding(mode);
   // Exclusive application protocols get the complete USB byte stream. Do not
   // let Modbus framing inspect or buffer any part of their payload.

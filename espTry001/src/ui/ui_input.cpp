@@ -23,9 +23,10 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
 
     case UiPage::ToolsMenu:
       if (y > 0 && y < 40) return UiAction::BackToSystemInfo;
-      if (y >= 60 && y < 120) return UiAction::EnterConfigUpload;
-      if (y >= 130 && y < 190) return UiAction::EnterLogExport;
-      if (y >= 200 && y < 260) return UiAction::EnterTimeSync;
+      if (y >= 55 && y < 105) return UiAction::EnterConfigUpload;
+      if (y >= 110 && y < 160) return UiAction::EnterLogExport;
+      if (y >= 165 && y < 215) return UiAction::EnterTimeSync;
+      if (y >= 220 && y < 270) return UiAction::OpenMobileUpgrade;
       if (y >= 272 && y < 320) return UiAction::EnterFirmwareDownload;
       break;
 
@@ -49,6 +50,7 @@ UiAction resolveTouchAction(UiPage page, int x, int y,
       break;
 
     case UiPage::Calibration:
+    case UiPage::MobileUpgrade:
       break;
   }
 

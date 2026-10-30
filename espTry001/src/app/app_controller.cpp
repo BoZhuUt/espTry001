@@ -145,6 +145,12 @@ void AppController::exitTimeSync() {
   returnToPassThrough(UiPage::SystemInfo);
 }
 
+bool AppController::enterMobileUpgrade() {
+  if (!prepareExclusiveUsbMode(AppMode::MobileUpgrade)) return false;
+  state_.page = UiPage::MobileUpgrade;
+  return true;
+}
+
 bool AppController::beginCalibration(uint8_t slaveAddress,
                                      const CalibrationProfile *profile,
                                      uint8_t procedureIndex,

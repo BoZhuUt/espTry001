@@ -25,7 +25,7 @@ void drawToolsCard(int16_t y, uint16_t accent, const char *title,
                    const char *subtitle) {
   constexpr int16_t kCardLeft = 10;
   constexpr int16_t kCardWidth = 220;
-  constexpr int16_t kCardHeight = 56;
+  constexpr int16_t kCardHeight = 46;
 
   gfx->fillRect(kCardLeft, y, kCardWidth, kCardHeight, RGB565_BLACK);
   gfx->drawRect(kCardLeft, y, kCardWidth, kCardHeight, accent);
@@ -182,12 +182,14 @@ void UiManager::drawToolsMenuPage() {
     gfx->drawLine(10, 49, BoardConfig::kDisplayWidth - 11, 49,
                   RGB565_DARKGREY);
 
-    drawToolsCard(60, RGB565_CYAN, "CONFIG UPLOAD",
+    drawToolsCard(55, RGB565_CYAN, "CONFIG UPLOAD",
                   "Update sensor profiles");
-    drawToolsCard(130, RGB565_GREEN, "LOG EXPORT",
+    drawToolsCard(110, RGB565_GREEN, "LOG EXPORT",
                   "Download recorded data");
-    drawToolsCard(200, RGB565_ORANGE, "TIME SYNC",
+    drawToolsCard(165, RGB565_ORANGE, "TIME SYNC",
                   "Set RTC from computer");
+    drawToolsCard(220, RGB565_BLUE, "SENSOR UPGRADE",
+                  "USB import / offline upgrade");
 
     gfx->fillRect(10, 272, BoardConfig::kDisplayWidth - 20, 42, RGB565_DARKGREY);
     gfx->setTextSize(1);
@@ -209,29 +211,27 @@ void UiManager::drawToolsMenuPage() {
   gfx->setCursor(5, 50);
   gfx->print("Tap header to go back");
 
-  gfx->fillRect(kContentLeft, 60, kButtonWidth, 56, RGB565_BLUE);
+  gfx->fillRect(kContentLeft, 55, kButtonWidth, 46, RGB565_BLUE);
   gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
   gfx->setTextSize(2);
-  gfx->setCursor(15, 80);
+  gfx->setCursor(15, 70);
   gfx->print("1.CONFIG");
-  gfx->setCursor(15, 98);
-  gfx->print("  UPLOAD");
 
-  gfx->fillRect(kContentLeft, 130, kButtonWidth, 56, RGB565_DARKGREEN);
+  gfx->fillRect(kContentLeft, 110, kButtonWidth, 46, RGB565_DARKGREEN);
   gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREEN);
   gfx->setTextSize(2);
-  gfx->setCursor(15, 150);
+  gfx->setCursor(15, 125);
   gfx->print("2.LOG");
-  gfx->setCursor(15, 168);
-  gfx->print("  EXPORT");
 
-  gfx->fillRect(kContentLeft, 200, kButtonWidth, 56, RGB565_ORANGE);
+  gfx->fillRect(kContentLeft, 165, kButtonWidth, 46, RGB565_ORANGE);
   gfx->setTextColor(RGB565_BLACK, RGB565_ORANGE);
   gfx->setTextSize(2);
-  gfx->setCursor(15, 220);
+  gfx->setCursor(15, 180);
   gfx->print("3.TIME");
-  gfx->setCursor(15, 238);
-  gfx->print("  SYNC");
+  gfx->fillRect(kContentLeft, 220, kButtonWidth, 46, RGB565_BLUE);
+  gfx->setTextColor(RGB565_WHITE, RGB565_BLUE);
+  gfx->setCursor(15, 235);
+  gfx->print("4.UPGRADE");
 
   gfx->fillRect(10, 272, BoardConfig::kDisplayWidth - 20, 42, RGB565_DARKGREY);
   gfx->setTextSize(1);

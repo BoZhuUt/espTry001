@@ -10,6 +10,7 @@
 #include "log_export_server.h"
 #include "sd_storage.h"
 #include "sensor_profile_store.h"
+#include "services/mobile_upgrade.h"
 
 // Fixed snapshot copied at the boundary between the application loop and the
 // storage task. The queue never contains pointers to poller-owned value arrays.
@@ -96,6 +97,10 @@ class StorageService {
   void getStatus(Status &out) const;
   bool isRecording() const;
   bool exportShouldExit() const;
+  // Blocking acknowledged operation; data belongs to the persistent module.
+  // On timeout callers must wait until firmwareBusy() clears before reading it.
+  bool firmwareOperation(MobileUpgrade &upgrade, uint8_t operation, uint8_t index = 0);
+  bool firmwareBusy() const;
 
  private:
   enum class CommandType : uint8_t {
@@ -103,6 +108,7 @@ class StorageService {
     StopLogging,
     BeginLogExport,
     CancelLogExport,
+    Firmware,
   };
 
   struct Command {
@@ -113,11 +119,15 @@ class StorageService {
     char logFileTimestamp[DataLogger::kLogFileTimestampLen + 1] = {0};
     const SensorProfile *profile = nullptr;
     char firmwareVersion[32] = {0};
+    MobileUpgrade *upgrade = nullptr;
+    uint8_t firmwareOperation = 0;
+    uint8_t firmwareIndex = 0;
   };
 
   static constexpr EventBits_t kInitializedBit = BIT0;
   static constexpr EventBits_t kStoppedBit = BIT1;
   static constexpr EventBits_t kExportCancelledBit = BIT2;
+  static constexpr EventBits_t kFirmwareDoneBit = BIT3;
 
   static void taskEntry(void *context);
   void taskLoop();
@@ -144,4 +154,6 @@ class StorageService {
 
   mutable portMUX_TYPE statusMux_ = portMUX_INITIALIZER_UNLOCKED;
   Status status_;
+  bool firmwarePending_ = false;
+  bool firmwareResult_ = false;
 };

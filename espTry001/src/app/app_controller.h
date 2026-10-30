@@ -43,6 +43,7 @@ public:
    * 返回 false 表示资源停止失败，调用者不应绘制 TIME SYNC 页面。
    */
   bool enterTimeSync();
+  bool enterMobileUpgrade();
 
   // 取消未完成的 ESPTIME1 命令，并恢复 PASS 与 System Info 页面。
   void exitTimeSync();

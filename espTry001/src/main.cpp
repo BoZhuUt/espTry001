@@ -160,6 +160,8 @@ UiManager ui;
 StorageUsbBridge logExportUsbBridge;
 StorageService storageService(sdStorage, dataLogger, logExportServer,
                               profileStore, logExportUsbBridge);
+MobileUpgrade mobileUpgrade;
+unsigned mobileSelected = 0;
 BoardRtc::Driver rtcDriver;
 TimeService timeService(rtcDriver);
 WifiTimeService wifiTimeService(timeService);
@@ -175,6 +177,111 @@ AppController appController(
 // ==========================================
 // 5. 核心逻辑主程序
 // ==========================================
+void drawMobileUpgradePage(bool fullRedraw = false) {
+  static bool initialized = false;
+  static bool lastBusy = false, lastDiskVisible = false, lastActive = false;
+  static char lastFile[27] = "", lastMessage[96] = "";
+  const bool full = fullRedraw || !initialized;
+  bool busy = storageService.firmwareBusy();
+  const bool diskVisible = mobileUpgrade.diskVisible();
+  const bool active = !busy && mobileUpgrade.active();
+  char file[27] = "", message[96] = "";
+  // StorageTask may update the file list and status while busy. Copy only
+  // after its resource handoff, then compare with the last rendered values.
+  if (!busy) {
+    snprintf(file, sizeof(file), "%.26s", mobileUpgrade.fileCount
+        ? mobileUpgrade.files[mobileSelected] : "No BIN in /firmware");
+    snprintf(message, sizeof(message), "%s", mobileUpgrade.message);
+  }
+  bool changed = false;
+  if (full) {
+    gfx->fillScreen(RGB565_BLACK);
+    gfx->setTextSize(2); gfx->setTextColor(RGB565_YELLOW);
+    gfx->setCursor(5, 12); gfx->print("UPGRADE");
+    gfx->setTextSize(1); gfx->setTextColor(RGB565_WHITE);
+    gfx->setCursor(5, 42); gfx->print("ST588 / Power-on boot");
+    gfx->setCursor(5, 60); gfx->print("9600 8N1 / YMODEM-1K");
+    changed = true;
+  }
+  gfx->setTextSize(1); gfx->setTextColor(RGB565_WHITE, RGB565_BLACK);
+  if (full || busy != lastBusy || strcmp(file, lastFile) != 0) {
+    gfx->fillRect(5, 80, BoardConfig::kDisplayWidth - 10, 60, RGB565_BLACK);
+    if (busy) {
+      gfx->setCursor(5, 105); gfx->print("SD busy; please wait");
+    } else {
+      gfx->setCursor(5, 84); gfx->print("Selected APP firmware:");
+      gfx->setCursor(5, 102); gfx->print(file);
+      gfx->setCursor(5, 125); gfx->print("Tap here: next file");
+    }
+    changed = true;
+  }
+  if (full || strcmp(message, lastMessage) != 0) {
+    gfx->fillRect(5, 145, BoardConfig::kDisplayWidth - 10, 62, RGB565_BLACK);
+    gfx->setCursor(5, 150);
+    unsigned width = (BoardConfig::kDisplayWidth - 10) / 6;
+    for (unsigned i = 0; message[i]; ++i) {
+      if (i && i % width == 0) gfx->setCursor(5, 150 + 12 * (i / width));
+      gfx->print(message[i]);
+    }
+    changed = true;
+  }
+  if (full || diskVisible != lastDiskVisible) {
+    gfx->fillRect(5, 212, BoardConfig::kDisplayWidth - 10, 45, RGB565_BLUE);
+    gfx->setTextColor(RGB565_WHITE, RGB565_BLUE); gfx->setCursor(10, 229);
+    gfx->print(diskVisible ? "EJECT PC, THEN SAVE" : "USB IMPORT (512 KiB)");
+    changed = true;
+  }
+  if (full || diskVisible != lastDiskVisible || active != lastActive) {
+    gfx->fillRect(5, 268, BoardConfig::kDisplayWidth - 10, 45, RGB565_DARKGREEN);
+    gfx->setTextColor(RGB565_WHITE, RGB565_DARKGREEN); gfx->setCursor(10, 285);
+    gfx->print(diskVisible ? "CANCEL IMPORT" : (active ? "CANCEL UPGRADE" : "START UPGRADE"));
+    changed = true;
+  }
+  initialized = true;
+  lastBusy = busy; lastDiskVisible = diskVisible; lastActive = active;
+  snprintf(lastFile, sizeof(lastFile), "%s", file);
+  snprintf(lastMessage, sizeof(lastMessage), "%s", message);
+  if (changed) gfx->flush();
+}
+
+void handleMobileUpgradeTouch(int, int y) {
+  if (storageService.firmwareBusy()) return;
+  if (y > 0 && y < 40) {
+    // PC eject is required before leaving an exposed import disk.
+    if (mobileUpgrade.diskVisible() && !mobileUpgrade.hideDisk()) { drawMobileUpgradePage(); return; }
+    mobileUpgrade.cancel(rs485Service);
+    if (!rs485Service.stopAndWait()) { appState.mode = AppMode::Fault; return; }
+    appController.returnToPassThrough(UiPage::SystemInfo);
+    ui.clearScreen(); drawAuthorPage(); return;
+  }
+  if (mobileUpgrade.active()) {
+    if (y >= 268) {
+      mobileUpgrade.cancel(rs485Service);
+      if (!rs485Service.stopAndWait()) appState.mode = AppMode::Fault;
+      snprintf(mobileUpgrade.message, sizeof(mobileUpgrade.message), "Cancelled; repower before retry");
+    }
+  } else if (y >= 80 && y < 140 && !mobileUpgrade.diskVisible()) {
+    if (mobileUpgrade.fileCount) mobileSelected = (mobileSelected + 1) % mobileUpgrade.fileCount;
+  } else if (y >= 212 && y < 257) {
+    if (mobileUpgrade.diskVisible()) {
+      if (mobileUpgrade.hideDisk()) {
+        storageService.firmwareOperation(mobileUpgrade, 1);
+        // Refresh after partial import, preserving its useful error message.
+        if (!storageService.firmwareBusy()) {
+          char result[96]; snprintf(result, sizeof(result), "%s", mobileUpgrade.message);
+          storageService.firmwareOperation(mobileUpgrade, 0);
+          if (!storageService.firmwareBusy()) snprintf(mobileUpgrade.message, sizeof(mobileUpgrade.message), "%s", result);
+        }
+        mobileSelected = 0;
+      }
+    } else mobileUpgrade.exposeDisk();
+  } else if (y >= 268) {
+    if (mobileUpgrade.diskVisible()) mobileUpgrade.discardDisk();
+    else if (mobileUpgrade.fileCount && storageService.firmwareOperation(mobileUpgrade, 2, mobileSelected)) mobileUpgrade.start(rs485Service);
+  }
+  drawMobileUpgradePage();
+}
+
 void setup()
 {
   usbService.beginCdc();
@@ -307,7 +414,10 @@ void loop()
 #endif
 
     UiAction action = UiAction::None;
-    if (appState.page == UiPage::Calibration) {
+    if (appState.page == UiPage::MobileUpgrade) {
+      handleMobileUpgradeTouch(tx, ty);
+      delay(180);
+    } else if (appState.page == UiPage::Calibration) {
       handleCalibrationTouch(tx, ty);
       delay(180);
     } else {
@@ -364,6 +474,15 @@ void loop()
       case UiAction::EnterTimeSync:
         enterTimeSyncMode();
         delay(400);
+        break;
+
+      case UiAction::OpenMobileUpgrade:
+        if (appController.enterMobileUpgrade()) {
+          mobileSelected = 0;
+          storageService.firmwareOperation(mobileUpgrade, 0);
+          drawMobileUpgradePage(true);
+        }
+        delay(300);
         break;
 
       case UiAction::EnterFirmwareDownload:
@@ -439,6 +558,13 @@ void loop()
   // UsbService is the single USB protocol router. It advances exactly one of
   // Modbus RTU, ESPCFG1, ESPLOG1 or ESPTIME1 according to AppMode.
   usbService.update(appState.mode);
+  if (appState.mode == AppMode::MobileUpgrade) {
+    static uint32_t lastDraw = 0;
+    if (!storageService.firmwareBusy()) mobileUpgrade.update(rs485Service);
+    if ((uint32_t)(millis() - lastDraw) >= 500) { drawMobileUpgradePage(); lastDraw = millis(); }
+    delay(1);
+    return;
+  }
 
   // CONFIG 模式独占 USB CDC，禁止 JSON 被本地 Modbus 解析或转发到 RS485。
   if (appState.isConfigUpload()) {

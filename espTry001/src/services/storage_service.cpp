@@ -142,6 +142,32 @@ void StorageService::getStatus(Status &out) const {
   portEXIT_CRITICAL(&statusMux_);
 }
 
+bool StorageService::firmwareBusy() const {
+  portENTER_CRITICAL(&statusMux_);
+  bool busy = firmwarePending_;
+  portEXIT_CRITICAL(&statusMux_);
+  return busy;
+}
+
+bool StorageService::firmwareOperation(MobileUpgrade &upgrade, uint8_t operation, uint8_t index) {
+  if (!events_ || firmwareBusy()) return false;
+  xEventGroupClearBits(events_, kFirmwareDoneBit);
+  portENTER_CRITICAL(&statusMux_);
+  firmwarePending_ = true;
+  portEXIT_CRITICAL(&statusMux_);
+  Command c; c.type = CommandType::Firmware; c.upgrade = &upgrade;
+  c.firmwareOperation = operation; c.firmwareIndex = index;
+  if (!sendCommand(c)) {
+    portENTER_CRITICAL(&statusMux_); firmwarePending_ = false; portEXIT_CRITICAL(&statusMux_);
+    return false;
+  }
+  auto bits = xEventGroupWaitBits(events_, kFirmwareDoneBit, pdTRUE, pdTRUE, pdMS_TO_TICKS(10000));
+  portENTER_CRITICAL(&statusMux_);
+  bool result = firmwareResult_;
+  portEXIT_CRITICAL(&statusMux_);
+  return (bits & kFirmwareDoneBit) && result;
+}
+
 bool StorageService::isRecording() const {
   Status status;
   getStatus(status);
@@ -189,6 +215,24 @@ void StorageService::taskLoop() {
 
 void StorageService::handleCommand(const Command &command) {
   switch (command.type) {
+    case CommandType::Firmware: {
+      bool ok = false;
+      if (!logger_.isRecording() && !exportActive_ && sd_.state() == SdStorage::State::Ready && command.upgrade) {
+        if (command.firmwareOperation == 0) ok = command.upgrade->scanFiles();
+        else if (command.firmwareOperation == 1) ok = command.upgrade->importFiles();
+        else if (command.firmwareOperation == 2) ok = command.upgrade->loadFile(command.firmwareIndex);
+      } else if (command.upgrade) {
+        snprintf(command.upgrade->message, sizeof(command.upgrade->message), "SD unavailable or storage busy");
+      }
+      portENTER_CRITICAL(&statusMux_);
+      firmwareResult_ = ok;
+      portEXIT_CRITICAL(&statusMux_);
+      xEventGroupSetBits(events_, kFirmwareDoneBit);
+      portENTER_CRITICAL(&statusMux_);
+      firmwarePending_ = false;
+      portEXIT_CRITICAL(&statusMux_);
+      break;
+    }
     case CommandType::StartLogging:
       if (exportActive_) {
         logExportServer_.cancel();

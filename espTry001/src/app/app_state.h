@@ -19,6 +19,7 @@ enum class AppMode : uint8_t {
   // Append new modes to preserve the numeric values exposed by diagnostics.
   UpgradePass,
   Calibration,
+  MobileUpgrade,
 };
 
 enum class AppDiscoveryPhase : uint8_t {
